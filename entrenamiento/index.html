@@ -729,12 +729,68 @@
             70% { box-shadow: 0 0 0 10px rgba(72, 187, 120, 0); }
             100% { box-shadow: 0 0 0 0 rgba(72, 187, 120, 0); }
         }
+        /* Estilos para el botón Completar modificado */
+        .complete-btn.completed {
+            background-color: #1e40af !important;
+            border-color: #1e3a8a !important;
+            color: white !important;
+            cursor: default !important;
+        }
+
+        .complete-btn.completed .btn-text {
+            content: "Completado" !important;
+        }
+
+        .complete-btn.completed:hover {
+            background-color: #1e40af !important;
+            transform: none !important;
+        }
+        /* ESTILOS PARA BOTÓN COMPLETAR MODIFICADO */
+        .complete-btn.completed,
+        .complete-btn[data-set-completed="true"] {
+            background-color: #1e40af !important;
+            border: 2px solid #1e3a8a !important;
+            color: white !important;
+            cursor: default !important;
+            transform: none !important;
+            box-shadow: 0 2px 4px rgba(30, 64, 175, 0.3) !important;
+        }
+
+        .complete-btn.completed:hover,
+        .complete-btn[data-set-completed="true"]:hover {
+            background-color: #1e40af !important;
+            transform: none !important;
+            box-shadow: 0 2px 6px rgba(30, 64, 175, 0.4) !important;
+        }
+
+        /* Asegurar que el texto sea visible */
+        .complete-btn .btn-text {
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        /* Estado inicial del botón */
+        .complete-btn:not(.completed):not([data-set-completed="true"]) {
+            background-color: #059669 !important;
+            border: 2px solid #047857 !important;
+        }
+
+        .complete-btn:not(.completed):not([data-set-completed="true"]):hover {
+            background-color: #10b981 !important;
+            transform: translateY(-1px);
+        }
     </style>
 </head>
 <body class="text-gray-100">
     <main x-data="gymApp()" x-init="init()">
         <!-- Pantalla de selección de modo -->
         <div x-show="currentScreen === 'mode-selection'" x-transition:enter.duration.300 class="container mx-auto px-4 py-8 max-w-6xl">
+                <!-- BOTÓN VOLVER AL INICIO PRINCIPAL - NUEVO -->
+            <div class="flex justify-start mb-6">
+                <button onclick="window.location.href = '../index.html'" class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition flex items-center">
+                    <i class="fas fa-home mr-2"></i> Volver al Inicio Principal
+                </button>
+            </div>
             <!-- Botón flotante de menú avanzado -->
             <div class="fixed bottom-6 right-6 z-50">
                 <div class="relative">
@@ -764,7 +820,6 @@
             
             <header class="text-center mb-10">
                 <h1 class="text-4xl font-bold mb-3 bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">GymApp</h1>
-                <p class="text-lg text-gray-400">Tu asistente personal para entrenamientos inteligentes</p>
             </header>
             
             <!-- SECCIÓN ESTADO ACTUAL SIMPLIFICADA - SOLO EL CUADRO -->
@@ -963,23 +1018,12 @@
             </div>
         </div> 
         <!-- Pantalla de detalles de rutina de trabajo -->
+        <!-- Pantalla de detalles de rutina de trabajo -->
         <div x-show="currentScreen === 'workout-group-details'" x-transition:enter.duration.300 x-transition:leave.duration.300>
-            <div class="flex justify-between items-center mb-6">
-                <div>
-                    <h2 class="text-2xl font-bold mb-2 text-white" x-text="currentWorkoutGroup?.name"></h2>
-                    <p class="text-gray-400" x-text="'Creada: ' + formatDateShort(currentWorkoutGroup?.creationDate)"></p>
-                </div>
-                <div class="flex space-x-2">
-                    <button @click="currentScreen = 'workout-groups'" class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition">
-                        <i class="fas fa-arrow-left mr-2"></i> Volver
-                    </button>
-                    <button @click="editWorkoutGroup(currentWorkoutGroup.id)" class="px-4 py-2 bg-yellow-600 rounded-lg hover:bg-yellow-500 transition">
-                        <i class="fas fa-edit mr-2"></i> Editar
-                    </button>
-                    <button @click="deleteWorkoutGroup(currentWorkoutGroup.id)" class="px-4 py-2 bg-red-600 rounded-lg hover:bg-red-500 transition">
-                        <i class="fas fa-trash mr-2"></i> Eliminar
-                    </button>
-                </div>
+            <!-- Encabezado simplificado -->
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold mb-2 text-white" x-text="currentWorkoutGroup?.name"></h2>
+                <p class="text-gray-400" x-text="'Creada: ' + formatDateShort(currentWorkoutGroup?.creationDate)"></p>
             </div>
 
             <div class="space-y-4">
@@ -990,7 +1034,6 @@
                                 <h4 class="font-semibold text-lg text-white" x-text="getWorkoutTitleFromWorkout(group.representative)"></h4>
                                 <div class="text-sm text-gray-400 mt-1">
                                     <span x-text="'Última ejecución: ' + formatDate(group.latestDate)"></span>
-                                    <span class="ml-3 text-blue-400" x-text="group.count + ' ejecuciones'"></span>
                                     <span class="ml-3 text-green-400" x-text="group.representative.exercises + ' ejercicios'"></span>
                                 </div>
                                 <!-- Músculos trabajados -->
@@ -1032,29 +1075,40 @@
                             </div>
                         </div>
                         
-                        <!-- Botones de acción para cada grupo de entrenamientos -->
-                        <div class="flex justify-between pt-4 border-t border-gray-600">
-                            <div class="flex space-x-2">
-                                <button @click="viewWorkoutInGroup(group.workoutIndices[0])" 
-                                        class="px-3 py-1 bg-blue-600 rounded text-sm hover:bg-blue-500 transition">
-                                    <i class="fas fa-eye mr-1"></i> Ver Último
-                                </button>
-                                <button @click="useWorkoutFromGroupAsTemplate(group.workoutIndices[0])" 
-                                        class="px-3 py-1 bg-green-600 rounded text-sm hover:bg-green-500 transition">
-                                    <i class="fas fa-copy mr-1"></i> Usar como Plantilla
-                                </button>
-                                <button @click="viewGroupHistory(group.workoutIndices)" 
-                                        class="px-3 py-1 bg-purple-600 rounded text-sm hover:bg-purple-500 transition">
-                                    <i class="fas fa-history mr-1"></i> Ver Historial
-                                </button>
-                            </div>
+                        <!-- BOTONES DE ACCIÓN - MOVIDOS AQUÍ -->
+                        <div class="grid grid-cols-2 gap-2 pt-4 border-t border-gray-600">
+                            <button @click="viewWorkoutInGroup(group.workoutIndices[0])" 
+                                    class="px-2 py-2 bg-blue-600 rounded text-sm hover:bg-blue-500 transition text-white flex items-center justify-center">
+                                <i class="fas fa-eye mr-1"></i> Ver
+                            </button>
                             <button @click="removeWorkoutGroupFromRoutine(currentWorkoutGroup.id, group.workoutIndices)" 
-                                    class="px-3 py-1 bg-red-600 rounded text-sm hover:bg-red-500 transition">
-                                <i class="fas fa-times mr-1"></i> Quitar Grupo
+                                    class="px-2 py-2 bg-red-600 rounded text-sm hover:bg-red-500 transition text-white flex items-center justify-center">
+                                <i class="fas fa-times mr-1"></i> Quitar
                             </button>
                         </div>
                     </div>
                 </template>
+            </div>
+
+            <!-- BOTONES PRINCIPALES - SOLO BOTÓN VOLVER MÁS OSCURO -->
+            <div class="mt-8 pt-6 border-t border-gray-700 bg-gray-750 rounded-xl p-6">
+                <div class="flex flex-col md:flex-row justify-between gap-4">
+                    <button @click="currentScreen = 'workout-groups'" 
+                            class="px-6 py-3 bg-gray-800 rounded-lg hover:bg-gray-700 transition flex items-center justify-center font-medium text-white">
+                        <i class="fas fa-arrow-left mr-2"></i> Volver
+                    </button>
+                    
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <button @click="editWorkoutGroup(currentWorkoutGroup.id)" 
+                                class="px-6 py-3 bg-yellow-600 rounded-lg hover:bg-yellow-500 transition flex items-center justify-center font-medium text-white">
+                            <i class="fas fa-edit mr-2"></i> Editar
+                        </button>
+                        <button @click="deleteWorkoutGroup(currentWorkoutGroup.id)" 
+                                class="px-6 py-3 bg-red-600 rounded-lg hover:bg-red-500 transition flex items-center justify-center font-medium text-white">
+                            <i class="fas fa-trash mr-2"></i> Eliminar 
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>     
         <!-- Pantalla de Evolución -->
@@ -1191,7 +1245,7 @@
                 <!-- Botón para volver a la selección de modo -->
                 <div class="flex justify-start mb-6">
                     <button @click="currentScreen = 'mode-selection'" class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition flex items-center">
-                        <i class="fas fa-arrow-left mr-2"></i> Inicio
+                        <i class="fas fa-arrow-left mr-2"></i> Volver
                     </button>
                 </div>
                 <h2 class="text-2xl font-bold mb-2">Selecciona tu nivel de experiencia</h2>
@@ -1640,10 +1694,13 @@
                                             <!-- Encabezado de la serie -->
                                             <div class="flex items-center justify-between p-3 border-b border-gray-700">
                                                 <span class="font-medium text-white">Serie <span x-text="setIndex + 1"></span></span>
-                                                <button class="px-3 py-1 bg-green-600 rounded text-sm hover:bg-green-500 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-                                                        @click="completeSet(muscle, exercise.name, setIndex)"
-                                                        :disabled="exerciseReps[muscle][exercise.name][setIndex] <= 0 || currentExercise.muscle !== muscle || currentExercise.name !== exercise.name">
-                                                    <i class="fas fa-check mr-1"></i> Completar
+                                                    <!-- BOTÓN COMPLETAR - VERSIÓN FUNCIONAL -->
+                                                <button class="px-3 py-1 rounded text-sm transition font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                                                        @click="completeSetWithVisual(muscle, exercise.name, setIndex)"
+                                                        :disabled="exerciseReps[muscle][exercise.name][setIndex] <= 0 || currentExercise.muscle !== muscle || currentExercise.name !== exercise.name"
+                                                        :class="getCompleteButtonClass(muscle, exercise.name, setIndex)">
+                                                    <i class="fas fa-check mr-1"></i> 
+                                                    <span x-text="isSetCompletedVisually(muscle, exercise.name, setIndex) ? 'Completado' : 'Completar'"></span>
                                                 </button>
                                             </div>
                                             
@@ -2023,73 +2080,116 @@
                 </div>
             </div>
             
-            <!-- Pantalla de detalles del entrenamiento -->
+            <!-- Pantalla de detalles del entrenamiento - ORDEN CORREGIDO -->
             <div x-show="currentScreen === 'details'" x-transition:enter.duration.300 x-transition:leave.duration.300>
                 <h2 class="text-2xl font-bold mb-2">Detalles del Entrenamiento</h2>
                 <p class="text-gray-400 mb-6" x-text="'Fecha: ' + formatDate(viewedWorkout.date)"></p>
-                 <div class="bg-gray-700 rounded-xl p-4 md:p-5 mb-6">
+                
+                <div class="bg-gray-700 rounded-xl p-4 md:p-5 mb-6">
                     <h3 class="text-lg font-semibold mb-4 flex items-center">
-                        <i class="fas fa-dumbbell mr-2 text-blue-400"></i> Ejercicios Realizados - Evolución
+                        <i class="fas fa-dumbbell mr-2 text-blue-400"></i> 
+                        Ejercicios Realizados - Última Ejecución
                     </h3>
+                    
+                    <!-- Indicador de que es la última ejecución -->
+                    <div class="bg-green-900 bg-opacity-30 border border-green-500 rounded-lg p-3 mb-4">
+                        <div class="flex items-center">
+                            <i class="fas fa-check-circle text-green-400 mr-2"></i>
+                            <span class="text-green-300 font-medium">Mostrando la ejecución más reciente de cada ejercicio</span>
+                        </div>
+                    </div>
+                    
                     <div class="space-y-6">
-                        <template x-for="muscle in Object.keys(viewedWorkout.exercisesData)" :key="muscle">
+                        <template x-for="(muscle, muscleIndex) in (viewedWorkout.order || getDefaultOrderFromWorkout(viewedWorkout))" :key="muscle">
                             <div>
                                 <h4 class="font-medium mb-3 text-lg flex items-center">
-                                    <div class="w-3 h-3 rounded-full mr-2" :class="muscleGroups.find(m => m.key === muscle)?.color || 'bg-gray-500'"></div>
+                                    <div class="w-3 h-3 rounded-full mr-2" 
+                                        :class="muscleGroups.find(m => m.key === muscle)?.color || 'bg-gray-500'"></div>
                                     <span x-text="muscleGroups.find(m => m.key === muscle)?.label || muscle"></span>
                                 </h4>
                                 <div class="space-y-4">
-                                    <template x-for="exercise in viewedWorkout.exercisesData[muscle]" :key="exercise.name">
-                                        <div class="bg-gray-800 p-4 rounded-lg">
+                                    <template x-for="(exercise, exerciseIndex) in (viewedWorkout.exercisesData[muscle] || [])" :key="exercise.name">
+                                        <div class="bg-gray-800 p-4 rounded-lg border-l-4 border-green-500">
+                                            <!-- ENCABEZADO MEJORADO -->
                                             <div class="flex justify-between items-start mb-4">
-                                                <h5 class="font-semibold wrap-text text-lg" x-text="exercise.name"></h5>
-                                                <div class="text-sm font-bold text-blue-400 bg-blue-900 bg-opacity-30 px-3 py-1 rounded-full" 
-                                                    x-text="exercise.volume + ' kg Volumen Total'"></div>
-                                            </div>
-                                            <!-- Información de la fecha actual -->
-                                            <div class="mb-3 p-2 bg-gray-750 rounded">
-                                                <div class="text-sm font-medium text-gray-300">
-                                                    Ejecutado el: <span x-text="formatDateShort(viewedWorkout.date)"></span>
+                                                <div class="flex-1">
+                                                    <h5 class="font-semibold wrap-text text-lg text-white mb-1" 
+                                                        x-text="exercise.name"></h5>
+                                                    <div class="text-sm text-gray-400">
+                                                        <span class="text-green-400 font-medium">
+                                                            <i class="fas fa-clock mr-1"></i>
+                                                            Última ejecución: <span x-text="formatDateShort(viewedWorkout.date)"></span>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div class="text-right">
+                                                    <div class="text-sm font-bold text-blue-400 bg-blue-900 bg-opacity-30 px-3 py-1 rounded-full" 
+                                                        x-text="exercise.volume + ' kg'"></div>
+                                                    <div class="text-xs text-green-400 mt-1" 
+                                                        x-text="exercise.completed + '/' + exercise.sets + ' series'"></div>
                                                 </div>
                                             </div>
-                                            <!-- Series del ejercicio actual -->
-                                            <div class="grid grid-cols-1 gap-2 mb-4">
-                                                <template x-for="(set, index) in exercise.setsData" :key="index">
-                                                    <div class="bg-gray-700 p-2 rounded text-sm" x-show="set.completed">
-                                                        <div class="flex justify-between">
-                                                            <span class="font-medium" x-text="'Serie ' + (index + 1)"></span>
-                                                            <span x-text="set.weight + ' kg x ' + set.reps + ' reps'"></span>
+                                            
+                                            <!-- SERIES DE LA ÚLTIMA EJECUCIÓN -->
+                                            <div class="mb-4">
+                                                <div class="text-sm font-medium text-gray-300 mb-2">Series realizadas:</div>
+                                                <div class="grid grid-cols-1 gap-2">
+                                                    <template x-for="(set, index) in exercise.setsData" :key="index">
+                                                        <div class="bg-gray-700 p-2 rounded text-sm" x-show="set.completed">
+                                                            <div class="flex justify-between items-center">
+                                                                <span class="font-medium" x-text="'Serie ' + (index + 1)"></span>
+                                                                <span class="text-blue-300 font-semibold" 
+                                                                    x-text="set.weight + ' kg x ' + set.reps + ' reps'"></span>
+                                                            </div>
                                                         </div>
+                                                    </template>
+                                                    <div x-show="exercise.setsData.filter(s => s.completed).length === 0" 
+                                                        class="text-sm text-gray-500 italic p-2">
+                                                        No hay series completadas en esta ejecución.
                                                     </div>
-                                                </template>
+                                                </div>
                                             </div>
-                                            <!-- Historial de ejecuciones anteriores -->
-                                            <div x-data="{ expanded: false }">
+                                            
+                                            <!-- HISTORIAL ANTERIOR - SEPARADO CLARAMENTE -->
+                                            <div x-data="{ expanded: false }" class="border-t border-gray-600 pt-4">
                                                 <button @click="expanded = !expanded" 
-                                                        class="flex items-center text-sm text-blue-400 hover:text-blue-300 mb-2">
+                                                        class="flex items-center text-sm text-yellow-400 hover:text-yellow-300 mb-2 w-full">
                                                     <i class="fas" :class="expanded ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
-                                                    <span class="ml-2" x-text="expanded ? 'Ocultar historial' : 'Ver ejecuciones anteriores (' + getExerciseHistoryCount(muscle, exercise.name, viewedWorkout.routineKey) + ')'"></span>
+                                                    <span class="ml-2 flex-1 text-left">
+                                                        <span x-text="expanded ? 'Ocultar ejecuciones anteriores' : 'Ver ejecuciones anteriores'"></span>
+                                                        <span class="text-gray-400 ml-1" 
+                                                            x-text="'(' + getExerciseHistoryCount(muscle, exercise.name, viewedWorkout.routineKey) + ')'"></span>
+                                                    </span>
                                                 </button>
+                                                
                                                 <div x-show="expanded" class="mt-3">
-                                                    <div class="text-xs text-gray-400 mb-2">Ejecuciones anteriores de la misma rutina:</div>
-                                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                                    <div class="text-xs text-gray-400 mb-3 font-medium">
+                                                        <i class="fas fa-history mr-1"></i>
+                                                        Ejecuciones anteriores de este ejercicio:
+                                                    </div>
+                                                    
+                                                    <div class="space-y-3">
                                                         <template x-for="(history, idx) in getExerciseHistory(muscle, exercise.name, viewedWorkout.routineKey)" :key="idx">
-                                                            <div class="bg-gray-750 p-3 rounded-lg">
-                                                                <div class="text-xs font-medium text-gray-300 mb-2" 
-                                                                    x-text="'Fecha: ' + formatDateShort(history.date)"></div>
-                                                                <div class="text-xs text-blue-400 mb-2" 
-                                                                    x-text="'Volumen: ' + history.volume + ' kg'"></div>
+                                                            <div class="bg-gray-750 p-3 rounded-lg border-l-4 border-yellow-500">
+                                                                <div class="flex justify-between items-start mb-2">
+                                                                    <div class="text-xs font-medium text-gray-300" 
+                                                                        x-text="formatDateShort(history.date)"></div>
+                                                                    <div class="text-xs text-blue-400 font-semibold" 
+                                                                        x-text="history.volume + ' kg'"></div>
+                                                                </div>
                                                                 <div class="space-y-1">
                                                                     <template x-for="(set, setIndex) in history.setsData" :key="setIndex">
-                                                                        <div x-show="set.completed" class="text-xs">
+                                                                        <div x-show="set.completed" class="text-xs text-gray-400">
                                                                             <span x-text="'S' + (setIndex + 1) + ': ' + set.weight + 'kg x ' + set.reps"></span>
                                                                         </div>
                                                                     </template>
                                                                 </div>
                                                             </div>
                                                         </template>
-                                                        <div x-show="getExerciseHistory(muscle, exercise.name, viewedWorkout.routineKey).length === 0" class="text-xs text-gray-500 italic">
-                                                            No hay ejecuciones anteriores de esta misma rutina.
+                                                        
+                                                        <div x-show="getExerciseHistory(muscle, exercise.name, viewedWorkout.routineKey).length === 0" 
+                                                            class="text-xs text-gray-500 italic text-center py-2">
+                                                            No hay ejecuciones anteriores registradas.
                                                         </div>
                                                     </div>
                                                 </div>
@@ -2101,20 +2201,11 @@
                         </template>
                     </div>
                 </div>
+                
                 <div class="flex justify-between space-x-2">
                     <button @click="goBackFromDetails()" 
                             class="flex-1 px-3 py-2 bg-gray-700 rounded text-sm hover:bg-gray-600 transition text-white flex items-center justify-center">
-                        <i class="fas fa-history mr-1"></i> Historial
-                    </button>
-                    
-                    <button @click="useWorkoutAsTemplateFromIndex(viewedWorkoutIndex)" 
-                            class="flex-1 px-3 py-2 bg-green-600 rounded text-sm hover:bg-green-500 transition text-white flex items-center justify-center">
-                        <i class="fas fa-copy mr-1"></i> Plantilla
-                    </button>
-                    
-                    <button @click="deleteSingleWorkout(viewedWorkoutIndex)" 
-                            class="flex-1 px-3 py-2 bg-red-600 rounded text-sm hover:bg-red-500 transition text-white flex items-center justify-center">
-                        <i class="fas fa-trash mr-1"></i> Eliminar
+                        <i class="fas fa-arrow-left mr-1"></i> Volver a la Rutina
                     </button>
                 </div>
             </div>
@@ -2418,6 +2509,7 @@
                 selectedWorkoutsForGroup: [],
                 newWorkoutGroupName: '',
                 editingWorkoutGroup: null,
+                completedSetsState: {},
                 // Variables para la evolución
                 selectedMetric: 'volume',
                 evolutionFilter: 'all',
@@ -2484,6 +2576,7 @@
                     this.loadCustomExercises();
                     this.currentScreen = 'mode-selection';
                     this.currentMode = '';
+                    this.completedSetsState = {};
                        // Corregir workouts sin modo
                     this.fixWorkoutModes();
                     setTimeout(() => {
@@ -2724,20 +2817,32 @@
                     this.currentWorkoutGroup.groupedWorkouts = Object.values(groupedWorkouts);
                     this.currentScreen = 'workout-group-details';
                 },
-
                 getGroupedWorkoutsForGroup() {
-                    if (!this.currentWorkoutGroup || !this.currentWorkoutGroup.groupedWorkouts) {
+                    if (!this.currentWorkoutGroup || !this.currentWorkoutGroup.workouts) {
+                        console.log('No hay workouts en la rutina actual');
                         return [];
                     }
                     
-                    return this.currentWorkoutGroup.groupedWorkouts.map(group => {
-                        // Mejorar la información del grupo con detalles de ejercicios
+                    const groups = this.getRoutineGroupsForWorkoutGroup(this.currentWorkoutGroup);
+                    
+                    // MEJORAR la información del grupo con detalles actualizados
+                    return groups.map(group => {
+                        // Contar workouts válidos en este grupo
+                        const validWorkouts = group.workoutIndices.filter(index => 
+                            index >= 0 && index < this.workoutHistory.length &&
+                            this.workoutHistory[index] &&
+                            this.workoutHistory[index].exercisesData
+                        );
+                        
                         const exercisesList = this.getExercisesListFromWorkout(group.representative);
                         
                         return {
                             ...group,
                             exercisesList: exercisesList,
-                            exerciseCount: exercisesList.length
+                            exerciseCount: exercisesList.length,
+                            // ACTUALIZAR el count con solo workouts válidos
+                            count: validWorkouts.length,
+                            workoutIndices: validWorkouts // Actualizar con índices válidos
                         };
                     });
                 },
@@ -2824,11 +2929,21 @@
                 getRoutineGroupsForWorkoutGroup(workoutGroup) {
                     if (!workoutGroup || !workoutGroup.workouts) return [];
                     
+                    console.log('=== CALCULANDO GRUPOS PARA RUTINA ===');
+                    console.log('Total workouts en rutina:', workoutGroup.workouts.length);
+                    
                     const groups = {};
                     
                     workoutGroup.workouts.forEach(workoutIndex => {
                         if (workoutIndex >= 0 && workoutIndex < this.workoutHistory.length) {
                             const workout = this.workoutHistory[workoutIndex];
+                            
+                            // VALIDACIÓN: Asegurar que el workout tiene datos válidos
+                            if (!workout || !workout.exercisesData || Object.keys(workout.exercisesData).length === 0) {
+                                console.log('❌ Workout inválido omitido:', workoutIndex);
+                                return; // Saltar workouts inválidos
+                            }
+                            
                             const routineKey = workout.routineKey || 'unknown';
                             
                             if (!groups[routineKey]) {
@@ -2848,10 +2963,15 @@
                                     groups[routineKey].latestDate = workout.date;
                                 }
                             }
+                        } else {
+                            console.log('❌ Índice de workout fuera de rango:', workoutIndex);
                         }
                     });
                     
-                    return Object.values(groups);
+                    const result = Object.values(groups);
+                    console.log('Grupos calculados:', result.length);
+                    
+                    return result;
                 },
 
                 // Función para contar rutinas únicas en un grupo
@@ -2862,7 +2982,10 @@
                     workoutGroup.workouts.forEach(workoutIndex => {
                         if (workoutIndex >= 0 && workoutIndex < this.workoutHistory.length) {
                             const workout = this.workoutHistory[workoutIndex];
-                            uniqueRoutines.add(workout.routineKey || 'unknown');
+                            // Solo contar workouts válidos
+                            if (workout && workout.exercisesData && Object.keys(workout.exercisesData).length > 0) {
+                                uniqueRoutines.add(workout.routineKey || 'unknown');
+                            }
                         }
                     });
                     
@@ -2887,32 +3010,71 @@
                 calculateGroupVolume(workoutIndices) {
                     if (!workoutIndices || workoutIndices.length === 0) return 0;
                     
-                    const totalVolume = workoutIndices.reduce((sum, index) => {
-                        if (index >= 0 && index < this.workoutHistory.length) {
-                            return sum + (this.workoutHistory[index].totalVolume || 0);
-                        }
-                        return sum;
+                    const validWorkouts = workoutIndices.filter(index => 
+                        index >= 0 && index < this.workoutHistory.length &&
+                        this.workoutHistory[index]
+                    );
+                    
+                    if (validWorkouts.length === 0) return 0;
+                    
+                    const totalVolume = validWorkouts.reduce((sum, index) => {
+                        const workout = this.workoutHistory[index];
+                        return sum + (workout.totalVolume || 0);
                     }, 0);
                     
-                    return Math.round(totalVolume / workoutIndices.length);
+                    return Math.round(totalVolume / validWorkouts.length);
                 },
                 calculateGroupCompletion(workoutIndices) {
                     if (!workoutIndices || workoutIndices.length === 0) return 0;
                     
-                    let totalCompletion = 0;
-                    let validWorkouts = 0;
+                    const validWorkouts = workoutIndices.filter(index => 
+                        index >= 0 && index < this.workoutHistory.length &&
+                        this.workoutHistory[index]
+                    );
                     
-                    workoutIndices.forEach(index => {
-                        if (index >= 0 && index < this.workoutHistory.length) {
-                            const workout = this.workoutHistory[index];
-                            if (workout.sets > 0) {
-                                totalCompletion += (workout.completedSets / workout.sets) * 100;
-                                validWorkouts++;
-                            }
+                    if (validWorkouts.length === 0) return 0;
+                    
+                    let totalCompletion = 0;
+                    let validWorkoutsCount = 0;
+                    
+                    validWorkouts.forEach(index => {
+                        const workout = this.workoutHistory[index];
+                        if (workout.sets > 0) {
+                            totalCompletion += (workout.completedSets / workout.sets) * 100;
+                            validWorkoutsCount++;
                         }
                     });
                     
-                    return validWorkouts > 0 ? Math.round(totalCompletion / validWorkouts) : 0;
+                    return validWorkoutsCount > 0 ? Math.round(totalCompletion / validWorkoutsCount) : 0;
+                },
+                // Función para forzar la actualización del resumen
+                refreshRoutineSummary() {
+                    console.log('🔄 Actualizando resumen de rutina...');
+                    
+                    if (!this.currentWorkoutGroup) {
+                        console.log('No hay rutina actual para actualizar');
+                        return;
+                    }
+                    
+                    // Buscar la rutina actualizada en workoutGroups
+                    const currentGroupId = this.currentWorkoutGroup.id;
+                    const updatedRoutine = this.workoutGroups.find(g => g.id === currentGroupId);
+                    
+                    if (updatedRoutine) {
+                        // Actualizar la rutina actual con los datos frescos
+                        this.currentWorkoutGroup = JSON.parse(JSON.stringify(updatedRoutine));
+                        
+                        // Forzar recálculo de los grupos
+                        this.$nextTick(() => {
+                            console.log('✅ Resumen de rutina actualizado:', {
+                                nombre: this.currentWorkoutGroup.name,
+                                workouts: this.currentWorkoutGroup.workouts?.length,
+                                últimaModificación: this.currentWorkoutGroup.lastModified
+                            });
+                        });
+                    } else {
+                        console.error('❌ No se pudo encontrar la rutina actualizada:', currentGroupId);
+                    }
                 },
 
                 viewGroupHistory(workoutIndices) {
@@ -3348,6 +3510,38 @@
                         }
                     }
                 },
+                // Función para completar serie con efecto visual
+                completeSetWithVisual(muscle, exercise, setIndex) {
+                    // Ejecutar la función original
+                    this.completeSet(muscle, exercise, setIndex);
+                    
+                    // Marcar como completado visualmente
+                    const key = `${muscle}_${exercise}_${setIndex}`;
+                    if (!this.completedSetsState) {
+                        this.completedSetsState = {};
+                    }
+                    this.completedSetsState[key] = true;
+                },
+                isSetCompletedVisually(muscle, exercise, setIndex) {
+                    const key = `${muscle}_${exercise}_${setIndex}`;
+                    return this.completedSetsState && this.completedSetsState[key] === true;
+                },
+
+                // Obtener clase del botón basado en estado
+                getCompleteButtonClass(muscle, exercise, setIndex) {
+                    const isCompleted = this.isSetCompletedVisually(muscle, exercise, setIndex);
+                    
+                    if (isCompleted) {
+                        return 'bg-blue-700 border-2 border-blue-800 text-white cursor-default';
+                    } else {
+                        return 'bg-green-600 hover:bg-green-500 text-white';
+                    }
+                },
+                // Función para verificar si una serie está completada
+                isSetCompleted(muscle, exercise, setIndex) {
+                    const reps = this.exerciseReps[muscle]?.[exercise]?.[setIndex];
+                    return reps > 0;
+                },
 
                 startRestTimer(muscle, exercise, nextSetIndex, totalSets, timerType = 'set') {
                     console.log('Iniciando temporizador de descanso:', { muscle, exercise, nextSetIndex, totalSets, timerType });
@@ -3693,9 +3887,40 @@
                     console.log('=== GUARDANDO WORKOUT ===');
                     console.log('Orden actual de músculos:', this.selectedMuscles);
 
+                    // VALIDACIÓN CRÍTICA: Verificar que hay datos reales antes de guardar
+                    let hasValidData = false;
+                    let completedSetsCount = 0;
+                    
+                    for (const muscle of this.selectedMuscles) {
+                        for (const ex of this.selectedExercises[muscle] || []) {
+                            const reps = this.exerciseReps[muscle]?.[ex.name] || [];
+                            const completedSets = reps.filter(rep => rep > 0).length;
+                            completedSetsCount += completedSets;
+                            
+                            if (completedSets > 0) {
+                                hasValidData = true;
+                            }
+                        }
+                    }
+                    
+                    console.log('Sets completados encontrados:', completedSetsCount);
+                    console.log('¿Tiene datos válidos?:', hasValidData);
+
+                    // Si no hay datos válidos, preguntar al usuario
+                    if (!hasValidData) {
+                        const userChoice = confirm('⚠️ No hay series completadas en este entrenamiento. ¿Estás seguro de que quieres guardarlo como vacío?');
+                        if (!userChoice) {
+                            console.log('Guardado cancelado por el usuario');
+                            return; // Cancelar guardado si el usuario no confirma
+                        }
+                        console.log('Usuario confirmó guardar workout vacío');
+                    }
+
                     // Guardar el origen ANTES de resetear
                     const originType = this.currentTemplateOrigin.type;
                     const originRoutineId = this.currentTemplateOrigin.routineId;
+
+                    console.log('Origen del workout:', { originType, originRoutineId });
 
                     // Determinar routineKey
                     let finalRoutineKey;
@@ -3748,22 +3973,52 @@
                         }
                     }
 
+                    // VALIDACIÓN FINAL: Verificar que el workout tiene datos coherentes
+                    const isValidWorkout = workout.exercisesData && 
+                                        Object.keys(workout.exercisesData).length > 0 &&
+                                        workout.sets > 0 &&
+                                        workout.exercises > 0;
+                    
+                    if (!isValidWorkout) {
+                        console.error('❌ Workout inválido detectado, cancelando guardado:', {
+                            exercisesData: workout.exercisesData,
+                            sets: workout.sets,
+                            exercises: workout.exercises
+                        });
+                        alert('Error: No se puede guardar un entrenamiento sin ejercicios o series.');
+                        return;
+                    }
+
                     // Añadir al historial
                     const newWorkoutIndex = this.workoutHistory.length;
                     this.workoutHistory.push(workout);
 
                     // Si viene de una rutina, añadirlo automáticamente
+                    let updatedRoutine = null;
                     if (originType === 'routine') {
                         const routine = this.workoutGroups.find(g => g.id === originRoutineId);
                         if (routine) {
                             if (!routine.workouts) routine.workouts = [];
                             routine.workouts.push(newWorkoutIndex);
                             routine.lastModified = new Date().toISOString();
+                            updatedRoutine = routine;
                             console.log('Workout añadido automáticamente a la rutina:', routine.name);
+                        } else {
+                            console.error('❌ Rutina no encontrada:', originRoutineId);
                         }
                     }
 
                     this.saveToLocalStorage();
+
+                    // VERIFICACIÓN POST-GUARDADO
+                    const savedWorkout = this.workoutHistory[newWorkoutIndex];
+                    console.log('✅ Workout guardado - Verificación:', {
+                        index: newWorkoutIndex,
+                        exercises: savedWorkout.exercises,
+                        sets: savedWorkout.sets,
+                        volume: savedWorkout.totalVolume,
+                        completedSets: savedWorkout.completedSets
+                    });
 
                     // Resetear estado
                     this.userLevel = '';
@@ -3773,18 +4028,68 @@
                     this.exerciseReps = {};
                     this.workoutTime = 0;
                     this.currentExercise = { muscle: '', name: '' };
-                    this.currentTemplateOrigin = { type: null, routineId: null, workoutIndex: null };
 
-                    // Navegar según el origen (usando variables guardadas)
-                    if (originType === 'routine') {
-                        this.viewRoutineHistory(originRoutineId);
-                    } else {
-                        this.currentScreen = 'history-manual';
-                    }
+                    // NAVEGACIÓN Y ACTUALIZACIÓN DEL RESUMEN
+                    this.$nextTick(() => {
+                        if (originType === 'routine' && originRoutineId) {
+                            console.log('🔄 Navegando a historial de rutina:', originRoutineId);
+                            
+                            // ACTUALIZAR EL RESUMEN DE LA RUTINA ANTES DE NAVEGAR
+                            if (updatedRoutine) {
+                                // Forzar la actualización de la rutina actual
+                                this.currentWorkoutGroup = JSON.parse(JSON.stringify(updatedRoutine));
+                                console.log('✅ Rutina actual actualizada con nuevo workout');
+                            }
+                            
+                            // Navegar al historial de la rutina
+                            this.viewRoutineHistory(originRoutineId);
+                            
+                            // ACTUALIZACIÓN ADICIONAL PARA GARANTIZAR QUE SE VEA EL CAMBIO
+                            setTimeout(() => {
+                                this.refreshRoutineSummary();
+                            }, 300);
+                            
+                        } else {
+                            console.log('🔄 Navegando a ejercicios sueltos');
+                            this.currentView = {
+                                type: 'all',
+                                routineId: null,
+                                filter: 'current'
+                            };
+                            this.currentScreen = 'history-manual';
+                        }
+                        
+                        // Resetear el origen después de la navegación
+                        this.currentTemplateOrigin = { type: null, routineId: null, workoutIndex: null };
+                    });
 
                     setTimeout(() => {
                         alert('✅ Entrenamiento guardado correctamente con el orden preservado.');
                     }, 100);
+                },
+                // Función para limpiar workouts fantasma existentes
+                cleanupGhostWorkouts() {
+                    const initialCount = this.workoutHistory.length;
+                    
+                    this.workoutHistory = this.workoutHistory.filter(workout => {
+                        const isValid = workout.exercisesData && 
+                                    Object.keys(workout.exercisesData).length > 0 &&
+                                    workout.sets > 0;
+                        
+                        return isValid;
+                    });
+                    
+                    const removedCount = initialCount - this.workoutHistory.length;
+                    
+                    if (removedCount > 0) {
+                        this.saveToLocalStorage();
+                        console.log(`🧹 Limpiados ${removedCount} workouts fantasma`);
+                        alert(`Se eliminaron ${removedCount} entrenamientos vacíos o corruptos.`);
+                    } else {
+                        console.log('✅ No se encontraron workouts fantasma');
+                    }
+                    
+                    return removedCount;
                 },
                 // Función para verificar que todos los workouts de una rutina tienen la misma routineKey
                 verifyRoutineConsistency(routineId) {
@@ -4160,9 +4465,46 @@
                         console.log('Workouts en rutina específica:', baseWorkouts.length);
                     }
 
-                    // 3. Agrupar por routineKey para mostrar solo uno por grupo
+                    // 3. FILTRAR WORKOUTS FANTASMA O VACÍOS
+                    const validWorkouts = baseWorkouts.filter(workout => {
+                        // Verificar que el workout tenga datos válidos
+                        const hasExercisesData = workout.exercisesData && 
+                                                Object.keys(workout.exercisesData).length > 0;
+                        
+                        const hasValidSets = workout.sets > 0;
+                        const hasValidExercises = workout.exercises > 0;
+                        const hasValidVolume = workout.totalVolume >= 0; // Permitir 0 pero no undefined/null
+                        
+                        const isValid = hasExercisesData && hasValidSets && hasValidExercises && hasValidVolume;
+                        
+                        if (!isValid) {
+                            console.log('❌ Workout excluido por datos inválidos:', {
+                                originalIndex: workout.originalIndex,
+                                date: workout.date,
+                                hasExercisesData: hasExercisesData,
+                                sets: workout.sets,
+                                exercises: workout.exercises,
+                                volume: workout.totalVolume,
+                                exercisesDataKeys: workout.exercisesData ? Object.keys(workout.exercisesData) : 'none'
+                            });
+                        } else {
+                            console.log('✅ Workout válido:', {
+                                originalIndex: workout.originalIndex,
+                                date: workout.date,
+                                exercises: workout.exercises,
+                                sets: workout.sets,
+                                volume: workout.totalVolume
+                            });
+                        }
+                        
+                        return isValid;
+                    });
+                    
+                    console.log(`Workouts después de filtrar fantasma: ${validWorkouts.length} de ${baseWorkouts.length}`);
+
+                    // 4. Agrupar por routineKey para mostrar solo uno por grupo
                     const groups = {};
-                    baseWorkouts.forEach(workout => {
+                    validWorkouts.forEach(workout => {
                         const key = workout.routineKey || 'unknown';
                         if (!groups[key]) {
                             groups[key] = {
@@ -4189,8 +4531,37 @@
                         groupCount: g.count
                     }));
 
-                    console.log('Resultado final:', result.length, 'grupos');
+                    console.log('Resultado final:', result.length, 'grupos válidos');
+                    
+                    // Log detallado de los resultados
+                    result.forEach((workout, index) => {
+                        console.log(`Grupo ${index + 1}:`, {
+                            routineKey: workout.routineKey,
+                            date: workout.date,
+                            exercises: workout.exercises,
+                            sets: workout.sets,
+                            volume: workout.totalVolume,
+                            groupCount: workout.groupCount
+                        });
+                    });
+                    
                     return result;
+                },
+                // Función para ver el historial de una rutina específica
+                viewRoutineHistory(routineId) {
+                    console.log('Navegando al historial de rutina:', routineId);
+                    
+                    // Establecer la vista actual como la rutina específica
+                    this.currentView = {
+                        type: 'routine',
+                        routineId: routineId,
+                        filter: 'current'
+                    };
+                    
+                    // Navegar al historial manual (que ahora filtrará por rutina)
+                    this.currentScreen = 'history-manual';
+                    
+                    console.log('Vista configurada:', this.currentView);
                 },
                 // AÑADIR esta función auxiliar
                 isWorkoutInAnyRoutine(workoutIndex) {
@@ -4338,25 +4709,140 @@
                     }
                 },
 
-                // ACTUALIZAR la función useWorkoutAsTemplateFromIndex
+                // Función para obtener orden por defecto si no existe
+                getDefaultOrderFromWorkout(workout) {
+                    if (!workout || !workout.exercisesData) return [];
+                    
+                    // Si no hay orden guardado, usar las claves de exercisesData
+                    return Object.keys(workout.exercisesData);
+                },
+
+                // Función para obtener color por índice (para numeración)
+                getMuscleColorByIndex(index) {
+                    const colors = [
+                        'bg-red-500', 'bg-blue-500', 'bg-green-500', 'bg-yellow-500',
+                        'bg-purple-500', 'bg-orange-500', 'bg-pink-500', 'bg-indigo-500'
+                    ];
+                    return colors[index % colors.length];
+                },
+
+                // Función mejorada para usar workout como plantilla
                 useWorkoutAsTemplateFromIndex(originalIndex) {
-                    console.log('Usando plantilla del workout con índice:', originalIndex);
+                    console.log('=== USANDO WORKOUT COMO PLANTILLA - VERSIÓN MEJORADA ===');
                     
                     if (originalIndex >= 0 && originalIndex < this.workoutHistory.length) {
-                        this.viewedWorkout = { ...this.workoutHistory[originalIndex] };
+                        const workout = this.workoutHistory[originalIndex];
+                        this.viewedWorkout = { ...workout };
                         
                         // DETERMINAR SI VIENE DE RUTINA O EJERCICIO SUELTO
                         const routineOrigin = this.findWorkoutRoutineOrigin(originalIndex);
                         this.currentTemplateOrigin = routineOrigin;
                         
                         console.log('Origen de la plantilla:', this.currentTemplateOrigin);
+                        console.log('Orden en workout original:', workout.order);
+                        console.log('ExercisesData keys:', workout.exercisesData ? Object.keys(workout.exercisesData) : 'none');
                         
-                        // USAR LA FUNCIÓN ACTUALIZADA QUE INCLUYE LOS PESOS DE REFERENCIA
-                        this.useWorkoutAsTemplate();
+                        // USAR LA FUNCIÓN ACTUALIZADA QUE PRESERVA EL ORDEN
+                        this.useWorkoutAsTemplateWithOrder();
                     } else {
                         console.error('Índice inválido para plantilla:', originalIndex);
                         alert('Error: No se pudo cargar la plantilla del entrenamiento.');
                     }
+                },
+
+                // Función mejorada que preserva el orden al usar plantilla
+                useWorkoutAsTemplateWithOrder() {
+                    console.log('=== CARGANDO PLANTILLA CON ORDEN PRESERVADO ===');
+                    
+                    if (!this.viewedWorkout || !this.viewedWorkout.exercisesData) {
+                        alert('No hay un workout cargado para usar como plantilla.');
+                        return;
+                    }
+
+                    const workout = JSON.parse(JSON.stringify(this.viewedWorkout)); // clone seguro
+
+                    // Nivel (si viene)
+                    if (workout.level) this.userLevel = workout.level;
+
+                    // ORDEN CRÍTICO: Usar workout.order si existe, si no usar orden por defecto
+                    const muscleOrder = Array.isArray(workout.order) && workout.order.length > 0
+                        ? workout.order.slice() // PRESERVAR ORDEN ORIGINAL
+                        : Object.keys(workout.exercisesData || []); // Orden por defecto
+
+                    console.log('Orden de músculos a cargar:', muscleOrder);
+
+                    // Asignar selectedMuscles RESPETANDO EL ORDEN ORIGINAL
+                    this.selectedMuscles = muscleOrder.slice();
+
+                    // Construir selectedExercises preservando estructura y orden
+                    this.selectedExercises = {};
+                    this.exerciseWeights = {};
+                    this.exerciseReps = {};
+                    
+                    muscleOrder.forEach(muscleKey => {
+                        const muscleExercises = workout.exercisesData && workout.exercisesData[muscleKey] ? workout.exercisesData[muscleKey] : [];
+                        this.selectedExercises[muscleKey] = muscleExercises.map(ex => {
+                            if (typeof ex === 'string') {
+                                return { 
+                                    name: ex, 
+                                    sets: this.seriesLimits[this.userLevel]?.min || 3,
+                                    completed: 0
+                                };
+                            }
+                            // Si ya es objeto, clonar y resetear estado de completado
+                            return {
+                                name: ex.name,
+                                sets: ex.sets || this.seriesLimits[this.userLevel]?.min || 3,
+                                completed: 0 // Resetear a 0
+                            };
+                        });
+
+                        // Inicializar arrays de pesos y reps CON LOS DATOS DE REFERENCIA
+                        this.exerciseWeights[muscleKey] = {};
+                        this.exerciseReps[muscleKey] = {};
+                        
+                        this.selectedExercises[muscleKey].forEach(ex => {
+                            const maxSets = this.seriesLimits[this.userLevel]?.max || 5;
+                            
+                            // Buscar los datos del ejercicio en el workout de referencia
+                            const referenceExercise = muscleExercises.find(e => e.name === ex.name);
+                            
+                            if (referenceExercise && referenceExercise.setsData) {
+                                // Cargar pesos y reps de la sesión anterior
+                                this.exerciseWeights[muscleKey][ex.name] = Array.from({length: maxSets}, (_, i) => {
+                                    return referenceExercise.setsData[i]?.weight || 0;
+                                });
+                                
+                                this.exerciseReps[muscleKey][ex.name] = Array.from({length: maxSets}, (_, i) => {
+                                    return referenceExercise.setsData[i]?.reps || 0;
+                                });
+                                
+                                console.log(`Cargados datos para ${ex.name}:`, {
+                                    weights: this.exerciseWeights[muscleKey][ex.name],
+                                    reps: this.exerciseReps[muscleKey][ex.name]
+                                });
+                            } else {
+                                // Si no hay datos anteriores, inicializar en 0
+                                this.exerciseWeights[muscleKey][ex.name] = Array.from({length: maxSets}, () => 0);
+                                this.exerciseReps[muscleKey][ex.name] = Array.from({length: maxSets}, () => 0);
+                            }
+                        });
+                    });
+
+                    // Forzar reactividad
+                    this.selectedMuscles = [...this.selectedMuscles];
+                    this.selectedExercises = JSON.parse(JSON.stringify(this.selectedExercises));
+
+                    console.log('✅ Plantilla cargada con orden:', this.selectedMuscles);
+
+                    // INICIAR DIRECTAMENTE EL ENTRENAMIENTO
+                    console.log('Plantilla cargada, iniciando entrenamiento...');
+                    this.startWorkout();
+
+                    this.$nextTick(() => {
+                        console.log('Entrenamiento iniciado desde plantilla. Orden final:', this.selectedMuscles);
+                        alert('✅ Plantilla cargada correctamente. ¡Se ha preservado el orden original y precargado los pesos!');
+                    });
                 },
                 // MEJORAR la función deleteSingleWorkout
                 deleteSingleWorkout(originalIndex) {
@@ -5165,37 +5651,24 @@
                     }
                 },
                 // REEMPLAZAR la función goBackFromDetails
+                // Función para volver desde detalles - VERSIÓN SIMPLIFICADA
                 goBackFromDetails() {
-                    console.log('Volviendo desde detalles. Contexto:', this.lastViewContext);
+                    console.log('Volviendo desde detalles a rutina');
                     
+                    // SIEMPRE volver a la rutina cuando estamos en contexto de rutina
                     if (this.lastViewContext && this.lastViewContext.isRoutine) {
-                        // FLUJO RUTINA: Volver a donde veníamos en el contexto de rutina
-                        if (this.lastViewContext.screen === 'workout-group-details') {
-                            // Volver al detalle de rutina específica
-                            this.currentScreen = 'workout-group-details';
-                            console.log('Volviendo a detalle de rutina');
-                        } else {
-                            // Volver al historial de la rutina específica
-                            this.currentView = {
-                                type: 'routine',
-                                routineId: this.lastViewContext.routineId,
-                                filter: 'current'
-                            };
-                            this.currentScreen = 'history-manual';
-                            console.log('Volviendo a historial de rutina');
-                        }
+                        this.currentScreen = 'workout-group-details';
                     } else {
-                        // FLUJO EJERCICIOS SUELTOS: Volver al historial general
+                        // Fallback: volver al historial general
                         this.currentView = {
                             type: 'all',
                             routineId: null,
                             filter: 'current'
                         };
                         this.currentScreen = 'history-manual';
-                        console.log('Volviendo a ejercicios sueltos');
                     }
                     
-                    // Limpiar el contexto después de usarlo
+                    // Limpiar el contexto
                     this.lastViewContext = null;
                 },
 
@@ -5716,29 +6189,84 @@
                         return firstMuscles.join(" + ") + ` + ${muscles.length - 2} más`;
                     }
                 },
+                // Función CORREGIDA para obtener historial de ejercicios (orden correcto)
                 getExerciseHistory(muscle, exerciseName, currentRoutineKey) {
+                    console.log('=== OBTENIENDO HISTORIAL DE EJERCICIO ===');
+                    console.log('Parámetros:', { muscle, exerciseName, currentRoutineKey });
+                    
                     const history = [];
-                    for (const workout of this.workoutHistory) {
-                        if (workout.date === this.viewedWorkout.date) continue;
-                        if (this.getRoutineKey(workout) !== currentRoutineKey) continue;
-                        if (workout.exercisesData[muscle]) {
+                    const currentWorkoutDate = this.viewedWorkout ? new Date(this.viewedWorkout.date) : null;
+                    
+                    // Recorrer todos los workouts en orden inverso (más reciente primero)
+                    for (let i = this.workoutHistory.length - 1; i >= 0; i--) {
+                        const workout = this.workoutHistory[i];
+                        
+                        // Saltar el workout actual que estamos viendo
+                        if (currentWorkoutDate && new Date(workout.date).getTime() === currentWorkoutDate.getTime()) {
+                            continue;
+                        }
+                        
+                        // Filtrar por routineKey si se especifica
+                        if (currentRoutineKey && workout.routineKey !== currentRoutineKey) {
+                            continue;
+                        }
+                        
+                        // Buscar el ejercicio en el workout
+                        if (workout.exercisesData && workout.exercisesData[muscle]) {
                             for (const exercise of workout.exercisesData[muscle]) {
                                 if (exercise.name === exerciseName) {
                                     history.push({
                                         date: workout.date,
                                         volume: exercise.volume,
                                         setsData: exercise.setsData,
-                                        workoutDate: workout.date
+                                        workoutDate: workout.date,
+                                        workoutIndex: i
                                     });
+                                    break; // Solo un ejercicio por workout
+                                }
+                            }
+                        }
+                        
+                        // Limitar a 3 ejecuciones anteriores máximo
+                        if (history.length >= 3) {
+                            break;
+                        }
+                    }
+                    
+                    console.log(`Historial encontrado: ${history.length} ejecuciones anteriores`);
+                    
+                    // Ya están en orden descendente (más reciente primero) por el loop inverso
+                    return history;
+                },
+                // Función CORREGIDA para contar ejecuciones anteriores
+                getExerciseHistoryCount(muscle, exerciseName, routineKey) {
+                    const currentWorkoutDate = this.viewedWorkout ? new Date(this.viewedWorkout.date) : null;
+                    let count = 0;
+                    
+                    for (let i = this.workoutHistory.length - 1; i >= 0; i--) {
+                        const workout = this.workoutHistory[i];
+                        
+                        // Saltar el workout actual
+                        if (currentWorkoutDate && new Date(workout.date).getTime() === currentWorkoutDate.getTime()) {
+                            continue;
+                        }
+                        
+                        // Filtrar por routineKey si se especifica
+                        if (routineKey && workout.routineKey !== routineKey) {
+                            continue;
+                        }
+                        
+                        if (workout.exercisesData && workout.exercisesData[muscle]) {
+                            for (const exercise of workout.exercisesData[muscle]) {
+                                if (exercise.name === exerciseName) {
+                                    count++;
                                     break;
                                 }
                             }
                         }
                     }
-                    return history.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 3);
-                },
-                getExerciseHistoryCount(muscle, exerciseName, routineKey) {
-                    return this.getExerciseHistory(muscle, exerciseName, routineKey).length;
+                    
+                    return count;
                 },
 
                 // ==================================================
