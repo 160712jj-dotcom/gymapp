@@ -785,11 +785,7 @@
     <main x-data="gymApp()" x-init="init()">
         <!-- Pantalla de selección de modo -->
         <div x-show="currentScreen === 'mode-selection'" x-transition:enter.duration.300 class="container mx-auto px-4 py-8 max-w-6xl">
-                <!-- BOTÓN VOLVER AL INICIO PRINCIPAL - NUEVO -->
             <div class="flex justify-start mb-6">
-                <button onclick="window.location.href = '../index.html'" class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition flex items-center">
-                    <i class="fas fa-home mr-2"></i> Volver al Inicio Principal
-                </button>
             </div>
             <!-- Botón flotante de menú avanzado -->
             <div class="fixed bottom-6 right-6 z-50">
@@ -875,31 +871,32 @@
                     </div>
                 </div>
             </div>
+            <!-- BOTÓN VOLVER AL INICIO PRINCIPAL EN LA PARTE INFERIOR - NUEVO -->
+            <div class="flex justify-center mt-10 pt-6 border-t border-gray-700">
+                <button onclick="window.location.href = '../index.html'" 
+                        class="px-6 py-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition flex items-center text-lg font-medium">
+                    <i class="fas fa-home mr-3"></i> Volver al Inicio Principal
+                </button>
+            </div>
         </div>
-
 
         <!-- ================================================== -->
         <!-- PANTALLA DE SELECCIÓN DE TIPO DE HISTORIAL - COMPLETA -->
         <!-- ================================================== -->
         <div x-show="currentScreen === 'history-selection'" x-transition:enter.duration.300 x-transition:leave.duration.300>
-            <div class="flex justify-between items-center mb-6">
-                <div>
-                    <h2 class="text-2xl font-bold mb-2 text-white">Recuperar Historial</h2>
-                    <p class="text-gray-400">¿Qué tipo de historial quieres ver?</p>
-                </div>
-                <button @click="currentScreen = 'mode-selection'" class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition flex items-center">
-                    <i class="fas fa-arrow-left mr-2"></i> Volver
-                </button>
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold mb-2 text-white">Recuperar de Historial</h2>
+                <p class="text-gray-400">¿Qué tipo de historial quieres ver?</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-10">
                 <!-- Ejercicios Sueltos -->
                 <div class="level-card bg-gray-700 p-6 md:p-8 rounded-xl cursor-pointer transition-all duration-300 hover:transform hover:scale-105 border-2 border-blue-500"
                     @click="viewAllHistory()">
                     <div class="text-5xl mb-5 text-blue-400"><i class="fas fa-dumbbell"></i></div>
-                    <h3 class="text-xl font-semibold mb-3 text-white">Ejercicios Sueltos</h3>
+                    <h3 class="text-xl font-semibold mb-3 text-white">Ejercicios en Ejecución</h3>
                     <div class="text-sm text-blue-300 flex items-center">
-                        <i class="fas fa-check-circle mr-2"></i> Ver historial completo de ejercicios sueltos
+                        <i class="fas fa-check-circle mr-2"></i> Ver historial completo de ejercicios en ejecución
                     </div>
                 </div>
                 
@@ -907,43 +904,37 @@
                 <div class="level-card bg-gray-700 p-6 md:p-8 rounded-xl cursor-pointer transition-all duration-300 hover:transform hover:scale-105 border-2 border-green-500"
                     @click="currentScreen = 'workout-groups'">
                     <div class="text-5xl mb-5 text-green-400"><i class="fas fa-layer-group"></i></div>
-                    <h3 class="text-xl font-semibold mb-3 text-white">Rutinas de Trabajo</h3>
+                    <h3 class="text-xl font-semibold mb-3 text-white">Rutinas Guardadas</h3>
                     <div class="text-sm text-green-300 flex items-center">
                         <i class="fas fa-check-circle mr-2"></i> Rutinas guardadas
                     </div>
                 </div>
             </div>
+
+            <!-- BOTÓN VOLVER EN LA PARTE INFERIOR CENTRADO - NUEVA POSICIÓN -->
+            <div class="flex justify-center mt-8 pt-6 border-t border-gray-700">
+                <button @click="currentScreen = 'mode-selection'" 
+                        class="px-6 py-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition flex items-center text-lg font-medium">
+                    <i class="fas fa-arrow-left mr-3"></i> Volver
+                </button>
+            </div>
         </div>
 
         <!-- Pantalla de grupos de trabajo -->
         <div x-show="currentScreen === 'workout-groups'" x-transition:enter.duration.300 x-transition:leave.duration.300>
-            <div class="flex justify-between items-center mb-6">
+            <!-- Encabezado simplificado -->
+            <div class="mb-6">
                 <div>
                     <h2 class="text-2xl font-bold mb-2 text-white">Grupos de Trabajo</h2>
                     <p class="text-gray-400" x-text="editingWorkoutGroup ? 'Modo edición - ' + editingWorkoutGroup.name : 'Rutinas semanales agrupadas'"></p>
-                </div>
-                <div class="flex space-x-2">
-                    <button @click="currentScreen = 'history-selection'" 
-                            class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition">
-                        <i class="fas fa-arrow-left mr-2"></i> Volver
-                    </button>
-                    <button @click="openCreateWorkoutGroupModal()" 
-                            class="px-4 py-2 bg-green-600 rounded-lg hover:bg-green-500 transition"
-                            :disabled="editingWorkoutGroup">
-                        <i class="fas fa-plus mr-2"></i> Nueva Rutina
-                    </button>
                 </div>
             </div>
 
             <div class="bg-gray-800 rounded-2xl shadow-xl p-6">
                 <div class="text-center py-10" x-show="workoutGroups.length === 0">
                     <div class="text-5xl mb-4 text-gray-500"><i class="fas fa-layer-group"></i></div>
-                    <h3 class="text-xl font-semibold mb-2 text-white">No hay grupos de trabajo</h3>
-                    <p class="text-gray-400 mb-4">Crea tu primer grupo de trabajo desde el historial de ejercicios sueltos.</p>
-                    <button @click="openCreateWorkoutGroupModal()" 
-                            class="px-4 py-2 bg-green-600 rounded-lg hover:bg-green-500 transition">
-                        <i class="fas fa-plus mr-2"></i> Nueva Rutina
-                    </button>
+                    <h3 class="text-xl font-semibold mb-2 text-white">No hay rutinas guardadas</h3>
+                    <p class="text-gray-400 mb-4">Crea tu primera rutina desde el historial de ejercicios.</p>
                 </div>
 
                 <!-- LISTA DE RUTINAS AGRUPADAS POR TIPO DE ENTRENAMIENTO -->
@@ -1016,8 +1007,21 @@
                     </template>
                 </div>
             </div>
+
+            <!-- BOTONES VOLVER Y NUEVA RUTINA EN LA PARTE INFERIOR CENTRADOS - NUEVA POSICIÓN -->
+            <div class="flex justify-center gap-4 mt-10 pt-6 border-t border-gray-700">
+                <button @click="currentScreen = 'history-selection'" 
+                        class="px-6 py-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition flex items-center text-lg font-medium">
+                    <i class="fas fa-arrow-left mr-3"></i> Volver
+                </button>
+                
+                <button @click="openCreateWorkoutGroupModal()" 
+                        class="px-6 py-3 bg-green-600 rounded-lg hover:bg-green-500 transition flex items-center text-lg font-medium"
+                        :disabled="editingWorkoutGroup">
+                    <i class="fas fa-plus mr-3"></i> Nueva Rutina
+                </button>
+            </div>
         </div> 
-        <!-- Pantalla de detalles de rutina de trabajo -->
         <!-- Pantalla de detalles de rutina de trabajo -->
         <div x-show="currentScreen === 'workout-group-details'" x-transition:enter.duration.300 x-transition:leave.duration.300>
             <!-- Encabezado simplificado -->
@@ -1242,14 +1246,12 @@
 
             <!-- Pantalla de selección de nivel (MODO MANUAL) -->
             <div x-show="currentScreen === 'level'" x-transition:enter.duration.300 x-transition:leave.duration.300 class="text-center">
-                <!-- Botón para volver a la selección de modo -->
-                <div class="flex justify-start mb-6">
-                    <button @click="currentScreen = 'mode-selection'" class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition flex items-center">
-                        <i class="fas fa-arrow-left mr-2"></i> Volver
-                    </button>
-                </div>
+                <!-- ELIMINADO el botón Volver de la parte superior -->
+                
                 <h2 class="text-2xl font-bold mb-2">Selecciona tu nivel de experiencia</h2>
                 <p class="text-gray-400 mb-8">Basado en el volumen de entrenamiento recomendado por la ciencia</p>
+                
+                <!-- Grid de niveles -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8 md:mb-10">
                     <!-- Principiante -->
                     <div class="level-card bg-gray-700 p-4 md:p-6 rounded-xl cursor-pointer transition-all duration-300 hover:transform hover:scale-105 border-2"
@@ -1290,17 +1292,27 @@
                         </div>
                     </div>
                 </div>
+                
                 <!-- Mensaje de selección automática -->
                 <div x-show="userLevel" class="fade-in mb-4">
                     <p class="text-blue-400"><i class="fas fa-info-circle mr-2"></i> Nivel seleccionado: <span x-text="levelLabels[userLevel]"></span></p>
                     <p class="text-gray-400 text-sm mt-1">Redirigiendo a selección de músculos...</p>
                 </div>
+                
                 <!-- Botón de continuar (solo como respaldo) -->
                 <button @click="currentScreen = 'muscles'" 
-                        class="px-6 md:px-8 py-3 bg-blue-600 rounded-lg text-lg font-semibold hover:bg-blue-500 transition"
+                        class="px-6 md:px-8 py-3 bg-blue-600 rounded-lg text-lg font-semibold hover:bg-blue-500 transition mb-6"
                         x-show="userLevel">
                     Continuar ahora <i class="fas fa-arrow-right ml-2"></i>
                 </button>
+                
+                <!-- BOTÓN VOLVER EN LA PARTE INFERIOR CENTRADO - NUEVA POSICIÓN -->
+                <div class="flex justify-center mt-8 pt-6 border-t border-gray-700">
+                    <button @click="currentScreen = 'mode-selection'" 
+                            class="px-6 py-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition flex items-center text-lg font-medium">
+                        <i class="fas fa-arrow-left mr-3"></i> Volver
+                    </button>
+                </div>
             </div>
 
             <!-- Pantalla de selección de músculos -->
@@ -1873,32 +1885,38 @@
                                     <div class="h-2 rounded-full progress-bar bg-blue-500" 
                                         :style="'width: ' + (getMuscleCompletedSets(muscle) / getMuscleTotalSets(muscle) * 100) + '%'"></div>
                                 </div>
-                            </div>
-                        </template>
-                    </div>
-                </div>
-
-                <!-- Detalles de ejercicios -->
-                <div class="bg-gray-700 rounded-xl p-4 md:p-5 mb-6">
-                    <h3 class="text-lg font-semibold mb-4 flex items-center text-white">
-                        <i class="fas fa-dumbbell mr-2 text-green-400"></i> Ejercicios Realizados
-                    </h3>
-                    <div class="space-y-3">
-                        <template x-for="muscle in selectedMuscles" :key="muscle">
-                            <template x-for="exercise in selectedExercises[muscle]" :key="exercise.name">
-                                <div class="bg-gray-800 p-3 rounded-lg">
-                                    <div class="flex justify-between items-center">
-                                        <div>
-                                            <h4 class="font-semibold text-white wrap-text" x-text="exercise.name"></h4>
-                                            <div class="text-sm text-gray-400" x-text="muscleGroups.find(m => m.key === muscle).label"></div>
-                                        </div>
-                                        <div class="text-right">
-                                            <div class="text-sm text-green-400" x-text="exercise.completed + '/' + exercise.sets + ' series'"></div>
-                                            <div class="text-sm text-blue-400" x-text="calculateExerciseVolume(muscle, exercise.name) + ' kg'"></div>
-                                        </div>
+                                
+                                <!-- CUADROS DE ESTADÍSTICAS EN ORDEN SOLICITADO -->
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
+                                    <!-- 1. Ejecuciones completas de los ejercicios -->
+                                    <div class="bg-gray-800 p-3 rounded text-center">
+                                        <div class="text-xl font-bold text-green-400" 
+                                            x-text="getMuscleCompletedExercises(muscle)"></div>
+                                        <div class="text-xs text-gray-400">Ejecuciones Completas</div>
+                                    </div>
+                                    
+                                    <!-- 2. Número de ejercicios -->
+                                    <div class="bg-gray-800 p-3 rounded text-center">
+                                        <div class="text-xl font-bold text-white" 
+                                            x-text="selectedExercises[muscle]?.length || 0"></div>
+                                        <div class="text-xs text-gray-400">Número de Ejercicios</div>
+                                    </div>
+                                    
+                                    <!-- 3. Series que lo forman -->
+                                    <div class="bg-gray-800 p-3 rounded text-center">
+                                        <div class="text-xl font-bold text-blue-400" 
+                                            x-text="getMuscleTotalSets(muscle)"></div>
+                                        <div class="text-xs text-gray-400">Series Totales</div>
+                                    </div>
+                                    
+                                    <!-- 4. Volumen -->
+                                    <div class="bg-gray-800 p-3 rounded text-center">
+                                        <div class="text-xl font-bold text-yellow-400" 
+                                            x-text="calculateMuscleVolume(muscle) + ' kg'"></div>
+                                        <div class="text-xs text-gray-400">Volumen Total</div>
                                     </div>
                                 </div>
-                            </template>
+                            </div>
                         </template>
                     </div>
                 </div>
@@ -1923,25 +1941,7 @@
                             'Ejercicios que no pertenecen a rutinas' : 
                             'Entrenamientos de esta rutina'"></p>
                     </div>
-                    <div class="flex space-x-2">
-                        <!-- Botón para volver según el contexto -->
-                        <template x-if="currentView.type === 'all'">
-                            <button @click="currentScreen = 'history-selection'" class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition">
-                                <i class="fas fa-arrow-left mr-2"></i> Volver
-                            </button>
-                        </template>
-                        <template x-if="currentView.type === 'routine'">
-                            <button @click="currentScreen = 'workout-group-details'" class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition">
-                                <i class="fas fa-arrow-left mr-2"></i> Volver a Rutina
-                            </button>
-                        </template>
-                    
-                        <button @click="viewEvolution()" class="px-4 py-2 bg-purple-600 rounded-lg hover:bg-purple-500 transition">
-                            <i class="fas fa-chart-line mr-2"></i> Evolución
-                        </button>
-                    </div>
                 </div>
-
                 <!-- Lista de entrenamientos filtrados -->
                 <div class="space-y-4 mb-8" x-show="getFilteredWorkouts().length > 0">
                     <template x-for="(workout, index) in getFilteredWorkouts()" :key="index">
@@ -1972,18 +1972,25 @@
                             </div>
                             
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                                <!-- 1. Repeticiones -->
+                                <div class="bg-gray-800 p-2 rounded text-center">
+                                    <div class="font-bold text-yellow-400" x-text="calculateTotalReps(workout)"></div>
+                                    <div class="text-xs text-gray-400">Repeticiones</div>
+                                </div>
+                                
+                                <!-- 2. Ejercicios -->
                                 <div class="bg-gray-800 p-2 rounded text-center">
                                     <div class="font-bold text-white" x-text="workout.exercises"></div>
                                     <div class="text-xs text-gray-400">Ejercicios</div>
                                 </div>
+                                
+                                <!-- 3. Series -->
                                 <div class="bg-gray-800 p-2 rounded text-center">
                                     <div class="font-bold text-white" x-text="workout.sets"></div>
                                     <div class="text-xs text-gray-400">Series</div>
                                 </div>
-                                <div class="bg-gray-800 p-2 rounded text-center">
-                                    <div class="font-bold text-green-400" x-text="workout.completedSets"></div>
-                                    <div class="text-xs text-gray-400">Completadas</div>
-                                </div>
+                                
+                                <!-- 4. Volumen -->
                                 <div class="bg-gray-800 p-2 rounded text-center">
                                     <div class="font-bold text-blue-400" x-text="workout.totalVolume + ' kg'"></div>
                                     <div class="text-xs text-gray-400">Volumen</div>
@@ -2077,6 +2084,23 @@
                             </div>
                         </div>
                     </template>
+                </div>
+            <div class="flex space-x-2">
+                    <!-- Botón para volver según el contexto -->
+                    <template x-if="currentView.type === 'all'">
+                        <button @click="currentScreen = 'history-selection'" class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition">
+                            <i class="fas fa-arrow-left mr-2"></i> Volver
+                        </button>
+                    </template>
+                    <template x-if="currentView.type === 'routine'">
+                        <button @click="currentScreen = 'workout-group-details'" class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition">
+                            <i class="fas fa-arrow-left mr-2"></i> Volver a Rutina
+                        </button>
+                    </template>
+                
+                    <button @click="viewEvolution()" class="px-4 py-2 bg-purple-600 rounded-lg hover:bg-purple-500 transition">
+                        <i class="fas fa-chart-line mr-2"></i> Evolución
+                    </button>
                 </div>
             </div>
             
@@ -3127,19 +3151,19 @@
                     }
                     return false;
                 },
-                // AÑADIR función para calcular total de workouts en grupos seleccionados
-                calculateTotalWorkoutsInSelectedGroups() {
-                    let total = 0;
-                    const grouped = this.getGroupedManualWorkouts();
+                calculateTotalReps(workout) {
+                    if (!workout || !workout.routineKey) return 1;
+    
+                    const routineKey = workout.routineKey;
+                    let count = 0;
                     
-                    this.selectedGroupsForWorkoutGroup.forEach(key => {
-                        const group = grouped.find(g => g.routineKey === key);
-                        if (group && group.allWorkouts) {
-                            total += group.allWorkouts.length;
+                    this.workoutHistory.forEach(w => {
+                        if (w.routineKey === routineKey) {
+                            count++;
                         }
                     });
                     
-                    return total;
+                    return count;
                 },
 
                 // ==================================================
@@ -3774,6 +3798,18 @@
                         const completedSets = this.exerciseReps[muscle][exercise].filter(reps => reps > 0).length;
                         ex.completed = completedSets;
                     }
+                },
+                getMuscleCompletedExercises(muscle) {
+                    if (!this.selectedExercises[muscle]) return 0;
+                    
+                    let completedCount = 0;
+                    this.selectedExercises[muscle].forEach(exercise => {
+                        if (exercise.completed === exercise.sets && exercise.completed > 0) {
+                            completedCount++;
+                        }
+                    });
+                    
+                    return completedCount;
                 },
 
                 // ==================================================
