@@ -6132,47 +6132,185 @@
                 toggleAdvancedMenu() {
                     this.showAdvancedMenu = !this.showAdvancedMenu;
                 },
+                // REEMPLAZAR la función exportData con esta versión corregida
                 exportData() {
-                    const data = {
-                        workoutHistory: this.workoutHistory,
-                        exportDate: new Date().toISOString()
-                    };
-                    const dataStr = JSON.stringify(data, null, 2);
-                    const dataUri = 'application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-                    const exportFileDefaultName = `gymapp_backup_${new Date().toISOString().slice(0,10)}.json`;
-                    const linkElement = document.createElement('a');
-                    linkElement.setAttribute('href', dataUri);
-                    linkElement.setAttribute('download', exportFileDefaultName);
-                    linkElement.click();
-                    this.showAdvancedMenu = false;
-                },
-                importData() {
-                    const input = document.createElement('input');
-                    input.type = 'file';
-                    input.accept = '.json';
-                    input.onchange = e => {
-                        const file = e.target.files[0];
-                        const reader = new FileReader();
-                        reader.onload = event => {
-                            try {
-                                const data = JSON.parse(event.target.result);
-                                if (data.workoutHistory) {
-                                    if (confirm('¿Estás seguro de que quieres importar estos datos? Se reemplazará tu historial actual.')) {
-                                        this.workoutHistory = data.workoutHistory;
-                                        this.saveToLocalStorage();
-                                        alert('Datos importados correctamente.');
-                                    }
-                                } else {
-                                    alert('El archivo no contiene datos válidos de GymApp.');
-                                }
-                            } catch (err) {
-                                alert('Error al importar el archivo: ' + err.message);
+                    try {
+                        console.log('=== EXPORTANDO DATOS ===');
+                        
+                        // Preparar todos los datos para exportar
+                        const exportData = {
+                            workoutHistory: this.workoutHistory,
+                            workoutGroups: this.workoutGroups,
+                            customExercises: {
+                                exercises: this.exercisesByMuscle,
+                                customMuscles: this.customMuscles,
+                                muscleGroups: this.muscleGroups
+                            },
+                            userPreferences: {
+                                userLevel: this.userLevel,
+                                soundEnabled: this.soundEnabled,
+                                restTimerConfig: this.restTimerConfig
+                            },
+                            exportInfo: {
+                                version: '1.0',
+                                exportDate: new Date().toISOString(),
+                                totalWorkouts: this.workoutHistory.length,
+                                totalRoutines: this.workoutGroups.length
                             }
                         };
-                        reader.readAsText(file);
-                    };
-                    input.click();
-                    this.showAdvancedMenu = false;
+
+                        // Convertir a JSON
+                        const dataStr = JSON.stringify(exportData, null, 2);
+                        
+                        // Crear blob y descargar
+                        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                        const url = URL.createObjectURL(dataBlob);
+                        
+                        // Crear enlace de descarga
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = `gymapp_backup_${new Date().toISOString().split('T')[0]}.json`;
+                        
+                        // Trigger la descarga
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        
+                        // Liberar memoria
+                        URL.revokeObjectURL(url);
+                        
+                        console.log('✅ Datos exportados correctamente');
+                        alert('✅ Datos exportados correctamente. Archivo descargado: ' + link.download);
+                        
+                    } catch (error) {
+                        console.error('❌ Error exportando datos:', error);
+                        alert('❌ Error al exportar datos: ' + error.message);
+                    }
+                },
+
+                // También verificar la función importData por si acaso
+                importData() {
+                    try {
+                        // Crear input file
+                        const input = document.createElement('input');
+                        input.type = 'file';
+                        input.accept = '.json';
+                        
+                        input.onchange = (e) => {
+                            const file = e.target.files[0];
+                            if (!file) return;
+                            
+                            const reader = new FileReader();
+                            reader.onload = (event) => {
+                                try {
+                                    const importedData = JSON.parse(event.target.result);
+                                    console.log('Datos importados:', importedData);
+                                    
+                                    if (confirm('¿Estás seguro de que quieres importar estos datos? Se sobrescribirán los datos actuales.')) {
+                                        this.processImportedData(importedData);
+                                    }
+                                } catch (error) {
+                                    console.error('Error parsing imported file:', error);
+                                    alert('❌ Error: El archivo no es válido o está corrupto.');
+                                }
+                            };
+                            
+                            reader.readAsText(file);
+                        };
+                        
+                        input.click();
+                        
+                    } catch (error) {
+                        console.error('Error en importData:', error);
+                        alert('❌ Error al importar datos: ' + error.message);
+                    }
+                },
+
+                // AÑADIR función para procesar datos importados
+                processImportedData(importedData) {
+                    try {
+                        console.log('=== PROCESANDO DATOS IMPORTADOS ===');
+                        
+                        // Validar estructura básica
+                        if (!importedData || typeof importedData !== 'object') {
+                            throw new Error('Estructura de datos inválida');
+                        }
+                        
+                        // Restaurar workoutHistory
+                        if (Array.isArray(importedData.workoutHistory)) {
+                            this.workoutHistory = importedData.workoutHistory;
+                            console.log('✅ Workout history restaurado:', this.workoutHistory.length);
+                        }
+                        
+                        // Restaurar workoutGroups
+                        if (Array.isArray(importedData.workoutGroups)) {
+                            this.workoutGroups = importedData.workoutGroups;
+                            console.log('✅ Workout groups restaurados:', this.workoutGroups.length);
+                        }
+                        
+                        // Restaurar ejercicios personalizados
+                        if (importedData.customExercises) {
+                            const customData = importedData.customExercises;
+                            
+                            if (customData.exercises && typeof customData.exercises === 'object') {
+                                // Combinar ejercicios existentes con importados
+                                Object.keys(customData.exercises).forEach(muscle => {
+                                    if (!this.exercisesByMuscle[muscle]) {
+                                        this.exercisesByMuscle[muscle] = [];
+                                    }
+                                    customData.exercises[muscle].forEach(exercise => {
+                                        if (!this.exercisesByMuscle[muscle].includes(exercise)) {
+                                            this.exercisesByMuscle[muscle].push(exercise);
+                                        }
+                                    });
+                                });
+                            }
+                            
+                            if (Array.isArray(customData.customMuscles)) {
+                                this.customMuscles = [...new Set([...this.customMuscles, ...customData.customMuscles])];
+                            }
+                            
+                            if (Array.isArray(customData.muscleGroups)) {
+                                // Añadir músculos personalizados que no existan
+                                customData.muscleGroups.forEach(muscle => {
+                                    const exists = this.muscleGroups.find(m => m.key === muscle.key);
+                                    if (!exists) {
+                                        this.muscleGroups.push(muscle);
+                                    }
+                                });
+                            }
+                            
+                            console.log('✅ Ejercicios personalizados restaurados');
+                        }
+                        
+                        // Restaurar preferencias
+                        if (importedData.userPreferences) {
+                            const prefs = importedData.userPreferences;
+                            
+                            if (prefs.userLevel) this.userLevel = prefs.userLevel;
+                            if (prefs.soundEnabled !== undefined) this.soundEnabled = prefs.soundEnabled;
+                            if (prefs.restTimerConfig) this.restTimerConfig = { ...this.restTimerConfig, ...prefs.restTimerConfig };
+                            
+                            console.log('✅ Preferencias de usuario restauradas');
+                        }
+                        
+                        // Guardar en localStorage
+                        this.saveToLocalStorage();
+                        
+                        // Recargar ejercicios personalizados
+                        this.loadCustomExercises();
+                        
+                        alert('✅ Datos importados correctamente. La página se recargará.');
+                        
+                        // Recargar para aplicar cambios
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1000);
+                        
+                    } catch (error) {
+                        console.error('Error procesando datos importados:', error);
+                        alert('❌ Error al procesar datos importados: ' + error.message);
+                    }
                 },
                 resetApp() {
                     if (confirm('¿Estás seguro de que quieres restablecer la aplicación? Se perderán todos tus datos.')) {
