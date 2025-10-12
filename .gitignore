@@ -1,0 +1,8 @@
+node_modules/ 
+android/ 
+platforms/ 
+plugins/ 
+*.log 
+.DS_Store 
+.capacitor/ 
+"*.tmp" 
