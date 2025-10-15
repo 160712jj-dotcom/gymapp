@@ -335,14 +335,41 @@
         .modal-enter {
             animation: modalEnter 0.3s ease-out;
         }
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        /* Estilos para el modal de exportación */
+        .modal-export {
+            animation: modalEnter 0.3s ease-out;
+        }
+
         @keyframes modalEnter {
             from {
                 opacity: 0;
-                transform: translateY(-20px);
+                transform: scale(0.9);
             }
             to {
                 opacity: 1;
-                transform: translateY(0);
+                transform: scale(1);
             }
         }
         .stats-grid {
@@ -6307,7 +6334,7 @@
                 // REEMPLAZAR la función exportData con esta versión corregida
                 exportData() {
                     try {
-                        console.log('=== EXPORTANDO DATOS ===');
+                        console.log('=== EXPORTANDO DATOS CON WEB SHARE API ===');
                         
                         // Preparar todos los datos para exportar
                         const exportData = {
@@ -6333,26 +6360,16 @@
 
                         // Convertir a JSON
                         const dataStr = JSON.stringify(exportData, null, 2);
-                        
-                        // Crear blob y descargar
-                        const dataBlob = new Blob([dataStr], { type: 'application/json' });
-                        const url = URL.createObjectURL(dataBlob);
-                        
-                        // Crear enlace de descarga
-                        const link = document.createElement('a');
-                        link.href = url;
-                        link.download = `gymapp_backup_${new Date().toISOString().split('T')[0]}.json`;
-                        
-                        // Trigger la descarga
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                        
-                        // Liberar memoria
-                        URL.revokeObjectURL(url);
-                        
-                        console.log('✅ Datos exportados correctamente');
-                        alert('✅ Datos exportados correctamente. Archivo descargado: ' + link.download);
+                        const fileName = `gymapp_backup_${new Date().toISOString().split('T')[0]}.json`;
+
+                        // Intentar usar Web Share API primero
+                        if (navigator.share) {
+                            console.log('Usando Web Share API...');
+                            this.useWebShare(dataStr, fileName);
+                        } else {
+                            console.log('Web Share API no disponible, usando descarga tradicional');
+                            this.useTraditionalDownload(dataStr, fileName);
+                        }
                         
                     } catch (error) {
                         console.error('❌ Error exportando datos:', error);
@@ -6360,41 +6377,466 @@
                     }
                 },
 
+                // Método con Web Share API
+                async useWebShare(dataStr, fileName) {
+                    try {
+                        // Crear archivo para compartir
+                        const blob = new Blob([dataStr], { type: 'application/json' });
+                        const file = new File([blob], fileName, { type: 'application/json' });
+
+                        // Verificar si se pueden compartir archivos
+                        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                            await navigator.share({
+                                title: 'Backup GymApp',
+                                text: 'Datos de respaldo de mi entrenamiento',
+                                files: [file]
+                            });
+                            alert('✅ Datos exportados correctamente. Elige donde guardar el archivo.');
+                        } else {
+                            // Compartir como texto si no se pueden compartir archivos
+                            await navigator.share({
+                                title: 'Backup GymApp',
+                                text: `Copia este texto y guárdalo como ${fileName}:\n\n${dataStr}`
+                            });
+                            alert('✅ Datos listos para guardar. Pega el texto en un archivo .json');
+                        }
+                        
+                    } catch (error) {
+                        if (error.name !== 'AbortError') {
+                            console.log('Web Share falló, usando método tradicional:', error);
+                            this.useTraditionalDownload(dataStr, fileName);
+                        }
+                    }
+                },
+
+                // Método tradicional de descarga
+                useTraditionalDownload(dataStr, fileName) {
+                    try {
+                        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                        const url = URL.createObjectURL(dataBlob);
+                        
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = fileName;
+                        
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        
+                        URL.revokeObjectURL(url);
+                        
+                        alert('✅ Datos exportados correctamente. Archivo descargado: ' + fileName);
+                        
+                    } catch (error) {
+                        console.error('Error en descarga tradicional:', error);
+                        // Último recurso: mostrar datos para copiar manualmente
+                        this.showManualExport(dataStr, fileName);
+                    }
+                },
+
+                // Método de emergencia: mostrar datos para copiar manualmente
+                showManualExport(dataStr, fileName) {
+                    const modal = document.createElement('div');
+                    modal.style.cssText = `
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        background: rgba(0,0,0,0.9);
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        z-index: 10000;
+                        padding: 20px;
+                    `;
+                    
+                    modal.innerHTML = `
+                        <div style="background: #1f2937; padding: 20px; border-radius: 10px; max-width: 90%; max-height: 80vh; overflow: auto;">
+                            <h3 style="color: white; margin-bottom: 15px;">📋 Copiar Datos Manualmente</h3>
+                            <p style="color: #d1d5db; margin-bottom: 15px;">Copia el texto y guárdalo como: <strong>${fileName}</strong></p>
+                            
+                            <textarea id="exportDataText" style="
+                                width: 100%;
+                                height: 300px;
+                                background: #374151;
+                                color: white;
+                                border: 1px solid #4b5563;
+                                border-radius: 5px;
+                                padding: 10px;
+                                font-family: monospace;
+                                margin-bottom: 15px;
+                            ">${dataStr}</textarea>
+                            
+                            <div style="display: flex; gap: 10px;">
+                                <button onclick="copyExportData()" style="
+                                    padding: 10px 20px;
+                                    background: #10b981;
+                                    color: white;
+                                    border: none;
+                                    border-radius: 5px;
+                                    cursor: pointer;
+                                ">📋 Copiar</button>
+                                
+                                <button onclick="closeExportModal()" style="
+                                    padding: 10px 20px;
+                                    background: #6b7280;
+                                    color: white;
+                                    border: none;
+                                    border-radius: 5px;
+                                    cursor: pointer;
+                                ">❌ Cerrar</button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.body.appendChild(modal);
+                    
+                    // Funciones globales temporales
+                    window.copyExportData = function() {
+                        const textarea = document.getElementById('exportDataText');
+                        textarea.select();
+                        document.execCommand('copy');
+                        alert('✅ Datos copiados al portapapeles');
+                    };
+                    
+                    window.closeExportModal = function() {
+                        document.body.removeChild(modal);
+                        delete window.copyExportData;
+                        delete window.closeExportModal;
+                    };
+                    
+                    // Auto-seleccionar el texto
+                    document.getElementById('exportDataText').select();
+                },
+                // AÑADE esta función si no la tienes
+                showExportSuccess(message = 'Datos exportados correctamente') {
+                    // Crear notificación de éxito
+                    const notification = document.createElement('div');
+                    notification.style.cssText = `
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        background: #10b981;
+                        color: white;
+                        padding: 16px 20px;
+                        border-radius: 10px;
+                        box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+                        z-index: 10000;
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                        max-width: 350px;
+                        animation: slideInRight 0.3s ease-out;
+                    `;
+                    
+                    notification.innerHTML = `
+                        <i class="fas fa-check-circle" style="font-size: 24px;"></i>
+                        <div>
+                            <div style="font-weight: bold; font-size: 1rem;">¡Éxito!</div>
+                            <div style="font-size: 0.85rem; opacity: 0.9;">${message}</div>
+                        </div>
+                    `;
+                    
+                    document.body.appendChild(notification);
+                    
+                    // Auto-remover después de 4 segundos
+                    setTimeout(() => {
+                        if (document.body.contains(notification)) {
+                            notification.style.animation = 'slideOutRight 0.3s ease-in';
+                            setTimeout(() => {
+                                if (document.body.contains(notification)) {
+                                    document.body.removeChild(notification);
+                                }
+                            }, 300);
+                        }
+                    }, 4000);
+                },
+
                 // También verificar la función importData por si acaso
                 importData() {
                     try {
+                        console.log('=== IMPORTANDO DATOS ===');
+                        
                         // Crear input file
                         const input = document.createElement('input');
                         input.type = 'file';
-                        input.accept = '.json';
+                        input.accept = '.json,application/json';
+                        input.style.display = 'none';
                         
                         input.onchange = (e) => {
                             const file = e.target.files[0];
-                            if (!file) return;
+                            if (!file) {
+                                console.log('No se seleccionó ningún archivo');
+                                return;
+                            }
+                            
+                            // Validar tipo de archivo
+                            if (!file.name.endsWith('.json') && !file.type.includes('json')) {
+                                alert('❌ Error: El archivo debe ser un archivo JSON (.json)');
+                                return;
+                            }
+                            
+                            // Validar tamaño (máximo 10MB)
+                            if (file.size > 10 * 1024 * 1024) {
+                                alert('❌ Error: El archivo es demasiado grande (máximo 10MB)');
+                                return;
+                            }
+                            
+                            console.log('Archivo seleccionado:', file.name, 'Tamaño:', file.size);
                             
                             const reader = new FileReader();
+                            
                             reader.onload = (event) => {
                                 try {
                                     const importedData = JSON.parse(event.target.result);
-                                    console.log('Datos importados:', importedData);
+                                    console.log('Datos importados crudos:', importedData);
                                     
-                                    if (confirm('¿Estás seguro de que quieres importar estos datos? Se sobrescribirán los datos actuales.')) {
-                                        this.processImportedData(importedData);
+                                    // Validar estructura básica del archivo
+                                    if (!this.isValidImportData(importedData)) {
+                                        alert('❌ Error: El archivo no es un backup válido de GymApp');
+                                        return;
                                     }
+                                    
+                                    // Mostrar resumen antes de importar
+                                    this.showImportConfirmation(importedData);
+                                    
                                 } catch (error) {
                                     console.error('Error parsing imported file:', error);
-                                    alert('❌ Error: El archivo no es válido o está corrupto.');
+                                    alert('❌ Error: El archivo no es un JSON válido o está corrupto.');
                                 }
+                            };
+                            
+                            reader.onerror = () => {
+                                alert('❌ Error: No se pudo leer el archivo.');
                             };
                             
                             reader.readAsText(file);
                         };
                         
+                        // Añadir al DOM y hacer click
+                        document.body.appendChild(input);
                         input.click();
+                        document.body.removeChild(input);
                         
                     } catch (error) {
                         console.error('Error en importData:', error);
                         alert('❌ Error al importar datos: ' + error.message);
+                    }
+                },
+
+                // Validar estructura de datos importados
+                isValidImportData(data) {
+                    if (!data || typeof data !== 'object') {
+                        console.log('Datos no son un objeto válido');
+                        return false;
+                    }
+                    
+                    // Verificar que tenga al menos una de las estructuras esperadas
+                    const hasWorkoutHistory = Array.isArray(data.workoutHistory);
+                    const hasWorkoutGroups = Array.isArray(data.workoutGroups);
+                    const hasCustomExercises = data.customExercises && typeof data.customExercises === 'object';
+                    
+                    if (!hasWorkoutHistory && !hasWorkoutGroups && !hasCustomExercises) {
+                        console.log('Datos no contienen estructuras válidas de GymApp');
+                        return false;
+                    }
+                    
+                    console.log('✅ Estructura de datos válida');
+                    return true;
+                },
+
+                // Mostrar confirmación con resumen
+                showImportConfirmation(importedData) {
+                    // Calcular estadísticas
+                    const workoutCount = importedData.workoutHistory ? importedData.workoutHistory.length : 0;
+                    const routineCount = importedData.workoutGroups ? importedData.workoutGroups.length : 0;
+                    const customExerciseCount = importedData.customExercises ? 
+                        Object.keys(importedData.customExercises.exercises || {}).length : 0;
+                    
+                    const exportDate = importedData.exportInfo ? 
+                        new Date(importedData.exportInfo.exportDate).toLocaleDateString() : 'Desconocida';
+                    
+                    const message = `
+                ¿Estás seguro de que quieres importar estos datos?
+
+                📊 RESUMEN DEL BACKUP:
+                • Entrenamientos: ${workoutCount}
+                • Rutinas guardadas: ${routineCount}
+                • Ejercicios personalizados: ${customExerciseCount}
+                • Fecha de exportación: ${exportDate}
+
+                ⚠️ ADVERTENCIA: Esto sobrescribirá tus datos actuales.
+                    `.trim();
+
+                    if (confirm(message)) {
+                        this.processImportedData(importedData);
+                    }
+                },
+
+                // Procesar datos importados
+                processImportedData(importedData) {
+                    try {
+                        console.log('Procesando datos importados...');
+                        
+                        // 1. Backup de datos actuales (por si acaso)
+                        this.createEmergencyBackup();
+                        
+                        // 2. Importar workoutHistory
+                        if (Array.isArray(importedData.workoutHistory)) {
+                            this.workoutHistory = importedData.workoutHistory;
+                            console.log('✅ WorkoutHistory importado:', this.workoutHistory.length, 'entrenamientos');
+                        }
+                        
+                        // 3. Importar workoutGroups
+                        if (Array.isArray(importedData.workoutGroups)) {
+                            this.workoutGroups = importedData.workoutGroups;
+                            console.log('✅ WorkoutGroups importado:', this.workoutGroups.length, 'rutinas');
+                        }
+                        
+                        // 4. Importar customExercises
+                        if (importedData.customExercises) {
+                            if (importedData.customExercises.exercises) {
+                                this.exercisesByMuscle = { ...importedData.customExercises.exercises };
+                                console.log('✅ Exercises importado');
+                            }
+                            
+                            if (Array.isArray(importedData.customExercises.customMuscles)) {
+                                this.customMuscles = importedData.customExercises.customMuscles;
+                                console.log('✅ CustomMuscles importado:', this.customMuscles.length);
+                            }
+                            
+                            if (Array.isArray(importedData.customExercises.muscleGroups)) {
+                                // Combinar muscleGroups sin duplicados
+                                const existingKeys = new Set(this.muscleGroups.map(m => m.key));
+                                importedData.customExercises.muscleGroups.forEach(muscle => {
+                                    if (!existingKeys.has(muscle.key)) {
+                                        this.muscleGroups.push(muscle);
+                                    }
+                                });
+                                console.log('✅ MuscleGroups actualizado');
+                            }
+                        }
+                        
+                        // 5. Importar preferencias de usuario
+                        if (importedData.userPreferences) {
+                            if (importedData.userPreferences.userLevel) {
+                                this.userLevel = importedData.userPreferences.userLevel;
+                            }
+                            if (importedData.userPreferences.soundEnabled !== undefined) {
+                                this.soundEnabled = importedData.userPreferences.soundEnabled;
+                            }
+                            if (importedData.userPreferences.restTimerConfig) {
+                                this.restTimerConfig = { 
+                                    ...this.restTimerConfig, 
+                                    ...importedData.userPreferences.restTimerConfig 
+                                };
+                            }
+                            console.log('✅ Preferencias de usuario importadas');
+                        }
+                        
+                        // 6. Guardar todo en localStorage
+                        this.saveToLocalStorage();
+                        this.saveCustomExercises();
+                        
+                        // 7. Mostrar resumen final
+                        this.showImportSuccess(importedData);
+                        
+                    } catch (error) {
+                        console.error('Error procesando datos importados:', error);
+                        this.handleImportError(error);
+                    }
+                },
+
+                // Crear backup de emergencia
+                createEmergencyBackup() {
+                    try {
+                        const emergencyBackup = {
+                            workoutHistory: [...this.workoutHistory],
+                            workoutGroups: [...this.workoutGroups],
+                            customExercises: {
+                                exercises: { ...this.exercisesByMuscle },
+                                customMuscles: [...this.customMuscles]
+                            },
+                            backupDate: new Date().toISOString()
+                        };
+                        
+                        localStorage.setItem('gymapp_emergency_backup', JSON.stringify(emergencyBackup));
+                        console.log('✅ Backup de emergencia creado');
+                    } catch (error) {
+                        console.error('Error creando backup de emergencia:', error);
+                    }
+                },
+
+                // Mostrar éxito de importación
+                showImportSuccess(importedData) {
+                    const workoutCount = importedData.workoutHistory ? importedData.workoutHistory.length : 0;
+                    const routineCount = importedData.workoutGroups ? importedData.workoutGroups.length : 0;
+                    
+                    const message = `
+                ✅ IMPORTACIÓN EXITOSA
+
+                Datos importados correctamente:
+                • ${workoutCount} entrenamientos
+                • ${routineCount} rutinas guardadas
+                • ${Object.keys(importedData.customExercises?.exercises || {}).length} ejercicios personalizados
+
+                La aplicación se recargará para aplicar los cambios.
+                    `.trim();
+
+                    alert(message);
+                    
+                    // Recargar después de un breve delay
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000);
+                },
+
+                // Manejar errores de importación
+                handleImportError(error) {
+                    console.error('Error en importación:', error);
+                    
+                    // Verificar si hay backup de emergencia
+                    const emergencyBackup = localStorage.getItem('gymapp_emergency_backup');
+                    if (emergencyBackup) {
+                        if (confirm('❌ Error al importar. ¿Quieres restaurar el backup anterior?')) {
+                            try {
+                                const backupData = JSON.parse(emergencyBackup);
+                                this.restoreFromEmergencyBackup(backupData);
+                                return;
+                            } catch (backupError) {
+                                console.error('Error restaurando backup:', backupError);
+                            }
+                        }
+                    }
+                    
+                    alert('❌ Error grave al importar datos. La aplicación puede necesitar reiniciarse.');
+                },
+
+                // Restaurar desde backup de emergencia
+                restoreFromEmergencyBackup(backupData) {
+                    try {
+                        this.workoutHistory = backupData.workoutHistory || [];
+                        this.workoutGroups = backupData.workoutGroups || [];
+                        
+                        if (backupData.customExercises) {
+                            this.exercisesByMuscle = { ...backupData.customExercises.exercises };
+                            this.customMuscles = [...backupData.customExercises.customMuscles];
+                        }
+                        
+                        this.saveToLocalStorage();
+                        this.saveCustomExercises();
+                        
+                        alert('✅ Backup de emergencia restaurado. Recargando aplicación...');
+                        
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1000);
+                        
+                    } catch (error) {
+                        console.error('Error restaurando backup de emergencia:', error);
+                        alert('❌ Error crítico. Por favor, reinstala la aplicación.');
                     }
                 },
 
