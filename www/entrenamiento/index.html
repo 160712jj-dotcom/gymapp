@@ -1153,7 +1153,7 @@
                         <label class="block text-sm font-medium mb-2">Filtrar por:</label>
                         <select class="w-full bg-gray-600 rounded-lg px-4 py-2 border border-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                                 x-model="evolutionFilter"
-                                @change="updateChart()">
+                                @change="changeEvolutionFilter($event.target.value)">
                             <option value="all">Todos los entrenamientos</option>
                             <template x-for="muscle in muscleGroups" :key="muscle.key">
                                 <option :value="'muscle_' + muscle.key" x-text="'Solo ' + muscle.label"></option>
@@ -1171,6 +1171,7 @@
                                 <option :value="exercise" x-text="exercise"></option>
                             </template>
                         </select>
+                        <div class="text-xs text-gray-400 mt-1" x-text="'Total ejercicios: ' + getAllUniqueExercises().length"></div>
                     </div>
                 </div>
             </div>
@@ -5767,176 +5768,330 @@
                     this.$nextTick(() => {
                         setTimeout(() => {
                             const ctx = document.getElementById('evolutionChart');
-                            if (ctx) {
-                                // Destruir gráfico existente
-                                if (this.evolutionChart) {
-                                    this.evolutionChart.destroy();
-                                }
-                                
-                                const chartData = this.prepareEvolutionData();
-                                
-                                // Solo crear el gráfico si hay datos
-                                if (chartData.values.length > 0) {
-                                    this.evolutionChart = new Chart(ctx, {
-                                        type: 'line',
-                                        data: {
-                                            labels: chartData.labels,
-                                            datasets: [{
-                                                label: chartData.label,
-                                                data: chartData.values,
-                                                borderColor: '#4299e1',
-                                                backgroundColor: 'rgba(66, 153, 225, 0.1)',
-                                                borderWidth: 2,
-                                                fill: true,
-                                                tension: 0.3
-                                            }]
-                                        },
-                                        options: {
-                                            responsive: true,
-                                            maintainAspectRatio: false,
-                                            plugins: {
-                                                legend: {
-                                                    display: false
-                                                },
-                                                tooltip: {
-                                                    mode: 'index',
-                                                    intersect: false
+                            if (!ctx) {
+                                console.error('No se encontró el elemento del gráfico');
+                                return;
+                            }
+                            
+                            const chartData = this.prepareEvolutionData();
+                            
+                            console.log('Inicializando gráfico con:', chartData);
+
+                            // Destruir gráfico existente
+                            if (this.evolutionChart) {
+                                this.evolutionChart.destroy();
+                            }
+
+                            // Solo crear gráfico si hay datos
+                            if (chartData.values.length > 0) {
+                                this.evolutionChart = new Chart(ctx, {
+                                    type: 'line',
+                                    data: {
+                                        labels: chartData.labels,
+                                        datasets: [{
+                                            label: chartData.label,
+                                            data: chartData.values,
+                                            borderColor: '#4299e1',
+                                            backgroundColor: 'rgba(66, 153, 225, 0.1)',
+                                            borderWidth: 3,
+                                            fill: true,
+                                            tension: 0.4,
+                                            pointBackgroundColor: '#4299e1',
+                                            pointBorderColor: '#ffffff',
+                                            pointBorderWidth: 2,
+                                            pointRadius: 5,
+                                            pointHoverRadius: 7
+                                        }]
+                                    },
+                                    options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        plugins: {
+                                            legend: {
+                                                display: true,
+                                                position: 'top',
+                                                labels: {
+                                                    color: '#d1d5db',
+                                                    font: {
+                                                        size: 12
+                                                    }
                                                 }
                                             },
-                                            scales: {
-                                                y: {
-                                                    beginAtZero: true,
-                                                    grid: {
-                                                        color: 'rgba(255, 255, 255, 0.1)'
-                                                    },
-                                                    ticks: {
-                                                        color: '#d1d5db'
+                                            tooltip: {
+                                                mode: 'index',
+                                                intersect: false,
+                                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                                titleColor: '#ffffff',
+                                                bodyColor: '#ffffff'
+                                            }
+                                        },
+                                        scales: {
+                                            y: {
+                                                beginAtZero: true,
+                                                grid: {
+                                                    color: 'rgba(255, 255, 255, 0.1)'
+                                                },
+                                                ticks: {
+                                                    color: '#d1d5db',
+                                                    callback: function(value) {
+                                                        return value + (chartData.label.includes('%') ? '%' : '');
                                                     }
                                                 },
-                                                x: {
-                                                    grid: {
-                                                        color: 'rgba(255, 255, 255, 0.1)'
-                                                    },
-                                                    ticks: {
-                                                        color: '#d1d5db',
-                                                        maxRotation: 45,
-                                                        minRotation: 45
-                                                    }
+                                                title: {
+                                                    display: true,
+                                                    text: chartData.label,
+                                                    color: '#d1d5db'
+                                                }
+                                            },
+                                            x: {
+                                                grid: {
+                                                    color: 'rgba(255, 255, 255, 0.1)'
+                                                },
+                                                ticks: {
+                                                    color: '#d1d5db',
+                                                    maxRotation: 45,
+                                                    minRotation: 45
                                                 }
                                             }
+                                        },
+                                        interaction: {
+                                            intersect: false,
+                                            mode: 'index'
                                         }
-                                    });
-                                } else {
-                                    console.log('No hay datos para mostrar en el gráfico');
-                                }
+                                    }
+                                });
                             } else {
-                                console.error('No se encontró el elemento canvas para el gráfico');
+                                console.log('No hay datos para mostrar en el gráfico');
+                                // Mostrar mensaje de no datos
+                                ctx.getContext('2d').clearRect(0, 0, ctx.width, ctx.height);
+                                ctx.getContext('2d').fillStyle = '#d1d5db';
+                                ctx.getContext('2d').font = '16px Arial';
+                                ctx.getContext('2d').fillText('No hay datos para mostrar', 50, 50);
                             }
-                        }, 100);
+                        }, 300);
                     });
                 },
                 updateChart() {
-                    this.initEvolutionChart();
-                },
-                prepareEvolutionData() {
-                        // USAR workouts filtrados en lugar de todos
-                    const workouts = this.getFilteredWorkouts();
+                    console.log('=== ACTUALIZANDO GRÁFICO ===');
+                    console.log('Filtro:', this.evolutionFilter);
+                    console.log('Ejercicio:', this.selectedExercise);
+                    console.log('Métrica:', this.selectedMetric);
                     
-                    if (workouts.length === 0) {
-                        return {
-                            labels: [],
-                            values: [],
-                            label: this.selectedMetric === 'volume' ? 'Volumen Total (kg)' :
-                                this.selectedMetric === 'weight' ? 'Peso Máximo (kg)' :
-                                this.selectedMetric === 'reps' ? 'Repeticiones Máximas' : 'Consistencia (%)'
-                        };
+                    this.$nextTick(() => {
+                        setTimeout(() => {
+                            this.initEvolutionChart();
+                        }, 200);
+                    });
+                },
+                // REEMPLAZAR completamente la función prepareEvolutionData
+                prepareEvolutionData() {
+                    console.log('Preparando datos de evolución:', {
+                        metric: this.selectedMetric,
+                        filter: this.evolutionFilter,
+                        exercise: this.selectedExercise,
+                        totalWorkouts: this.workoutHistory.length
+                    });
+
+                    // Usar todos los workouts del historial para la evolución
+                    const data = this.workoutHistory.filter(workout => 
+                        workout && workout.exercisesData && Object.keys(workout.exercisesData).length > 0
+                    );
+                    
+                    if (data.length === 0) {
+                        console.log('No hay datos para mostrar');
+                        return { labels: [], values: [], label: 'Sin datos' };
                     }
 
-                    if (this.workoutHistory.length === 0) {
-                        return {
-                            labels: [],
-                            values: [],
-                            label: this.selectedMetric === 'volume' ? 'Volumen Total (kg)' :
-                                this.selectedMetric === 'weight' ? 'Peso Máximo (kg)' :
-                                this.selectedMetric === 'reps' ? 'Repeticiones Máximas' : 'Consistencia (%)'
-                        };
-                    }
-                    let data = [];
-                    let labels = [];
-                    let metricLabel = '';
-                    let filteredWorkouts = this.workoutHistory.filter(workout => {
-                        if (this.evolutionFilter === 'all') return true;
-                        if (this.evolutionFilter.startsWith('muscle_')) {
-                            const muscle = this.evolutionFilter.replace('muscle_', '');
-                            return workout.exercisesData && workout.exercisesData[muscle];
-                        }
-                        if (this.evolutionFilter === 'specific' && this.selectedExercise) {
-                            if (!workout.exercisesData) return false;
-                            for (const muscle of Object.values(workout.exercisesData)) {
-                                if (muscle.some(ex => ex.name === this.selectedExercise)) {
-                                    return true;
+                    // Ordenar por fecha
+                    const sortedData = [...data].sort((a, b) => new Date(a.date) - new Date(b.date));
+                    
+                    const labels = [];
+                    const values = [];
+                    let label = '';
+
+                    sortedData.forEach(workout => {
+                        let value = 0;
+                        let hasData = false;
+
+                        switch(this.selectedMetric) {
+                            case 'volume':
+                                // VOLUMEN - CORREGIDO
+                                if (this.evolutionFilter === 'specific' && this.selectedExercise) {
+                                    // Ejercicio específico
+                                    Object.keys(workout.exercisesData).forEach(muscle => {
+                                        workout.exercisesData[muscle].forEach(exercise => {
+                                            if (exercise.name === this.selectedExercise) {
+                                                value += exercise.volume || 0;
+                                                hasData = true;
+                                                console.log(`Ejercicio ${this.selectedExercise}: volumen ${exercise.volume}`);
+                                            }
+                                        });
+                                    });
+                                } 
+                                else if (this.evolutionFilter.startsWith('muscle_')) {
+                                    // Músculo específico
+                                    const muscleKey = this.evolutionFilter.replace('muscle_', '');
+                                    if (workout.exercisesData[muscleKey]) {
+                                        workout.exercisesData[muscleKey].forEach(exercise => {
+                                            value += exercise.volume || 0;
+                                            hasData = true;
+                                        });
+                                    }
                                 }
-                            }
-                        }
-                        return false;
-                    });
-                    filteredWorkouts.sort((a, b) => new Date(a.date) - new Date(b.date));
-                    switch(this.selectedMetric) {
-                        case 'volume':
-                            metricLabel = 'Volumen Total (kg)';
-                            data = filteredWorkouts.map(w => w.totalVolume);
-                            break;
-                        case 'weight':
-                            metricLabel = 'Peso Máximo (kg)';
-                            data = filteredWorkouts.map(workout => {
+                                else {
+                                    // Todos los datos
+                                    value = workout.totalVolume || 0;
+                                    hasData = value > 0;
+                                }
+                                label = 'Volumen Total (kg)';
+                                break;
+
+                            case 'weight':
+                                // PESO MÁXIMO - CORREGIDO
                                 let maxWeight = 0;
-                                for (const muscle of Object.values(workout.exercisesData || {})) {
-                                    for (const exercise of muscle) {
-                                        const completedSets = exercise.setsData.filter(set => set.completed);
-                                        if (completedSets.length > 0) {
-                                            const exerciseMax = Math.max(...completedSets.map(set => set.weight || 0));
-                                            maxWeight = Math.max(maxWeight, exerciseMax);
-                                        }
+                                
+                                if (this.evolutionFilter === 'specific' && this.selectedExercise) {
+                                    // Ejercicio específico
+                                    Object.keys(workout.exercisesData).forEach(muscle => {
+                                        workout.exercisesData[muscle].forEach(exercise => {
+                                            if (exercise.name === this.selectedExercise && exercise.setsData) {
+                                                exercise.setsData.forEach(set => {
+                                                    if (set.completed && set.weight > maxWeight) {
+                                                        maxWeight = set.weight;
+                                                        hasData = true;
+                                                    }
+                                                });
+                                            }
+                                        });
+                                    });
+                                } 
+                                else if (this.evolutionFilter.startsWith('muscle_')) {
+                                    // Músculo específico
+                                    const muscleKey = this.evolutionFilter.replace('muscle_', '');
+                                    if (workout.exercisesData[muscleKey]) {
+                                        workout.exercisesData[muscleKey].forEach(exercise => {
+                                            if (exercise.setsData) {
+                                                exercise.setsData.forEach(set => {
+                                                    if (set.completed && set.weight > maxWeight) {
+                                                        maxWeight = set.weight;
+                                                        hasData = true;
+                                                    }
+                                                });
+                                            }
+                                        });
                                     }
                                 }
-                                return maxWeight;
-                            });
-                            break;
-                        case 'reps':
-                            metricLabel = 'Repeticiones Máximas';
-                            data = filteredWorkouts.map(workout => {
+                                else {
+                                    // Todos los datos
+                                    Object.keys(workout.exercisesData).forEach(muscle => {
+                                        workout.exercisesData[muscle].forEach(exercise => {
+                                            if (exercise.setsData) {
+                                                exercise.setsData.forEach(set => {
+                                                    if (set.completed && set.weight > maxWeight) {
+                                                        maxWeight = set.weight;
+                                                        hasData = true;
+                                                    }
+                                                });
+                                            }
+                                        });
+                                    });
+                                }
+                                value = maxWeight;
+                                label = 'Peso Máximo (kg)';
+                                break;
+
+                            case 'reps':
+                                // REPETICIONES MÁXIMAS - CORREGIDO
                                 let maxReps = 0;
-                                for (const muscle of Object.values(workout.exercisesData || {})) {
-                                    for (const exercise of muscle) {
-                                        const completedSets = exercise.setsData.filter(set => set.completed);
-                                        if (completedSets.length > 0) {
-                                            const exerciseMax = Math.max(...completedSets.map(set => set.reps || 0));
-                                            maxReps = Math.max(maxReps, exerciseMax);
-                                        }
+                                
+                                if (this.evolutionFilter === 'specific' && this.selectedExercise) {
+                                    // Ejercicio específico
+                                    Object.keys(workout.exercisesData).forEach(muscle => {
+                                        workout.exercisesData[muscle].forEach(exercise => {
+                                            if (exercise.name === this.selectedExercise && exercise.setsData) {
+                                                exercise.setsData.forEach(set => {
+                                                    if (set.completed && set.reps > maxReps) {
+                                                        maxReps = set.reps;
+                                                        hasData = true;
+                                                    }
+                                                });
+                                            }
+                                        });
+                                    });
+                                } 
+                                else if (this.evolutionFilter.startsWith('muscle_')) {
+                                    // Músculo específico
+                                    const muscleKey = this.evolutionFilter.replace('muscle_', '');
+                                    if (workout.exercisesData[muscleKey]) {
+                                        workout.exercisesData[muscleKey].forEach(exercise => {
+                                            if (exercise.setsData) {
+                                                exercise.setsData.forEach(set => {
+                                                    if (set.completed && set.reps > maxReps) {
+                                                        maxReps = set.reps;
+                                                        hasData = true;
+                                                    }
+                                                });
+                                            }
+                                        });
                                     }
                                 }
-                                return maxReps;
-                            });
-                            break;
-                        case 'consistency':
-                            metricLabel = 'Consistencia (%)';
-                            if (filteredWorkouts.length < 2) {
-                                data = [100];
-                            } else {
-                                const firstDate = new Date(filteredWorkouts[0].date);
-                                const lastDate = new Date(filteredWorkouts[filteredWorkouts.length - 1].date);
-                                const totalDays = Math.ceil((lastDate - firstDate) / (1000 * 60 * 60 * 24));
-                                data = filteredWorkouts.map((_, i) => Math.round(((i + 1) / totalDays) * 100));
-                            }
-                            break;
+                                else {
+                                    // Todos los datos
+                                    Object.keys(workout.exercisesData).forEach(muscle => {
+                                        workout.exercisesData[muscle].forEach(exercise => {
+                                            if (exercise.setsData) {
+                                                exercise.setsData.forEach(set => {
+                                                    if (set.completed && set.reps > maxReps) {
+                                                        maxReps = set.reps;
+                                                        hasData = true;
+                                                    }
+                                                });
+                                            }
+                                        });
+                                    });
+                                }
+                                value = maxReps;
+                                label = 'Repeticiones Máximas';
+                                break;
+
+                            case 'consistency':
+                                // CONSISTENCIA - usa todos los datos
+                                if (workout.sets > 0) {
+                                    value = Math.round((workout.completedSets / workout.sets) * 100);
+                                    hasData = true;
+                                }
+                                label = 'Tasa de Completado (%)';
+                                break;
+                        }
+
+                        // Solo añadir datos si hay valores válidos
+                        if (hasData && value >= 0) {
+                            labels.push(this.formatDateShort(workout.date));
+                            values.push(value);
+                            console.log(`Añadido punto: ${this.formatDateShort(workout.date)} - ${value}`);
+                        }
+                    });
+
+                    // Personalizar etiqueta según el filtro
+                    if (this.evolutionFilter === 'specific' && this.selectedExercise) {
+                        label = `${this.selectedExercise} - ${label}`;
+                    } else if (this.evolutionFilter.startsWith('muscle_')) {
+                        const muscleKey = this.evolutionFilter.replace('muscle_', '');
+                        const muscle = this.muscleGroups.find(m => m.key === muscleKey);
+                        if (muscle) {
+                            label = `${muscle.label} - ${label}`;
+                        }
                     }
-                    labels = filteredWorkouts.map(w => this.formatDateShort(w.date));
-                    return {
-                        labels: labels,
-                        values: data,
-                        label: metricLabel
-                    };
+
+                    console.log('Datos finales del gráfico:', {
+                        labels: labels.length,
+                        values: values.length,
+                        label: label
+                    });
+
+                    return { labels, values, label };
                 },
+                
                 calculateProgress() {
                     const chartData = this.prepareEvolutionData();
                     const values = chartData.values.filter(v => v > 0);
@@ -5990,19 +6145,33 @@
                 },
                 getAllUniqueExercises() {
                     const exercises = new Set();
+                    
                     this.workoutHistory.forEach(workout => {
                         if (workout.exercisesData) {
                             Object.values(workout.exercisesData).forEach(muscleExercises => {
                                 muscleExercises.forEach(exercise => {
-                                    exercises.add(exercise.name);
+                                    if (exercise.name && exercise.name.trim() !== '') {
+                                        exercises.add(exercise.name);
+                                    }
                                 });
                             });
                         }
                     });
+                    
                     return Array.from(exercises).sort();
                 },
                 changeMetric(metric) {
                     this.selectedMetric = metric;
+                    console.log('Cambiando métrica a:', metric);
+                    this.updateChart();
+                },
+                changeEvolutionFilter(filter) {
+                    this.evolutionFilter = filter;
+                    // Resetear ejercicio específico si no es el filtro correspondiente
+                    if (filter !== 'specific') {
+                        this.selectedExercise = '';
+                    }
+                    console.log('Cambiando filtro a:', filter);
                     this.updateChart();
                 },
                 getTrainingPeriod() {
