@@ -2595,6 +2595,9 @@
                 // 2. INICIALIZACIÓN Y CARGA DE DATOS
                 // ==================================================
                 init() {
+                    localStorage.removeItem('userLevel');
+                    this.userLevel = null;
+
                     console.log('Iniciando aplicación...');
                     this.migrateOldData();
                     this.loadFromLocalStorage();
@@ -5025,9 +5028,9 @@
                     return completed;
                 },
                 loadFromLocalStorage() {
-                    const savedLevel = localStorage.getItem('gymApp_userLevel');
+                    //const savedLevel = localStorage.getItem('gymApp_userLevel');
 
-                    this.userLevel = savedLevel || '';
+                    //this.userLevel = savedLevel || '';
 
                     
                     const savedHistory = localStorage.getItem('gymApp_workoutHistory');
@@ -5066,7 +5069,7 @@
                     }
                 },
                 saveToLocalStorage() {
-                    localStorage.setItem('gymApp_userLevel', this.userLevel);
+                    // localStorage.setItem('gymApp_userLevel', this.userLevel);
                     localStorage.setItem('gymApp_workoutHistory', JSON.stringify(this.workoutHistory));
                     localStorage.setItem('gymApp_soundEnabled', this.soundEnabled);
                     localStorage.setItem('gymApp_restTimerConfig', JSON.stringify(this.restTimerConfig));
