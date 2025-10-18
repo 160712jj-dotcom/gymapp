@@ -6347,8 +6347,8 @@
                         console.log('=== EXPORTANDO DATOS ===');
                         console.log('UserAgent:', navigator.userAgent);
                         console.log('Es WebView?:', this.isAndroidWebView());
-                        
-                        // Preparar datos
+
+                        // 🔹 Preparar datos
                         const exportData = {
                             workoutHistory: this.workoutHistory,
                             workoutGroups: this.workoutGroups,
@@ -6373,61 +6373,72 @@
                         const dataStr = JSON.stringify(exportData, null, 2);
                         const fileName = `gymapp_backup_${new Date().toISOString().split('T')[0]}.json`;
 
-                        // DETECCIÓN INTELIGENTE
+                        // =====================================================
+                        // ✅ DETECCIÓN INTELIGENTE DE ENTORNO
+                        // =====================================================
                         if (this.isAndroidWebView()) {
-                            console.log('📱 Ejecutando método para WebView Android...');
+                            console.log('📱 Ejecutando método Android WebView / Capacitor...');
                             this.useAndroidWebViewDownload(dataStr, fileName);
                         } 
                         else if ('showSaveFilePicker' in window) {
-                            console.log('🖥️ Ejecutando Storage Access Framework...');
+                            console.log('🖥️ Ejecutando Storage Access Framework (desktop) ...');
                             this.useSAFDownload(dataStr, fileName);
                         } 
                         else if (navigator.share) {
                             console.log('📤 Ejecutando Web Share API...');
                             this.useWebShare(dataStr, fileName);
-                        }
+                        } 
                         else {
                             console.log('🔄 Ejecutando método tradicional...');
                             this.useTraditionalDownload(dataStr, fileName);
                         }
-                        
+
                     } catch (error) {
                         console.error('❌ Error exportando datos:', error);
                         alert('❌ Error al exportar datos: ' + error.message);
                     }
                 },
+
                 // Método ESPECÍFICO para WebView de Android
                 useAndroidWebViewDownload(dataStr, fileName) {
                     try {
-                        console.log('🔧 Usando Data URL para descarga...');
-                        
-                        // Crear data URL (más compatible que Blob)
-                        const dataUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
-                        
-                        // Intentar con link
-                        const link = document.createElement('a');
-                        link.href = dataUrl;
-                        link.download = fileName;
-                        link.target = '_blank';
-                        link.style.display = 'none';
-                        
-                        document.body.appendChild(link);
-                        
-                        // Múltiples intentos
-                        setTimeout(() => link.click(), 100);
-                        setTimeout(() => link.click(), 500);
-                        setTimeout(() => window.open(dataUrl, '_blank'), 1000);
-                        
-                        this.showExportSuccess('Descarga iniciada. Si no funciona, usa "Guardar como" en el navegador que se abra');
-                        
-                        // Limpiar
-                        setTimeout(() => document.body.removeChild(link), 5000);
-                        
+                        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Filesystem) {
+                            console.log('🗂 Guardando archivo con Capacitor Filesystem...');
+
+                            const Filesystem = window.Capacitor.Plugins.Filesystem;
+                            const downloadsPath = 'Download/gymapp_exports';
+                            const fullPath = `${downloadsPath}/${fileName}`;
+
+                            Filesystem.writeFile({
+                                path: fullPath,
+                                data: dataStr,
+                                directory: 'EXTERNAL', // ✅ almacenamiento público
+                                encoding: 'utf8',
+                                recursive: true
+                            })
+                            .then(() => {
+                                alert(`✅ Archivo guardado en Descargas/gymapp_exports/${fileName}`);
+                                console.log('✅ Exportación completada:', fullPath);
+
+                                // 👇 Cierra el panel o menú de exportación si está abierto
+                                if (this.exportMenuOpen !== undefined) this.exportMenuOpen = false;
+                                if (this.showExportMenu !== undefined) this.showExportMenu = false;
+                                if (this.exporting !== undefined) this.exporting = false;
+                            })
+                            .catch(err => {
+                                console.error('❌ Error guardando con Capacitor:', err);
+                                alert('❌ No se pudo guardar el archivo: ' + err.message);
+                            });
+                        } else {
+                            console.warn('⚠️ Capacitor Filesystem no disponible, usando método alternativo...');
+                            this.useTraditionalDownload(dataStr, fileName);
+                        }
                     } catch (error) {
-                        console.error('Error con Data URL:', error);
-                        this.showManualExport(dataStr, fileName);
+                        console.error('❌ Error en useAndroidWebViewDownload:', error);
+                        alert('❌ Error al exportar datos en Android: ' + error.message);
                     }
                 },
+
                 // Descarga tradicional MEJORADA para Android
                 useEnhancedTraditionalDownload(dataStr, fileName) {
                     try {
