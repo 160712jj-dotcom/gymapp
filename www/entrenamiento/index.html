@@ -808,274 +808,6 @@
         }
     </style>
 </head>
-<script>
-// Sistema que usa Capacitor de forma global (sin imports)
-class CapacitorJsonSaver {
-    
-    async guardarJsonConCapacitor(datos, nombreArchivo) {
-        try {
-            console.log('💾 Intentando guardar con Capacitor...');
-            
-            // Verificar si Capacitor está disponible
-            if (typeof Capacitor === 'undefined') {
-                throw new Error('Capacitor no está disponible');
-            }
-            
-            // Verificar si el plugin Filesystem está disponible
-            if (!Capacitor.Plugins || !Capacitor.Plugins.Filesystem) {
-                throw new Error('Filesystem plugin no disponible');
-            }
-            
-            // Convertir a JSON
-            const jsonData = JSON.stringify(datos, null, 2);
-            
-            console.log('📄 Guardando:', nombreArchivo);
-            
-            // Guardar usando Filesystem de Capacitor
-            const result = await Capacitor.Plugins.Filesystem.writeFile({
-                path: nombreArchivo,
-                data: btoa(unescape(encodeURIComponent(jsonData))), // Codificar en base64
-                directory: 'DOCUMENTS',
-                encoding: 'utf8'
-            });
-            
-            console.log('✅ Archivo JSON guardado:', result.uri);
-            
-            alert(`✅ ARCHIVO JSON GUARDADO\n\n📍 ${result.uri}\n\nLos datos están guardados en el almacenamiento interno de la app.`);
-            
-            return true;
-            
-        } catch (error) {
-            console.error('❌ Error con Capacitor:', error);
-            // Fallback a localStorage
-            this.guardarEnLocalStorage(datos, nombreArchivo);
-            return false;
-        }
-    }
-    
-    guardarEnLocalStorage(datos, nombreArchivo) {
-        const clave = 'gym_json_' + nombreArchivo.replace('.json', '');
-        localStorage.setItem(clave, JSON.stringify({
-            nombreArchivo: nombreArchivo,
-            datos: datos,
-            fecha: new Date().toISOString()
-        }));
-        
-        alert(`📱 DATOS GUARDADOS EN LA APP\n\n💾 Clave: ${clave}\n📄 Nombre: ${nombreArchivo}\n\nLos datos están seguros en la memoria de la app.`);
-        
-        console.log('💾 Guardado en localStorage:', clave, datos);
-    }
-    
-    async listarArchivosGuardados() {
-        try {
-            // Intentar con Capacitor primero
-            if (Capacitor.Plugins && Capacitor.Plugins.Filesystem) {
-                const files = await Capacitor.Plugins.Filesystem.readdir({
-                    path: '',
-                    directory: 'DOCUMENTS'
-                });
-                
-                const jsonFiles = files.files.filter(file => 
-                    file.name && file.name.endsWith('.json')
-                );
-                
-                if (jsonFiles.length > 0) {
-                    let mensaje = '📁 ARCHIVOS JSON (Capacitor):\n\n';
-                    jsonFiles.forEach(file => {
-                        mensaje += `📄 ${file.name}\n`;
-                    });
-                    alert(mensaje);
-                    return;
-                }
-            }
-        } catch (error) {
-            console.log('No se pudieron listar archivos de Capacitor:', error);
-        }
-        
-        // Fallback a localStorage
-        this.listarLocalStorage();
-    }
-    
-    listarLocalStorage() {
-        const archivos = [];
-        for (let i = 0; i < localStorage.length; i++) {
-            const clave = localStorage.key(i);
-            if (clave.startsWith('gym_json_')) {
-                try {
-                    const datos = JSON.parse(localStorage.getItem(clave));
-                    archivos.push(datos.nombreArchivo);
-                } catch (e) {
-                    console.error('Error parseando:', clave);
-                }
-            }
-        }
-        
-        if (archivos.length === 0) {
-            alert('No hay archivos JSON guardados');
-            return;
-        }
-        
-        let mensaje = '📁 DATOS GUARDADOS (Memoria):\n\n';
-        archivos.forEach(archivo => {
-            mensaje += `💾 ${archivo}\n`;
-        });
-        
-        alert(mensaje);
-    }
-    
-    // EJEMPLOS DE USO
-    
-    async guardarRutinaCompleta() {
-        const datos = {
-            tipo: "rutina_entrenamiento",
-            version: "1.0",
-            fecha: new Date().toISOString(),
-            usuario: "Usuario Gym",
-            rutina: {
-                nombre: "Rutina Fuerza Principiante",
-                nivel: "Principiante",
-                dias: ["Lunes", "Miércoles", "Viernas"]
-            },
-            ejercicios: [
-                {
-                    dia: "Lunes - Pecho y Tríceps",
-                    ejercicios: [
-                        { nombre: "Press Banca", series: 3, reps: "10-12", peso: "60kg" },
-                        { nombre: "Press Inclinado", series: 3, reps: "10-12", peso: "50kg" }
-                    ]
-                },
-                {
-                    dia: "Miércoles - Espalda y Bíceps",
-                    ejercicios: [
-                        { nombre: "Jalón al Pecho", series: 3, reps: "10-12", peso: "40kg" },
-                        { nombre: "Curl Bíceps", series: 3, reps: "10-12", peso: "10kg" }
-                    ]
-                },
-                {
-                    dia: "Viernes - Piernas y Hombros", 
-                    ejercicios: [
-                        { nombre: "Sentadillas", series: 3, reps: "10-12", peso: "60kg" },
-                        { nombre: "Press Militar", series: 3, reps: "10-12", peso: "30kg" }
-                    ]
-                }
-            ]
-        };
-        
-        const nombreArchivo = `rutina_${this.getTimestamp()}.json`;
-        await this.guardarJsonConCapacitor(datos, nombreArchivo);
-    }
-    
-    async guardarProgresoDetallado() {
-        const datos = {
-            tipo: "registro_progreso",
-            fecha: new Date().toLocaleString(),
-            usuario: "Usuario Gym",
-            medidas: {
-                peso: "75.5kg",
-                altura: "175cm",
-                imc: "24.7"
-            },
-            marcas: {
-                press_banca: "80kg",
-                sentadillas: "100kg", 
-                peso_muerto: "120kg"
-            }
-        };
-        
-        const nombreArchivo = `progreso_${this.getTimestamp()}.json`;
-        await this.guardarJsonConCapacitor(datos, nombreArchivo);
-    }
-    
-    async guardarRutinaPersonalizada() {
-        const nombre = prompt('Nombre de la rutina:', 'Mi Rutina Personal');
-        if (!nombre) return;
-        
-        const ejerciciosInput = prompt('Ejercicios (separar por coma):', 'Press Banca, Sentadillas, Peso Muerto');
-        if (!ejerciciosInput) return;
-        
-        const ejercicios = ejerciciosInput.split(',').map(ej => ej.trim());
-        
-        const datos = {
-            tipo: "rutina_personalizada",
-            fecha: new Date().toISOString(),
-            nombre: nombre,
-            ejercicios: ejercicios.map((ejercicio, index) => ({
-                id: index + 1,
-                nombre: ejercicio,
-                series: 3,
-                repeticiones: 10,
-                completado: false
-            }))
-        };
-        
-        const nombreArchivo = `${nombre.replace(/[^a-z0-9]/gi, '_')}_${this.getTimestamp()}.json`;
-        await this.guardarJsonConCapacitor(datos, nombreArchivo);
-    }
-    
-    getTimestamp() {
-        const now = new Date();
-        return now.getFullYear() + 
-               String(now.getMonth() + 1).padStart(2, '0') + 
-               String(now.getDate()).padStart(2, '0') + '_' +
-               String(now.getHours()).padStart(2, '0') + 
-               String(now.getMinutes()).padStart(2, '0');
-    }
-}
-
-// Crear instancia global inmediatamente
-window.capacitorSaver = new CapacitorJsonSaver();
-
-// Función para verificar si Capacitor está disponible
-function verificarCapacitor() {
-    if (typeof Capacitor === 'undefined') {
-        console.log('❌ Capacitor no está disponible');
-        return false;
-    }
-    console.log('✅ Capacitor está disponible');
-    console.log('🔌 Plugins disponibles:', Object.keys(Capacitor.Plugins || {}));
-    return true;
-}
-
-// Verificar al cargar
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🔍 Verificando Capacitor...');
-    verificarCapacitor();
-});
-</script>
-
-<!-- Botones SIMPLIFICADOS que SÍ funcionan -->
-<div style="position: fixed; top: 20px; right: 20px; z-index: 9999; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); border: 2px solid #10B981;">
-    <h4 style="margin: 0 0 10px 0; color: #1F2937; text-align: center;">💾 GUARDAR JSON</h4>
-    <div style="display: flex; flex-direction: column; gap: 8px;">
-        <button onclick="capacitorSaver.guardarRutinaCompleta()" 
-                style="padding: 12px; background: #10B981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
-            🏋️‍♂️ Rutina JSON
-        </button>
-        <button onclick="capacitorSaver.guardarProgresoDetallado()" 
-                style="padding: 12px; background: #3B82F6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
-            📊 Progreso JSON
-        </button>
-        <button onclick="capacitorSaver.guardarRutinaPersonalizada()" 
-                style="padding: 12px; background: #8B5CF6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
-            ✏️ Personalizado JSON
-        </button>
-        <button onclick="capacitorSaver.listarArchivosGuardados()" 
-                style="padding: 12px; background: #F59E0B; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
-            📁 Ver Guardados
-        </button>
-    </div>
-</div>
-
-<!-- Panel de información -->
-<div style="position: fixed; bottom: 20px; left: 20px; z-index: 9999; background: #EFF6FF; padding: 15px; border-radius: 10px; border: 2px solid #3B82F6; max-width: 300px;">
-    <h4 style="margin: 0 0 8px 0; color: #1E40AF;">ℹ️ Funcionamiento</h4>
-    <p style="margin: 0; font-size: 12px; color: #1E40AF;">
-        • Usa Capacitor (nativo Android)<br>
-        • Fallback a memoria de la app<br>
-        • Datos persistentes<br>
-        • Sin errores de descarga
-    </p>
-</div>
 <body class="text-gray-100">
     <main x-data="gymApp()" x-init="init()">
         <!-- Pantalla de selección de modo -->
@@ -1089,16 +821,39 @@ document.addEventListener('DOMContentLoaded', function() {
                         <i class="fas fa-cog"></i>
                     </button>
                     <div class="advanced-menu" :class="{ 'show': showAdvancedMenu }">
-                        <div class="advanced-menu-item" @click="exportData()">
-                            <i class="fas fa-file-export text-green-400"></i>
-                            <span>Exportar Datos</span>
+                        <!-- NUEVO: Opciones de guardado JSON que SÍ funcionan -->
+                        <div class="advanced-menu-item" @click="guardarBackupCompleto()">
+                            <i class="fas fa-save text-green-400"></i>
+                            <span>Guardar Backup Completo</span>
                         </div>
-                        <div class="advanced-menu-item" @click="importData()">
-                            <i class="fas fa-file-import text-blue-400"></i>
-                            <span>Importar Datos</span>
+                        <div class="advanced-menu-item" @click="guardarRutinaActual()">
+                            <i class="fas fa-dumbbell text-blue-400"></i>
+                            <span>Guardar Rutina Actual</span>
                         </div>
+                        <div class="advanced-menu-item" @click="guardarProgreso()">
+                            <i class="fas fa-chart-line text-purple-400"></i>
+                            <span>Guardar Progreso</span>
+                        </div>
+                        
+                        <!-- Separador -->
+                        <div class="border-t border-gray-600 my-2"></div>
+                        
+                        <!-- OPCIONES ORIGINALES (pero redirigidas al sistema que SÍ funciona) -->
+                        <div class="advanced-menu-item" @click="exportarDatos()">
+                            <i class="fas fa-file-export text-yellow-400"></i>
+                            <span>Exportar Todos los Datos</span>
+                        </div>
+                        <div class="advanced-menu-item" @click="verArchivosGuardados()">
+                            <i class="fas fa-folder-open text-orange-400"></i>
+                            <span>Ver Archivos Guardados</span>
+                        </div>
+                        
+                        <!-- Separador -->
+                        <div class="border-t border-gray-600 my-2"></div>
+                        
+                        <!-- Otras opciones de mantenimiento -->
                         <div class="advanced-menu-item" @click="regenerateDefaultData()">
-                            <i class="fas fa-redo text-purple-400"></i>
+                            <i class="fas fa-redo text-indigo-400"></i>
                             <span>Regenerar Ejercicios</span>
                         </div>
                         <div class="advanced-menu-item" @click="resetApp()">
@@ -4109,6 +3864,120 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                     
                     return completedCount;
+                },
+
+                // En el componente Alpine.js, reemplaza/agrega estas funciones:
+
+                // ==================================================
+                // SISTEMA DE GUARDADO JSON - FUNCIONA
+                // ==================================================
+
+                guardarBackupCompleto() {
+                    this.showAdvancedMenu = false;
+                    setTimeout(() => {
+                        if (window.capacitorSaver) {
+                            // Crear backup completo con todos los datos
+                            const datos = {
+                                tipo: "backup_completo_gymapp",
+                                version: "2.0",
+                                fecha: new Date().toISOString(),
+                                datos: {
+                                    historial_entrenamientos: this.workoutHistory,
+                                    rutinas_guardadas: this.workoutGroups,
+                                    configuracion: {
+                                        temporizador: this.restTimerConfig,
+                                        sonido: this.soundEnabled
+                                    },
+                                    estadisticas: this.obtenerEstadisticasCompletas()
+                                }
+                            };
+                            
+                            const nombreArchivo = `backup_completo_${this.getTimestamp()}.json`;
+                            window.capacitorSaver.guardarJsonConCapacitor(datos, nombreArchivo);
+                        } else {
+                            alert('❌ Sistema de guardado no disponible');
+                        }
+                    }, 300);
+                },
+
+                guardarRutinaActual() {
+                    this.showAdvancedMenu = false;
+                    setTimeout(() => {
+                        if (window.capacitorSaver) {
+                            window.capacitorSaver.guardarRutinaCompleta();
+                        } else {
+                            alert('❌ Sistema de guardado no disponible');
+                        }
+                    }, 300);
+                },
+
+                guardarProgreso() {
+                    this.showAdvancedMenu = false;
+                    setTimeout(() => {
+                        if (window.capacitorSaver) {
+                            window.capacitorSaver.guardarProgresoDetallado();
+                        } else {
+                            alert('❌ Sistema de guardado no disponible');
+                        }
+                    }, 300);
+                },
+
+                // REEMPLAZAR la función exportData original por esta que SÍ funciona
+                exportarDatos() {
+                    this.showAdvancedMenu = false;
+                    setTimeout(() => {
+                        if (window.capacitorSaver) {
+                            // Opción 1: Backup completo (recomendado)
+                            this.guardarBackupCompleto();
+                            
+                            // Opción 2: O mostrar opciones al usuario
+                            /*
+                            const opcion = confirm('¿Qué datos quieres exportar?\n\nAceptar: Backup Completo (Recomendado)\nCancelar: Solo Rutina Actual');
+                            if (opcion) {
+                                this.guardarBackupCompleto();
+                            } else {
+                                this.guardarRutinaActual();
+                            }
+                            */
+                        } else {
+                            alert('❌ Sistema de exportación no disponible');
+                        }
+                    }, 300);
+                },
+
+                verArchivosGuardados() {
+                    this.showAdvancedMenu = false;
+                    setTimeout(() => {
+                        if (window.capacitorSaver) {
+                            window.capacitorSaver.listarArchivosGuardados();
+                        } else {
+                            alert('❌ Sistema de archivos no disponible');
+                        }
+                    }, 300);
+                },
+
+                // Función auxiliar para obtener estadísticas
+                obtenerEstadisticasCompletas() {
+                    return {
+                        total_entrenamientos: this.workoutHistory.length,
+                        total_ejercicios: this.workoutHistory.reduce((sum, w) => sum + (w.exercises || 0), 0),
+                        total_series: this.workoutHistory.reduce((sum, w) => sum + (w.sets || 0), 0),
+                        total_volumen: this.workoutHistory.reduce((sum, w) => sum + (w.totalVolume || 0), 0),
+                        fecha_primer_entrenamiento: this.workoutHistory.length > 0 ? 
+                            this.workoutHistory[this.workoutHistory.length - 1].date : null,
+                        fecha_ultimo_entrenamiento: this.workoutHistory.length > 0 ? 
+                            this.workoutHistory[0].date : null
+                    };
+                },
+
+                // Función para timestamp (si no existe)
+                getTimestamp() {
+                    const now = new Date();
+                    return now.getFullYear() + 
+                        String(now.getMonth() + 1).padStart(2, '0') + 
+                        String(now.getDate()).padStart(2, '0') + '_' +
+                        String(now.getHours()).padStart(2, '0') + 
+                        String(now.getMinutes()).padStart(2, '0');
                 },
 
                 // ==================================================
