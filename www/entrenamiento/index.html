@@ -6400,42 +6400,40 @@
                 },
 
                 // Método ESPECÍFICO para WebView de Android
-                useAndroidWebViewDownload(dataStr, fileName) {
+                async useAndroidWebViewDownload(dataStr, fileName) {
                     try {
-                        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Filesystem) {
-                            console.log('🗂 Guardando archivo con Capacitor Filesystem...');
-
-                            const Filesystem = window.Capacitor.Plugins.Filesystem;
-                            const downloadsPath = 'Download/gymapp_exports';
-                            const fullPath = `${downloadsPath}/${fileName}`;
-
-                            Filesystem.writeFile({
-                                path: fullPath,
-                                data: dataStr,
-                                directory: 'EXTERNAL', // ✅ almacenamiento público
-                                encoding: 'utf8',
-                                recursive: true
-                            })
-                            .then(() => {
-                                alert(`✅ Archivo guardado en Descargas/gymapp_exports/${fileName}`);
-                                console.log('✅ Exportación completada:', fullPath);
-
-                                // 👇 Cierra el panel o menú de exportación si está abierto
-                                if (this.exportMenuOpen !== undefined) this.exportMenuOpen = false;
-                                if (this.showExportMenu !== undefined) this.showExportMenu = false;
-                                if (this.exporting !== undefined) this.exporting = false;
-                            })
-                            .catch(err => {
-                                console.error('❌ Error guardando con Capacitor:', err);
-                                alert('❌ No se pudo guardar el archivo: ' + err.message);
-                            });
+                        console.log('📱 Usando Capacitor Filesystem...');
+                        
+                        // ✅ FORMA CORRECTA de usar Capacitor Filesystem
+                        const { Filesystem, Directory } = await import('@capacitor/filesystem');
+                        
+                        // ✅ Guardar en Directorio de Descargas
+                        await Filesystem.writeFile({
+                            path: fileName,
+                            data: dataStr,
+                            directory: Directory.Downloads,  // ✅ CORRECTO
+                            encoding: 'utf8',
+                            recursive: true
+                        });
+                        
+                        console.log('✅ Archivo guardado con éxito');
+                        this.showExportSuccess(`✅ Archivo guardado en Descargas: ${fileName}`);
+                        
+                        // Cerrar menús de exportación si existen
+                        if (this.exportMenuOpen !== undefined) this.exportMenuOpen = false;
+                        if (this.showExportMenu !== undefined) this.showExportMenu = false;
+                        if (this.exporting !== undefined) this.exporting = false;
+                        
+                    } catch (error) {
+                        console.error('❌ Error con Capacitor Filesystem:', error);
+                        
+                        // Fallback mejorado
+                        if (error.message.includes('permission') || error.message.includes('PERMISSION')) {
+                            alert('❌ Permiso denegado. La app necesita acceso al almacenamiento.');
                         } else {
-                            console.warn('⚠️ Capacitor Filesystem no disponible, usando método alternativo...');
+                            console.log('🔄 Intentando método tradicional...');
                             this.useTraditionalDownload(dataStr, fileName);
                         }
-                    } catch (error) {
-                        console.error('❌ Error en useAndroidWebViewDownload:', error);
-                        alert('❌ Error al exportar datos en Android: ' + error.message);
                     }
                 },
 
