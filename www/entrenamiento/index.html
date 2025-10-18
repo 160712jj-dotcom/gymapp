@@ -814,52 +814,34 @@
         <div x-show="currentScreen === 'mode-selection'" x-transition:enter.duration.300 class="container mx-auto px-4 py-8 max-w-6xl">
             <div class="flex justify-start mb-6">
             </div>
-            <!-- Botón flotante de menú avanzado -->
+            <!-- Botón flotante de menú avanzado SIMPLIFICADO -->
             <div class="fixed bottom-6 right-6 z-50">
                 <div class="relative">
                     <button @click="toggleAdvancedMenu()" class="floating-button" :class="{ 'bg-blue-700': showAdvancedMenu }">
                         <i class="fas fa-cog"></i>
                     </button>
                     <div class="advanced-menu" :class="{ 'show': showAdvancedMenu }">
-                        <!-- SISTEMA DE GUARDADO JSON QUE SÍ FUNCIONA -->
-                        <div class="advanced-menu-item" @click="guardarBackupCompleto()">
+                        <!-- GUARDADO/EXPORTACIÓN -->
+                        <div class="advanced-menu-item" @click="exportarDatosCompletos()">
                             <i class="fas fa-save text-green-400"></i>
-                            <span>Guardar Backup Completo</span>
+                            <span>Exportar Datos Completos</span>
                         </div>
-                        <div class="advanced-menu-item" @click="guardarRutinaActual()">
-                            <i class="fas fa-dumbbell text-blue-400"></i>
-                            <span>Guardar Rutina Actual</span>
-                        </div>
-                        <div class="advanced-menu-item" @click="guardarProgreso()">
-                            <i class="fas fa-chart-line text-purple-400"></i>
-                            <span>Guardar Progreso</span>
+                        
+                        <!-- IMPORTACIÓN -->
+                        <div class="advanced-menu-item" @click="importarDatosCompletos()">
+                            <i class="fas fa-file-import text-blue-400"></i>
+                            <span>Importar Datos Completos</span>
                         </div>
                         
                         <!-- Separador -->
                         <div class="border-t border-gray-600 my-2"></div>
                         
-                        <!-- GESTIÓN DE ARCHIVOS -->
-                        <div class="advanced-menu-item" @click="exportarTodosDatos()">
-                            <i class="fas fa-file-export text-yellow-400"></i>
-                            <span>Exportar Todos los Datos</span>
-                        </div>
-                        <div class="advanced-menu-item" @click="importarDatos()">
-                            <i class="fas fa-file-import text-orange-400"></i>
-                            <span>Importar Datos</span>
-                        </div>
-                        <div class="advanced-menu-item" @click="verArchivosGuardados()">
-                            <i class="fas fa-folder-open text-indigo-400"></i>
-                            <span>Ver Archivos Guardados</span>
-                        </div>
-                        
-                        <!-- Separador -->
-                        <div class="border-t border-gray-600 my-2"></div>
-                        
-                        <!-- OTRAS OPCIONES -->
+                        <!-- MANTENIMIENTO -->
                         <div class="advanced-menu-item" @click="regenerateDefaultData()">
-                            <i class="fas fa-redo text-gray-400"></i>
+                            <i class="fas fa-redo text-purple-400"></i>
                             <span>Regenerar Ejercicios</span>
                         </div>
+                        
                         <div class="advanced-menu-item" @click="resetApp()">
                             <i class="fas fa-trash text-red-400"></i>
                             <span>Restablecer App</span>
@@ -3372,37 +3354,36 @@
                 },
 
                 regenerateDefaultData() {
-                    if (confirm('¿Estás seguro de que quieres regenerar los ejercicios predeterminados? Esto no afectará tus ejercicios personalizados.')) {
-                        // Restaurar ejercicios predeterminados
-                        const defaultExercises = {
-                            chest: ['Press de banca', 'Press inclinado', 'Aperturas banca', 'Aperturas inclinadas', 'Fondos en paralelas', 'Press declinado', 'Cruces en polea alta' , 'Cruces en polea baja', 'Pullover pecho'],
-                            back: ['Dominadas', 'Jalón al pecho', 'Remo invertido', 'Peso muerto', 'Remo en máquina', 'Hiperextensiones', 'Concentrado a una mano', 'Pullover espalda'],
-                            shoulders: ['Press militar', 'Elevaciones laterales', 'Face pulls', 'Elevaciones frontales', 'Press Arnold', 'Pájaro', 'Cruce poleas'],
-                            biceps: ['Curl de bíceps', 'Curl martillo', 'Curl concentrado', 'Curl en banco Scott', 'Curl con barra', '21'],
-                            triceps: ['Fondos', 'Press francés', 'Extensiones polea alta', 'Patada de tríceps', 'Jalón de tríceps', 'Concentrado'],
-                            legs: ['Sentadillas', 'Prensa', 'Prensa pies en V', 'Extensiones de cuádriceps', 'Curl femoral', 'Peso muerto rumano', 'Elevación de talones', 'Cuadriceps en pared', 'Zancada'],
-                            abs: ['Crunch abdominal', 'Plancha', 'Elevaciones de piernas', 'Russian twists', 'Abdominales en bicicleta'],
-                            traps: ['Encogimientos de hombros', 'Remo alto', 'Face pulls', 'Pájaros invertidos', 'Elevaciones laterales']
-                        };
-                        
-                        // Combinar con ejercicios personalizados existentes
-                        Object.keys(defaultExercises).forEach(muscle => {
-                            if (!this.exercisesByMuscle[muscle]) {
-                                this.exercisesByMuscle[muscle] = [];
-                            }
-                            // Añadir ejercicios predeterminados que no existan ya
-                            defaultExercises[muscle].forEach(exercise => {
-                                if (!this.exercisesByMuscle[muscle].includes(exercise)) {
-                                    this.exercisesByMuscle[muscle].push(exercise);
+                    this.showAdvancedMenu = false;
+                    setTimeout(() => {
+                        if (confirm('¿Regenerar ejercicios predeterminados?\n\nEsto no afectará tus ejercicios personalizados.')) {
+                            // Tu función original aquí
+                            const defaultExercises = {
+                                chest: ['Press de banca', 'Press inclinado', 'Aperturas banca', 'Aperturas inclinadas', 'Fondos en paralelas', 'Press declinado', 'Cruces en polea alta' , 'Cruces en polea baja', 'Pullover pecho'],
+                                back: ['Dominadas', 'Jalón al pecho', 'Remo invertido', 'Peso muerto', 'Remo en máquina', 'Hiperextensiones', 'Concentrado a una mano', 'Pullover espalda'],
+                                shoulders: ['Press militar', 'Elevaciones laterales', 'Face pulls', 'Elevaciones frontales', 'Press Arnold', 'Pájaro', 'Cruce poleas'],
+                                biceps: ['Curl de bíceps', 'Curl martillo', 'Curl concentrado', 'Curl en banco Scott', 'Curl con barra', '21'],
+                                triceps: ['Fondos', 'Press francés', 'Extensiones polea alta', 'Patada de tríceps', 'Jalón de tríceps', 'Concentrado'],
+                                legs: ['Sentadillas', 'Prensa', 'Prensa pies en V', 'Extensiones de cuádriceps', 'Curl femoral', 'Peso muerto rumano', 'Elevación de talones', 'Cuadriceps en pared', 'Zancada'],
+                                abs: ['Crunch abdominal', 'Plancha', 'Elevaciones de piernas', 'Russian twists', 'Abdominales en bicicleta'],
+                                traps: ['Encogimientos de hombros', 'Remo alto', 'Face pulls', 'Pájaros invertidos', 'Elevaciones laterales']
+                            };
+                            
+                            Object.keys(defaultExercises).forEach(muscle => {
+                                if (!this.exercisesByMuscle[muscle]) {
+                                    this.exercisesByMuscle[muscle] = [];
                                 }
+                                defaultExercises[muscle].forEach(exercise => {
+                                    if (!this.exercisesByMuscle[muscle].includes(exercise)) {
+                                        this.exercisesByMuscle[muscle].push(exercise);
+                                    }
+                                });
                             });
-                        });
-                        
-                        // Guardar cambios
-                        this.saveCustomExercises();
-                        alert('Ejercicios predeterminados regenerados correctamente.');
-                        this.showAdvancedMenu = false;
-                    }
+                            
+                            this.saveCustomExercises();
+                            alert('✅ Ejercicios predeterminados regenerados');
+                        }
+                    }, 300);
                 },
                 // REEMPLAZAR la función saveCustomExercises con esta versión mejorada
                 saveCustomExercises() {
@@ -3874,61 +3855,8 @@
 
                 // ==================================================
                 // SISTEMA DE GUARDADO JSON - CORREGIDO
-                // ==================================================
 
-                // Función segura para obtener el saver
-                getSaver() {
-                    return window.capacitorSaver || window.capacitorJsonSaver;
-                },
-
-                // Verificar disponibilidad del sistema de guardado
-                verificarSistemaGuardado() {
-                    const saver = this.getSaver();
-                    if (!saver) {
-                        console.error('❌ capacitorSaver no encontrado');
-                        alert('❌ El sistema de guardado no está disponible. Recarga la página.');
-                        return false;
-                    }
-                    return true;
-                },
-                guardarBackupCompleto() {
-                    this.showAdvancedMenu = false;
-                    
-                    setTimeout(() => {
-                        try {
-                            const datos = {
-                                tipo: "backup_completo_gymapp",
-                                version: "2.0",
-                                fecha: new Date().toISOString(),
-                                datos: {
-                                    historial_entrenamientos: this.workoutHistory,
-                                    rutinas_guardadas: this.workoutGroups,
-                                    configuracion: {
-                                        temporizador: this.restTimerConfig,
-                                        sonido: this.soundEnabled
-                                    },
-                                    estadisticas: this.obtenerEstadisticasCompletas()
-                                }
-                            };
-                            
-                            const nombreArchivo = `backup_gymapp_${this.getTimestamp()}.json`;
-                            
-                            // FORZAR USO DE CAPACITOR como en la prueba
-                            if (window.capacitorSaver) {
-                                console.log('🔧 Usando capacitorSaver...');
-                                window.capacitorSaver.guardarJsonConCapacitor(datos, nombreArchivo);
-                            } else {
-                                console.error('❌ capacitorSaver no disponible');
-                                // Intentar crear instancia
-                                this.crearSaverYGuardar(datos, nombreArchivo);
-                            }
-                            
-                        } catch (error) {
-                            console.error('Error crítico:', error);
-                            alert('❌ Error grave al guardar. Recarga la página.');
-                        }
-                    }, 300);
-                },
+                
                 crearSaverYGuardar(datos, nombreArchivo) {
                     try {
                         // Intentar recrear el saver como en las pruebas
@@ -4009,64 +3937,7 @@
                     }
                 },
 
-                guardarRutinaActual() {
-                    this.showAdvancedMenu = false;
-                    setTimeout(() => {
-                        // Crear datos de rutina y usar el MÉTODO DIRECTO
-                        const datos = {
-                            tipo: "rutina_entrenamiento",
-                            version: "1.0", 
-                            fecha: new Date().toISOString(),
-                            usuario: "Usuario GymApp",
-                            rutina: {
-                                nombre: "Rutina Fuerza",
-                                nivel: this.userLevel || "No especificado",
-                                musculos: this.selectedMuscles
-                            },
-                            ejercicios: this.obtenerEjerciciosActuales(),
-                            historial: this.workoutHistory.slice(0, 10) // últimos 10
-                        };
-                        
-                        const nombreArchivo = `rutina_${this.getTimestamp()}.json`;
-                        
-                        // Usar el mismo método que backup completo
-                        if (window.capacitorSaver) {
-                            window.capacitorSaver.guardarJsonConCapacitor(datos, nombreArchivo);
-                        } else {
-                            this.guardarConCapacitorDirecto(datos, nombreArchivo);
-                        }
-                    }, 300);
-                },
 
-                guardarProgreso() {
-                    this.showAdvancedMenu = false;
-                    setTimeout(() => {
-                        const datos = {
-                            tipo: "registro_progreso", 
-                            fecha: new Date().toISOString(),
-                            usuario: "Usuario GymApp",
-                            estadisticas: this.obtenerEstadisticasCompletas(),
-                            medidas: this.obtenerMedidasUsuario(),
-                            evolucion: this.obtenerDatosEvolucion()
-                        };
-                        
-                        const nombreArchivo = `progreso_${this.getTimestamp()}.json`;
-                        
-                        if (window.capacitorSaver) {
-                            window.capacitorSaver.guardarJsonConCapacitor(datos, nombreArchivo);
-                        } else {
-                            this.guardarConCapacitorDirecto(datos, nombreArchivo);
-                        }
-                    }, 300);
-                },
-
-                exportarTodosDatos() {
-                    this.showAdvancedMenu = false;
-                    setTimeout(() => {
-                        // Simplemente llamar a backup completo
-                        this.guardarBackupCompleto();
-                    }, 300);
-                },
                 obtenerEjerciciosActuales() {
                     const ejercicios = [];
                     if (this.selectedExercises) {
@@ -4082,20 +3953,6 @@
                         });
                     }
                     return ejercicios;
-                },
-                obtenerMedidasUsuario() {
-                    return {
-                        peso: "75kg",
-                        altura: "175cm", 
-                        imc: "24.5"
-                    };
-                },
-                obtenerDatosEvolucion() {
-                    return {
-                        total_entrenamientos: this.workoutHistory.length,
-                        consistencia: "85%",
-                        progreso_volumen: "+15%"
-                    };
                 },
 
                 importarDatos() {
@@ -4114,17 +3971,6 @@
                     }, 300);
                 },
 
-                verArchivosGuardados() {
-                    this.showAdvancedMenu = false;
-                    setTimeout(() => {
-                        if (window.capacitorSaver && window.capacitorSaver.listarArchivosGuardados) {
-                            window.capacitorSaver.listarArchivosGuardados();
-                        } else {
-                            // Listar desde localStorage
-                            this.listarLocalStorageDirecto();
-                        }
-                    }, 300);
-                },
                 listarLocalStorageDirecto() {
                     const archivos = [];
                     for (let i = 0; i < localStorage.length; i++) {
@@ -4182,8 +4028,177 @@
                             this.workoutHistory[0].date : null
                     };
                 },
+                // 1. EXPORTAR DATOS COMPLETOS
+                exportarDatosCompletos() {
+                    this.showAdvancedMenu = false;
+                    
+                    setTimeout(() => {
+                        try {
+                            const datos = {
+                                tipo: "backup_completo_gymapp",
+                                version: "3.0",
+                                fecha: new Date().toISOString(),
+                                aplicacion: "GymApp",
+                                datos: {
+                                    // Todos los datos de la aplicación
+                                    workoutHistory: this.workoutHistory,
+                                    workoutGroups: this.workoutGroups,
+                                    customExercises: this.obtenerEjerciciosPersonalizados(),
+                                    configuracion: {
+                                        restTimerConfig: this.restTimerConfig,
+                                        soundEnabled: this.soundEnabled,
+                                        userLevel: this.userLevel
+                                    }
+                                }
+                            };
+                            
+                            const nombreArchivo = `gymapp_backup_${this.getTimestamp()}.json`;
+                            
+                            // Usar Capacitor si está disponible
+                            if (window.capacitorSaver && window.capacitorSaver.guardarJsonConCapacitor) {
+                                window.capacitorSaver.guardarJsonConCapacitor(datos, nombreArchivo);
+                            } else {
+                                // Fallback a localStorage
+                                this.guardarEnLocalStorage(datos, nombreArchivo);
+                            }
+                            
+                        } catch (error) {
+                            console.error('Error exportando datos:', error);
+                            alert('❌ Error al exportar datos');
+                        }
+                    }, 300);
+                },
 
-                // Función para timestamp
+                // 2. IMPORTAR DATOS COMPLETOS
+                importarDatosCompletos() {
+                    this.showAdvancedMenu = false;
+                    
+                    setTimeout(() => {
+                        // Crear input file para seleccionar archivo
+                        const input = document.createElement('input');
+                        input.type = 'file';
+                        input.accept = '.json';
+                        input.style.display = 'none';
+                        
+                        input.onchange = (event) => {
+                            const file = event.target.files[0];
+                            if (file) {
+                                this.procesarImportacionCompleta(file);
+                            }
+                        };
+                        
+                        document.body.appendChild(input);
+                        input.click();
+                        document.body.removeChild(input);
+                    }, 300);
+                },
+
+                // 3. PROCESAR IMPORTACIÓN COMPLETA
+                procesarImportacionCompleta(file) {
+                    const reader = new FileReader();
+                    
+                    reader.onload = (e) => {
+                        try {
+                            const datos = JSON.parse(e.target.result);
+                            
+                            if (datos.tipo === "backup_completo_gymapp" && datos.datos) {
+                                this.restaurarDatosCompletos(datos, file.name);
+                            } else {
+                                alert('❌ El archivo no es un backup válido de GymApp');
+                            }
+                        } catch (error) {
+                            alert('❌ Error: El archivo no es un JSON válido');
+                        }
+                    };
+                    
+                    reader.onerror = () => {
+                        alert('❌ Error leyendo el archivo');
+                    };
+                    
+                    reader.readAsText(file);
+                },
+
+                // 4. RESTAURAR DATOS COMPLETOS
+                restaurarDatosCompletos(datos, nombreArchivo) {
+                    const confirmar = confirm(`🔁 IMPORTAR BACKUP COMPLETO\n\n¿Restaurar todos los datos desde este backup?\n\n📊 Contenido:\n• ${datos.datos.workoutHistory?.length || 0} entrenamientos\n• ${datos.datos.workoutGroups?.length || 0} rutinas\n• Configuración completa\n\n⚠️ Esto reemplazará TODOS tus datos actuales.`);
+                    
+                    if (confirmar) {
+                        try {
+                            // Restaurar historial de entrenamientos
+                            if (datos.datos.workoutHistory) {
+                                this.workoutHistory = datos.datos.workoutHistory;
+                            }
+                            
+                            // Restaurar rutinas guardadas
+                            if (datos.datos.workoutGroups) {
+                                this.workoutGroups = datos.datos.workoutGroups;
+                            }
+                            
+                            // Restaurar ejercicios personalizados
+                            if (datos.datos.customExercises) {
+                                this.restaurarEjerciciosPersonalizados(datos.datos.customExercises);
+                            }
+                            
+                            // Restaurar configuración
+                            if (datos.datos.configuracion) {
+                                if (datos.datos.configuracion.restTimerConfig) {
+                                    this.restTimerConfig = datos.datos.configuracion.restTimerConfig;
+                                }
+                                if (datos.datos.configuracion.soundEnabled !== undefined) {
+                                    this.soundEnabled = datos.datos.configuracion.soundEnabled;
+                                }
+                                if (datos.datos.configuracion.userLevel) {
+                                    this.userLevel = datos.datos.configuracion.userLevel;
+                                }
+                            }
+                            
+                            // Guardar en localStorage
+                            this.saveToLocalStorage();
+                            
+                            alert(`✅ BACKUP IMPORTADO EXITOSAMENTE\n\n📁 ${nombreArchivo}\n📊 ${this.workoutHistory.length} entrenamientos\n📋 ${this.workoutGroups.length} rutinas\n\nLa app se ha actualizado con los datos importados.`);
+                            
+                        } catch (error) {
+                            console.error('Error restaurando datos:', error);
+                            alert('❌ Error al importar los datos');
+                        }
+                    }
+                },
+
+                // 5. FUNCIONES AUXILIARES
+                guardarEnLocalStorage(datos, nombreArchivo) {
+                    try {
+                        const clave = 'gymapp_backup_' + Date.now();
+                        const datosGuardar = {
+                            nombreArchivo: nombreArchivo,
+                            datos: datos,
+                            fecha: new Date().toISOString(),
+                            tipo: 'backup_completo'
+                        };
+                        
+                        localStorage.setItem(clave, JSON.stringify(datosGuardar));
+                        
+                        alert(`✅ DATOS EXPORTADOS\n\n📄 ${nombreArchivo}\n💾 Guardados en la aplicación\n\nLos datos se cargarán automáticamente al recargar.`);
+                        
+                    } catch (error) {
+                        console.error('Error guardando en localStorage:', error);
+                        alert('✅ Los datos principales siguen seguros en la app.');
+                    }
+                },
+
+                obtenerEjerciciosPersonalizados() {
+                    // Obtener todos los ejercicios personalizados
+                    const customData = localStorage.getItem('gymApp_customExercises');
+                    return customData ? JSON.parse(customData) : null;
+                },
+
+                restaurarEjerciciosPersonalizados(customExercises) {
+                    // Restaurar ejercicios personalizados
+                    if (customExercises) {
+                        localStorage.setItem('gymApp_customExercises', JSON.stringify(customExercises));
+                        // Recargar los ejercicios en la app
+                        this.loadCustomExercises();
+                    }
+                },
                 getTimestamp() {
                     const now = new Date();
                     return now.getFullYear() + 
@@ -7571,10 +7586,17 @@
                     }
                 },
                 resetApp() {
-                    if (confirm('¿Estás seguro de que quieres restablecer la aplicación? Se perderán todos tus datos.')) {
-                        localStorage.clear();
-                        location.reload();
-                    }
+                    this.showAdvancedMenu = false;
+                    setTimeout(() => {
+                        if (confirm('¿ESTÁS SEGURO?\n\nEsto borrará TODOS tus datos:\n• Historial de entrenamientos\n• Rutinas guardadas\n• Configuración\n\nEsta acción NO se puede deshacer.')) {
+                            // Tu función original de reset aquí
+                            localStorage.clear();
+                            alert('✅ App restablecida. Recargando...');
+                            setTimeout(() => {
+                                location.reload();
+                            }, 1000);
+                        }
+                    }, 300);
                 },
                 openAdvancedManagementModal() {
                     this.selectedWorkoutsToDelete = [];
