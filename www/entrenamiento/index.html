@@ -6334,7 +6334,7 @@
                 // REEMPLAZAR la función exportData con esta versión corregida
                 exportData() {
                     try {
-                        console.log('=== EXPORTANDO DATOS CON WEB SHARE API ===');
+                        console.log('=== EXPORTANDO DATOS CON STORAGE ACCESS FRAMEWORK ===');
                         
                         // Preparar todos los datos para exportar
                         const exportData = {
@@ -6362,12 +6362,19 @@
                         const dataStr = JSON.stringify(exportData, null, 2);
                         const fileName = `gymapp_backup_${new Date().toISOString().split('T')[0]}.json`;
 
-                        // Intentar usar Web Share API primero
-                        if (navigator.share) {
-                            console.log('Usando Web Share API...');
+                        // Intentar Storage Access Framework primero (más confiable)
+                        if ('showSaveFilePicker' in window) {
+                            console.log('Usando Storage Access Framework...');
+                            this.useSAFDownload(dataStr, fileName);
+                        } 
+                        // Fallback: Web Share API
+                        else if (navigator.share) {
+                            console.log('SAF no disponible, usando Web Share API...');
                             this.useWebShare(dataStr, fileName);
-                        } else {
-                            console.log('Web Share API no disponible, usando descarga tradicional');
+                        }
+                        // Último recurso: método tradicional
+                        else {
+                            console.log('APIs modernas no disponibles, usando descarga tradicional');
                             this.useTraditionalDownload(dataStr, fileName);
                         }
                         
@@ -6376,61 +6383,194 @@
                         alert('❌ Error al exportar datos: ' + error.message);
                     }
                 },
-
-                // Método con Web Share API
-                async useWebShare(dataStr, fileName) {
-                    try {
-                        // Crear archivo para compartir
-                        const blob = new Blob([dataStr], { type: 'application/json' });
-                        const file = new File([blob], fileName, { type: 'application/json' });
-
-                        // Verificar si se pueden compartir archivos
-                        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                            await navigator.share({
-                                title: 'Backup GymApp',
-                                text: 'Datos de respaldo de mi entrenamiento',
-                                files: [file]
-                            });
-                            alert('✅ Datos exportados correctamente. Elige donde guardar el archivo.');
-                        } else {
-                            // Compartir como texto si no se pueden compartir archivos
-                            await navigator.share({
-                                title: 'Backup GymApp',
-                                text: `Copia este texto y guárdalo como ${fileName}:\n\n${dataStr}`
-                            });
-                            alert('✅ Datos listos para guardar. Pega el texto en un archivo .json');
-                        }
-                        
-                    } catch (error) {
-                        if (error.name !== 'AbortError') {
-                            console.log('Web Share falló, usando método tradicional:', error);
-                            this.useTraditionalDownload(dataStr, fileName);
-                        }
-                    }
-                },
-
-                // Método tradicional de descarga
+                // Método tradicional de descarga (fallback final)
                 useTraditionalDownload(dataStr, fileName) {
                     try {
-                        const dataBlob = new Blob([dataStr], { type: 'application/json' });
-                        const url = URL.createObjectURL(dataBlob);
+                        console.log('Usando descarga tradicional...');
+                        
+                        const blob = new Blob([dataStr], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
                         
                         const link = document.createElement('a');
                         link.href = url;
                         link.download = fileName;
+                        link.style.display = 'none';
                         
                         document.body.appendChild(link);
-                        link.click();
+                        
+                        // Usar evento de clic mejorado
+                        const clickEvent = new MouseEvent('click', {
+                            view: window,
+                            bubbles: true,
+                            cancelable: true
+                        });
+                        link.dispatchEvent(clickEvent);
+                        
                         document.body.removeChild(link);
                         
-                        URL.revokeObjectURL(url);
+                        // Revocar URL después de un tiempo
+                        setTimeout(() => {
+                            URL.revokeObjectURL(url);
+                        }, 60000); // 60 segundos para dar tiempo a la descarga
                         
-                        alert('✅ Datos exportados correctamente. Archivo descargado: ' + fileName);
+                        console.log('✅ Descarga tradicional iniciada');
+                        this.showExportSuccess(`Descarga iniciada: ${fileName}`);
                         
                     } catch (error) {
                         console.error('Error en descarga tradicional:', error);
                         // Último recurso: mostrar datos para copiar manualmente
                         this.showManualExport(dataStr, fileName);
+                    }
+                },
+
+                // Método con Web Share API (actualizado)
+                async useWebShare(dataStr, fileName) {
+                    try {
+                        console.log('Usando Web Share API...');
+                        
+                        const blob = new Blob([dataStr], { type: 'application/json' });
+                        const file = new File([blob], fileName, { type: 'application/json' });
+
+                        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                            await navigator.share({
+                                title: 'Backup GymApp - ' + fileName,
+                                text: 'Datos de respaldo de mi entrenamiento',
+                                files: [file]
+                            });
+                            this.showExportSuccess('Archivo compartido correctamente');
+                        } else {
+                            // Compartir como texto
+                            await navigator.share({
+                                title: 'Backup GymApp - ' + fileName,
+                                text: `Backup de GymApp. Guarda este texto como ${fileName}:\n\n${dataStr}`
+                            });
+                            this.showExportSuccess('Datos listos para guardar manualmente');
+                        }
+                        
+                    } catch (error) {
+                        if (error.name !== 'AbortError') {
+                            console.log('Web Share falló:', error);
+                            this.useTraditionalDownload(dataStr, fileName);
+                        }
+                    }
+                },
+
+                // Método PRINCIPAL - Storage Access Framework (Android 10+, Chrome 86+)
+                async useSAFDownload(dataStr, fileName) {
+                    try {
+                        console.log('Iniciando SAF download...');
+                        
+                        // Verificar permisos primero
+                        if (await this.checkSAFPermissions()) {
+                            const fileHandle = await window.showSaveFilePicker({
+                                suggestedName: fileName,
+                                types: [{
+                                    description: 'Archivo JSON de respaldo',
+                                    accept: {
+                                        'application/json': ['.json']
+                                    }
+                                }],
+                                excludeAcceptAllOption: false,
+                                startIn: 'downloads' // Sugerir carpeta Downloads
+                            });
+
+                            // Crear escritor y guardar archivo
+                            const writableStream = await fileHandle.createWritable();
+                            await writableStream.write(dataStr);
+                            await writableStream.close();
+
+                            console.log('✅ Archivo guardado via SAF:', fileName);
+                            this.showExportSuccess(`Archivo guardado: ${fileName}`);
+                            
+                        } else {
+                            throw new Error('Permisos de almacenamiento denegados');
+                        }
+                        
+                    } catch (error) {
+                        console.log('SAF falló:', error);
+                        
+                        // Manejo específico de errores
+                        if (error.name === 'AbortError') {
+                            console.log('Usuario canceló la operación');
+                            return;
+                        } else if (error.name === 'SecurityError') {
+                            console.log('Error de seguridad, intentando método alternativo...');
+                            this.useAlternativeSAFDownload(dataStr, fileName);
+                        } else if (error.message.includes('permission')) {
+                            console.log('Problema de permisos, intentando método alternativo...');
+                            this.useAlternativeSAFDownload(dataStr, fileName);
+                        } else {
+                            // Fallback a Web Share API
+                            console.log('SAF no disponible, intentando Web Share...');
+                            this.useWebShare(dataStr, fileName);
+                        }
+                    }
+                },
+                // Verificar y solicitar permisos de almacenamiento
+                async checkSAFPermissions() {
+                    try {
+                        // Verificar si la API está disponible
+                        if (!('showSaveFilePicker' in window)) {
+                            return false;
+                        }
+
+                        // Para algunos navegadores, necesitamos verificar permisos
+                        if ('permissions' in navigator) {
+                            try {
+                                const permission = await navigator.permissions.query({ 
+                                    name: 'file-system' 
+                                });
+                                return permission.state === 'granted';
+                            } catch (e) {
+                                // Si falla la verificación, asumimos que funciona
+                                console.log('No se pudo verificar permisos, continuando...');
+                                return true;
+                            }
+                        }
+                        
+                        return true;
+                    } catch (error) {
+                        console.log('Error verificando permisos:', error);
+                        return false;
+                    }
+                },
+                // Método alternativo SAF para compatibilidad
+                async useAlternativeSAFDownload(dataStr, fileName) {
+                    try {
+                        console.log('Intentando método SAF alternativo...');
+                        
+                        // Crear blob y URL
+                        const blob = new Blob([dataStr], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        
+                        // Crear enlace de descarga
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = fileName;
+                        link.style.display = 'none';
+                        
+                        // Agregar al DOM y hacer clic
+                        document.body.appendChild(link);
+                        
+                        // Disparar evento de clic
+                        const clickEvent = new MouseEvent('click', {
+                            view: window,
+                            bubbles: true,
+                            cancelable: true
+                        });
+                        link.dispatchEvent(clickEvent);
+                        
+                        // Limpiar
+                        document.body.removeChild(link);
+                        setTimeout(() => URL.revokeObjectURL(url), 1000);
+                        
+                        console.log('✅ Descarga alternativa iniciada');
+                        this.showExportSuccess(`Descarga iniciada: ${fileName}`);
+                        
+                    } catch (error) {
+                        console.error('Error en método alternativo:', error);
+                        // Último recurso
+                        this.useWebShare(dataStr, fileName);
                     }
                 },
 
@@ -6511,6 +6651,7 @@
                     document.getElementById('exportDataText').select();
                 },
                 // AÑADE esta función si no la tienes
+                // Notificación de éxito mejorada
                 showExportSuccess(message = 'Datos exportados correctamente') {
                     // Crear notificación de éxito
                     const notification = document.createElement('div');
@@ -6527,21 +6668,22 @@
                         display: flex;
                         align-items: center;
                         gap: 12px;
-                        max-width: 350px;
+                        max-width: 400px;
                         animation: slideInRight 0.3s ease-out;
+                        font-family: 'Inter', sans-serif;
                     `;
                     
                     notification.innerHTML = `
                         <i class="fas fa-check-circle" style="font-size: 24px;"></i>
                         <div>
-                            <div style="font-weight: bold; font-size: 1rem;">¡Éxito!</div>
+                            <div style="font-weight: bold; font-size: 1rem;">¡Exportación Exitosa!</div>
                             <div style="font-size: 0.85rem; opacity: 0.9;">${message}</div>
                         </div>
                     `;
                     
                     document.body.appendChild(notification);
                     
-                    // Auto-remover después de 4 segundos
+                    // Auto-remover después de 5 segundos
                     setTimeout(() => {
                         if (document.body.contains(notification)) {
                             notification.style.animation = 'slideOutRight 0.3s ease-in';
@@ -6551,7 +6693,7 @@
                                 }
                             }, 300);
                         }
-                    }, 4000);
+                    }, 5000);
                 },
 
                 // También verificar la función importData por si acaso
