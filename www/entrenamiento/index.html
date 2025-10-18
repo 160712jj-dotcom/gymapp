@@ -6399,16 +6399,34 @@
                 // Método ESPECÍFICO para WebView de Android
                 useAndroidWebViewDownload(dataStr, fileName) {
                     try {
-                        console.log('Iniciando descarga para WebView Android...');
+                        // Crear Blob y URL
+                        const blob = new Blob([dataStr], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
                         
-                        // Método 1: Intentar descarga tradicional mejorada
-                        this.useEnhancedTraditionalDownload(dataStr, fileName);
+                        // Crear iframe invisible para forzar descarga
+                        const iframe = document.createElement('iframe');
+                        iframe.style.display = 'none';
+                        iframe.src = url;
+                        document.body.appendChild(iframe);
+                        
+                        // Forzar descarga después de un delay
+                        setTimeout(() => {
+                            const link = document.createElement('a');
+                            link.href = url;
+                            link.download = fileName;
+                            link.click();
+                            
+                            // Limpiar
+                            document.body.removeChild(iframe);
+                            setTimeout(() => URL.revokeObjectURL(url), 1000);
+                        }, 100);
+                        
+                        this.showExportSuccess('Descarga iniciada automáticamente');
                         
                     } catch (error) {
-                        console.error('Error en método WebView:', error);
-                        
-                        // Método 2: Fallback a mostrar datos para copiar
-                        this.showManualExport(dataStr, fileName);
+                        console.error('Error en descarga Android:', error);
+                        // Fallback
+                        this.useEnhancedTraditionalDownload(dataStr, fileName);
                     }
                 },
                 // Descarga tradicional MEJORADA para Android
