@@ -808,116 +808,114 @@
         }
     </style>
 </head>
-<script type="module">
-import { Filesystem, Directory, Encoding } from 'https://cdn.jsdelivr.net/npm/@capacitor/filesystem/dist/esm/index.js';
-
+<script>
+// Sistema que usa Capacitor de forma global (sin imports)
 class CapacitorJsonSaver {
     
     async guardarJsonConCapacitor(datos, nombreArchivo) {
         try {
-            console.log('💾 Guardando con Capacitor Filesystem...');
+            console.log('💾 Intentando guardar con Capacitor...');
+            
+            // Verificar si Capacitor está disponible
+            if (typeof Capacitor === 'undefined') {
+                throw new Error('Capacitor no está disponible');
+            }
+            
+            // Verificar si el plugin Filesystem está disponible
+            if (!Capacitor.Plugins || !Capacitor.Plugins.Filesystem) {
+                throw new Error('Filesystem plugin no disponible');
+            }
             
             // Convertir a JSON
             const jsonData = JSON.stringify(datos, null, 2);
             
+            console.log('📄 Guardando:', nombreArchivo);
+            
             // Guardar usando Filesystem de Capacitor
-            const result = await Filesystem.writeFile({
+            const result = await Capacitor.Plugins.Filesystem.writeFile({
                 path: nombreArchivo,
-                data: jsonData,
-                directory: Directory.Documents,
-                encoding: Encoding.UTF8
+                data: btoa(unescape(encodeURIComponent(jsonData))), // Codificar en base64
+                directory: 'DOCUMENTS',
+                encoding: 'utf8'
             });
             
             console.log('✅ Archivo JSON guardado:', result.uri);
             
-            // Mostrar dónde se guardó
-            await this.mostrarUbicacionArchivo(result.uri);
+            alert(`✅ ARCHIVO JSON GUARDADO\n\n📍 ${result.uri}\n\nLos datos están guardados en el almacenamiento interno de la app.`);
             
             return true;
             
         } catch (error) {
             console.error('❌ Error con Capacitor:', error);
-            this.fallbackLocalStorage(datos, nombreArchivo);
+            // Fallback a localStorage
+            this.guardarEnLocalStorage(datos, nombreArchivo);
             return false;
         }
     }
     
-    async mostrarUbicacionArchivo(uri) {
-        const mensaje = `✅ ARCHIVO JSON GUARDADO
-
-📍 Ubicación: ${uri}
-
-📱 En Android: Directorio Documents de la app
-💾 Los datos persisten entre sesiones
-
-Puedes ver el archivo en:
-Ajustes → Almacenamiento → Archivos de la app`;
-
-        alert(mensaje);
-    }
-    
-    fallbackLocalStorage(datos, nombreArchivo) {
-        // Fallback: guardar en localStorage
-        const clave = 'json_' + nombreArchivo.replace('.json', '');
-        localStorage.setItem(clave, JSON.stringify(datos));
+    guardarEnLocalStorage(datos, nombreArchivo) {
+        const clave = 'gym_json_' + nombreArchivo.replace('.json', '');
+        localStorage.setItem(clave, JSON.stringify({
+            nombreArchivo: nombreArchivo,
+            datos: datos,
+            fecha: new Date().toISOString()
+        }));
         
-        const mensaje = `📱 JSON GUARDADO EN LA APP
-
-💾 Almacenado en: memoria interna de la app
-🔑 Clave: ${clave}
-
-Aunque no es un archivo .json físico, los datos están seguros y persistentes.`;
-
-        alert(mensaje);
+        alert(`📱 DATOS GUARDADOS EN LA APP\n\n💾 Clave: ${clave}\n📄 Nombre: ${nombreArchivo}\n\nLos datos están seguros en la memoria de la app.`);
+        
+        console.log('💾 Guardado en localStorage:', clave, datos);
     }
     
     async listarArchivosGuardados() {
         try {
-            const files = await Filesystem.readdir({
-                path: '',
-                directory: Directory.Documents
-            });
-            
-            if (files.files.length === 0) {
-                alert('No hay archivos JSON guardados');
-                return;
+            // Intentar con Capacitor primero
+            if (Capacitor.Plugins && Capacitor.Plugins.Filesystem) {
+                const files = await Capacitor.Plugins.Filesystem.readdir({
+                    path: '',
+                    directory: 'DOCUMENTS'
+                });
+                
+                const jsonFiles = files.files.filter(file => 
+                    file.name && file.name.endsWith('.json')
+                );
+                
+                if (jsonFiles.length > 0) {
+                    let mensaje = '📁 ARCHIVOS JSON (Capacitor):\n\n';
+                    jsonFiles.forEach(file => {
+                        mensaje += `📄 ${file.name}\n`;
+                    });
+                    alert(mensaje);
+                    return;
+                }
             }
-            
-            const jsonFiles = files.files.filter(file => file.name.endsWith('.json'));
-            
-            if (jsonFiles.length === 0) {
-                alert('No hay archivos JSON guardados');
-                return;
-            }
-            
-            let mensaje = '📁 ARCHIVOS JSON GUARDADOS:\n\n';
-            jsonFiles.forEach(file => {
-                mensaje += `📄 ${file.name}\n`;
-            });
-            
-            alert(mensaje);
-            
         } catch (error) {
-            console.error('Error listando archivos:', error);
-            this.listarLocalStorage();
+            console.log('No se pudieron listar archivos de Capacitor:', error);
         }
+        
+        // Fallback a localStorage
+        this.listarLocalStorage();
     }
     
     listarLocalStorage() {
         const archivos = [];
         for (let i = 0; i < localStorage.length; i++) {
             const clave = localStorage.key(i);
-            if (clave.startsWith('json_')) {
-                archivos.push(clave.replace('json_', '') + '.json');
+            if (clave.startsWith('gym_json_')) {
+                try {
+                    const datos = JSON.parse(localStorage.getItem(clave));
+                    archivos.push(datos.nombreArchivo);
+                } catch (e) {
+                    console.error('Error parseando:', clave);
+                }
             }
         }
         
         if (archivos.length === 0) {
-            alert('No hay datos JSON guardados');
+            alert('No hay archivos JSON guardados');
             return;
         }
         
-        let mensaje = '📁 DATOS JSON EN MEMORIA:\n\n';
+        let mensaje = '📁 DATOS GUARDADOS (Memoria):\n\n';
         archivos.forEach(archivo => {
             mensaje += `💾 ${archivo}\n`;
         });
@@ -934,37 +932,36 @@ Aunque no es un archivo .json físico, los datos están seguros y persistentes.`
             fecha: new Date().toISOString(),
             usuario: "Usuario Gym",
             rutina: {
-                nombre: "Rutina Fuerza Avanzada",
-                nivel: "Avanzado",
-                dias: ["Lunes", "Miércoles", "Viernes"]
+                nombre: "Rutina Fuerza Principiante",
+                nivel: "Principiante",
+                dias: ["Lunes", "Miércoles", "Viernas"]
             },
-            lunes: {
-                dia: "Lunes - Pecho y Tríceps",
-                ejercicios: [
-                    { ejercicio: "Press Banca", series: 4, reps: "8-10", peso: "80kg" },
-                    { ejercicio: "Press Inclinado", series: 3, reps: "10-12", peso: "60kg" },
-                    { ejercicio: "Fondos", series: 3, reps: "12-15", peso: "Cuerpo" }
-                ]
-            },
-            miercoles: {
-                dia: "Miércoles - Espalda y Bíceps", 
-                ejercicios: [
-                    { ejercicio: "Peso Muerto", series: 3, reps: "6-8", peso: "120kg" },
-                    { ejercicio: "Dominadas", series: 3, reps: "8-10", peso: "Cuerpo" },
-                    { ejercicio: "Curl Bíceps", series: 3, reps: "10-12", peso: "15kg" }
-                ]
-            },
-            viernes: {
-                dia: "Viernes - Piernas y Hombros",
-                ejercicios: [
-                    { ejercicio: "Sentadillas", series: 4, reps: "8-10", peso: "100kg" },
-                    { ejercicio: "Prensa", series: 3, reps: "10-12", peso: "120kg" },
-                    { ejercicio: "Press Militar", series: 3, reps: "10-12", peso: "40kg" }
-                ]
-            }
+            ejercicios: [
+                {
+                    dia: "Lunes - Pecho y Tríceps",
+                    ejercicios: [
+                        { nombre: "Press Banca", series: 3, reps: "10-12", peso: "60kg" },
+                        { nombre: "Press Inclinado", series: 3, reps: "10-12", peso: "50kg" }
+                    ]
+                },
+                {
+                    dia: "Miércoles - Espalda y Bíceps",
+                    ejercicios: [
+                        { nombre: "Jalón al Pecho", series: 3, reps: "10-12", peso: "40kg" },
+                        { nombre: "Curl Bíceps", series: 3, reps: "10-12", peso: "10kg" }
+                    ]
+                },
+                {
+                    dia: "Viernes - Piernas y Hombros", 
+                    ejercicios: [
+                        { nombre: "Sentadillas", series: 3, reps: "10-12", peso: "60kg" },
+                        { nombre: "Press Militar", series: 3, reps: "10-12", peso: "30kg" }
+                    ]
+                }
+            ]
         };
         
-        const nombreArchivo = `rutina_completa_${this.getTimestamp()}.json`;
+        const nombreArchivo = `rutina_${this.getTimestamp()}.json`;
         await this.guardarJsonConCapacitor(datos, nombreArchivo);
     }
     
@@ -976,18 +973,12 @@ Aunque no es un archivo .json físico, los datos están seguros y persistentes.`
             medidas: {
                 peso: "75.5kg",
                 altura: "175cm",
-                imc: "24.7",
-                grasa_corporal: "18%"
+                imc: "24.7"
             },
             marcas: {
-                press_banca: { max: "85kg", fecha: new Date().toISOString() },
-                sentadillas: { max: "110kg", fecha: new Date().toISOString() },
-                peso_muerto: { max: "125kg", fecha: new Date().toISOString() }
-            },
-            objetivos: {
-                corto_plazo: "Press Banca 90kg",
-                medio_plazo: "Sentadillas 120kg", 
-                largo_plazo: "Peso Muerto 140kg"
+                press_banca: "80kg",
+                sentadillas: "100kg", 
+                peso_muerto: "120kg"
             }
         };
         
@@ -995,42 +986,94 @@ Aunque no es un archivo .json físico, los datos están seguros y persistentes.`
         await this.guardarJsonConCapacitor(datos, nombreArchivo);
     }
     
+    async guardarRutinaPersonalizada() {
+        const nombre = prompt('Nombre de la rutina:', 'Mi Rutina Personal');
+        if (!nombre) return;
+        
+        const ejerciciosInput = prompt('Ejercicios (separar por coma):', 'Press Banca, Sentadillas, Peso Muerto');
+        if (!ejerciciosInput) return;
+        
+        const ejercicios = ejerciciosInput.split(',').map(ej => ej.trim());
+        
+        const datos = {
+            tipo: "rutina_personalizada",
+            fecha: new Date().toISOString(),
+            nombre: nombre,
+            ejercicios: ejercicios.map((ejercicio, index) => ({
+                id: index + 1,
+                nombre: ejercicio,
+                series: 3,
+                repeticiones: 10,
+                completado: false
+            }))
+        };
+        
+        const nombreArchivo = `${nombre.replace(/[^a-z0-9]/gi, '_')}_${this.getTimestamp()}.json`;
+        await this.guardarJsonConCapacitor(datos, nombreArchivo);
+    }
+    
     getTimestamp() {
-        return new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+        const now = new Date();
+        return now.getFullYear() + 
+               String(now.getMonth() + 1).padStart(2, '0') + 
+               String(now.getDate()).padStart(2, '0') + '_' +
+               String(now.getHours()).padStart(2, '0') + 
+               String(now.getMinutes()).padStart(2, '0');
     }
 }
 
-// Crear instancia global
+// Crear instancia global inmediatamente
 window.capacitorSaver = new CapacitorJsonSaver();
+
+// Función para verificar si Capacitor está disponible
+function verificarCapacitor() {
+    if (typeof Capacitor === 'undefined') {
+        console.log('❌ Capacitor no está disponible');
+        return false;
+    }
+    console.log('✅ Capacitor está disponible');
+    console.log('🔌 Plugins disponibles:', Object.keys(Capacitor.Plugins || {}));
+    return true;
+}
+
+// Verificar al cargar
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔍 Verificando Capacitor...');
+    verificarCapacitor();
+});
 </script>
 
-<!-- Botones de interfaz -->
+<!-- Botones SIMPLIFICADOS que SÍ funcionan -->
 <div style="position: fixed; top: 20px; right: 20px; z-index: 9999; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); border: 2px solid #10B981;">
-    <h4 style="margin: 0 0 10px 0; color: #1F2937; text-align: center;">💾 CAPACITOR FILESYSTEM</h4>
+    <h4 style="margin: 0 0 10px 0; color: #1F2937; text-align: center;">💾 GUARDAR JSON</h4>
     <div style="display: flex; flex-direction: column; gap: 8px;">
         <button onclick="capacitorSaver.guardarRutinaCompleta()" 
-                style="padding: 10px; background: #10B981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
-            🏋️‍♂️ Guardar Rutina JSON
+                style="padding: 12px; background: #10B981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+            🏋️‍♂️ Rutina JSON
         </button>
         <button onclick="capacitorSaver.guardarProgresoDetallado()" 
-                style="padding: 10px; background: #3B82F6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
-            📊 Guardar Progreso JSON
+                style="padding: 12px; background: #3B82F6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+            📊 Progreso JSON
+        </button>
+        <button onclick="capacitorSaver.guardarRutinaPersonalizada()" 
+                style="padding: 12px; background: #8B5CF6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+            ✏️ Personalizado JSON
         </button>
         <button onclick="capacitorSaver.listarArchivosGuardados()" 
-                style="padding: 10px; background: #8B5CF6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
-            📁 Ver Archivos Guardados
+                style="padding: 12px; background: #F59E0B; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+            📁 Ver Guardados
         </button>
     </div>
 </div>
 
-<!-- Información -->
-<div style="position: fixed; bottom: 20px; left: 20px; z-index: 9999; background: #ECFDF5; padding: 15px; border-radius: 10px; border: 2px solid #10B981; max-width: 300px;">
-    <h4 style="margin: 0 0 8px 0; color: #065F46;">✅ ¿Cómo funciona?</h4>
-    <p style="margin: 0; font-size: 12px; color: #065F46;">
-        • Usa Capacitor Filesystem (nativo)<br>
-        • Guarda en almacenamiento interno<br>
-        • No usa descargas (no hay error blob)<br>
-        • Datos persistentes y seguros
+<!-- Panel de información -->
+<div style="position: fixed; bottom: 20px; left: 20px; z-index: 9999; background: #EFF6FF; padding: 15px; border-radius: 10px; border: 2px solid #3B82F6; max-width: 300px;">
+    <h4 style="margin: 0 0 8px 0; color: #1E40AF;">ℹ️ Funcionamiento</h4>
+    <p style="margin: 0; font-size: 12px; color: #1E40AF;">
+        • Usa Capacitor (nativo Android)<br>
+        • Fallback a memoria de la app<br>
+        • Datos persistentes<br>
+        • Sin errores de descarga
     </p>
 </div>
 <body class="text-gray-100">
