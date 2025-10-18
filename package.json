@@ -1,8 +1,23 @@
 {
+  "name": "gymapp",
+  "version": "1.0.0",
+  "description": "Tu aplicación de gym",
+  "main": "www/index.html",
+  "scripts": {
+    "build": "echo 'Build completado'",
+    "serve": "npx http-server www -o"
+  },
   "dependencies": {
     "@capacitor/android": "^7.4.3",
     "@capacitor/cli": "^7.4.3",
     "@capacitor/core": "^7.4.3",
     "@capacitor/filesystem": "^7.1.4"
+  },
+  "devDependencies": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "capacitor": {
+    "webDir": "www"
   }
 }
