@@ -4104,13 +4104,16 @@
                     reader.onload = (e) => {
                         try {
                             const datos = JSON.parse(e.target.result);
+                            console.log('📥 Archivo importado:', datos);
                             
-                            if (datos.tipo === "backup_completo_gymapp" && datos.datos) {
+                            // VALIDACIÓN MÁS FLEXIBLE - aceptar múltiples formatos
+                            if (this.esBackupValido(datos)) {
                                 this.restaurarDatosCompletos(datos, file.name);
                             } else {
-                                alert('❌ El archivo no es un backup válido de GymApp');
+                                alert('❌ El archivo no es un backup válido de GymApp\n\nFormato no reconocido.');
                             }
                         } catch (error) {
+                            console.error('Error parseando JSON:', error);
                             alert('❌ Error: El archivo no es un JSON válido');
                         }
                     };
@@ -4121,39 +4124,65 @@
                     
                     reader.readAsText(file);
                 },
+                esBackupValido(datos) {
+                    // Aceptar múltiples formatos de backup
+                    if (!datos || typeof datos !== 'object') return false;
+                    
+                    // Formato 1: Backup completo nuevo
+                    if (datos.tipo === "backup_completo_gymapp" && datos.datos) {
+                        return true;
+                    }
+                    
+                    // Formato 2: Backup completo antiguo
+                    if (datos.tipo === "backup_completo" && datos.datos) {
+                        return true;
+                    }
+                    
+                    // Formato 3: Datos directos (compatibilidad con versiones anteriores)
+                    if (datos.workoutHistory !== undefined || datos.workoutGroups !== undefined) {
+                        return true;
+                    }
+                    
+                    // Formato 4: Estructura antigua de datos
+                    if (datos.datos && (datos.datos.workoutHistory || datos.datos.historial_entrenamientos)) {
+                        return true;
+                    }
+                    
+                    console.log('Formato no reconocido:', datos);
+                    return false;
+                },
 
                 // 4. RESTAURAR DATOS COMPLETOS
                 restaurarDatosCompletos(datos, nombreArchivo) {
-                    const confirmar = confirm(`🔁 IMPORTAR BACKUP COMPLETO\n\n¿Restaurar todos los datos desde este backup?\n\n📊 Contenido:\n• ${datos.datos.workoutHistory?.length || 0} entrenamientos\n• ${datos.datos.workoutGroups?.length || 0} rutinas\n• Configuración completa\n\n⚠️ Esto reemplazará TODOS tus datos actuales.`);
+                    const confirmar = confirm(`🔁 IMPORTAR BACKUP COMPLETO\n\n¿Restaurar todos los datos desde este backup?\n\n📊 Contenido detectado:\n${this.obtenerInfoBackup(datos)}\n\n⚠️ Esto reemplazará TODOS tus datos actuales.`);
                     
                     if (confirmar) {
                         try {
+                            // Determinar el formato y restaurar accordingly
+                            const datosParaRestaurar = this.extraerDatosParaRestaurar(datos);
+                            
                             // Restaurar historial de entrenamientos
-                            if (datos.datos.workoutHistory) {
-                                this.workoutHistory = datos.datos.workoutHistory;
+                            if (datosParaRestaurar.workoutHistory) {
+                                this.workoutHistory = datosParaRestaurar.workoutHistory;
+                                console.log('✅ Entrenamientos restaurados:', this.workoutHistory.length);
                             }
                             
                             // Restaurar rutinas guardadas
-                            if (datos.datos.workoutGroups) {
-                                this.workoutGroups = datos.datos.workoutGroups;
+                            if (datosParaRestaurar.workoutGroups) {
+                                this.workoutGroups = datosParaRestaurar.workoutGroups;
+                                console.log('✅ Rutinas restauradas:', this.workoutGroups.length);
                             }
                             
                             // Restaurar ejercicios personalizados
-                            if (datos.datos.customExercises) {
-                                this.restaurarEjerciciosPersonalizados(datos.datos.customExercises);
+                            if (datosParaRestaurar.customExercises) {
+                                this.restaurarEjerciciosPersonalizados(datosParaRestaurar.customExercises);
+                                console.log('✅ Ejercicios personalizados restaurados');
                             }
                             
                             // Restaurar configuración
-                            if (datos.datos.configuracion) {
-                                if (datos.datos.configuracion.restTimerConfig) {
-                                    this.restTimerConfig = datos.datos.configuracion.restTimerConfig;
-                                }
-                                if (datos.datos.configuracion.soundEnabled !== undefined) {
-                                    this.soundEnabled = datos.datos.configuracion.soundEnabled;
-                                }
-                                if (datos.datos.configuracion.userLevel) {
-                                    this.userLevel = datos.datos.configuracion.userLevel;
-                                }
+                            if (datosParaRestaurar.configuracion) {
+                                this.restaurarConfiguracion(datosParaRestaurar.configuracion);
+                                console.log('✅ Configuración restaurada');
                             }
                             
                             // Guardar en localStorage
@@ -4163,9 +4192,91 @@
                             
                         } catch (error) {
                             console.error('Error restaurando datos:', error);
-                            alert('❌ Error al importar los datos');
+                            alert('❌ Error al importar los datos: ' + error.message);
                         }
                     }
+                },
+                obtenerInfoBackup(datos) {
+                    let info = '';
+                    
+                    // Formato 1: Nuevo backup completo
+                    if (datos.tipo === "backup_completo_gymapp" && datos.datos) {
+                        info += `• ${datos.datos.workoutHistory?.length || 0} entrenamientos\n`;
+                        info += `• ${datos.datos.workoutGroups?.length || 0} rutinas\n`;
+                        info += `• Configuración de la app\n`;
+                    }
+                    // Formato 2: Backup antiguo
+                    else if (datos.tipo === "backup_completo" && datos.datos) {
+                        info += `• ${datos.datos.historial_entrenamientos?.length || 0} entrenamientos\n`;
+                        info += `• ${datos.datos.rutinas_guardadas?.length || 0} rutinas\n`;
+                        info += `• Configuración\n`;
+                    }
+                    // Formato 3: Datos directos
+                    else if (datos.workoutHistory || datos.workoutGroups) {
+                        info += `• ${datos.workoutHistory?.length || 0} entrenamientos\n`;
+                        info += `• ${datos.workoutGroups?.length || 0} rutinas\n`;
+                    }
+                    // Formato 4: Estructura antigua
+                    else if (datos.datos) {
+                        info += `• ${datos.datos.workoutHistory?.length || datos.datos.historial_entrenamientos?.length || 0} entrenamientos\n`;
+                        info += `• ${datos.datos.workoutGroups?.length || datos.datos.rutinas_guardadas?.length || 0} rutinas\n`;
+                    }
+                    else {
+                        info += '• Formato detectado pero contenido no especificado\n';
+                    }
+                    
+                    return info;
+                },
+
+                extraerDatosParaRestaurar(datos) {
+                    const resultado = {};
+                    
+                    // Formato 1: Nuevo backup completo
+                    if (datos.tipo === "backup_completo_gymapp" && datos.datos) {
+                        resultado.workoutHistory = datos.datos.workoutHistory;
+                        resultado.workoutGroups = datos.datos.workoutGroups;
+                        resultado.customExercises = datos.datos.customExercises;
+                        resultado.configuracion = datos.datos.configuracion;
+                    }
+                    // Formato 2: Backup antiguo
+                    else if (datos.tipo === "backup_completo" && datos.datos) {
+                        resultado.workoutHistory = datos.datos.historial_entrenamientos;
+                        resultado.workoutGroups = datos.datos.rutinas_guardadas;
+                        resultado.customExercises = datos.datos.customExercises;
+                        resultado.configuracion = datos.datos.configuracion;
+                    }
+                    // Formato 3: Datos directos
+                    else if (datos.workoutHistory || datos.workoutGroups) {
+                        resultado.workoutHistory = datos.workoutHistory;
+                        resultado.workoutGroups = datos.workoutGroups;
+                        resultado.customExercises = datos.customExercises;
+                        resultado.configuracion = datos.configuracion;
+                    }
+                    // Formato 4: Estructura antigua
+                    else if (datos.datos) {
+                        resultado.workoutHistory = datos.datos.workoutHistory || datos.datos.historial_entrenamientos;
+                        resultado.workoutGroups = datos.datos.workoutGroups || datos.datos.rutinas_guardadas;
+                        resultado.customExercises = datos.datos.customExercises;
+                        resultado.configuracion = datos.datos.configuracion;
+                    }
+                    
+                    return resultado;
+                },
+
+                restaurarConfiguracion(configuracion) {
+                    if (configuracion.restTimerConfig) {
+                        this.restTimerConfig = configuracion.restTimerConfig;
+                    }
+                    if (configuracion.soundEnabled !== undefined) {
+                        this.soundEnabled = configuracion.soundEnabled;
+                    }
+                    if (configuracion.userLevel) {
+                        this.userLevel = configuracion.userLevel;
+                    }
+                    
+                    // Guardar configuración en localStorage
+                    localStorage.setItem('gymApp_restTimerConfig', JSON.stringify(this.restTimerConfig));
+                    localStorage.setItem('gymApp_soundEnabled', this.soundEnabled);
                 },
 
                 // 5. FUNCIONES AUXILIARES
