@@ -6402,38 +6402,43 @@
                 // Método ESPECÍFICO para WebView de Android
                 async useAndroidWebViewDownload(dataStr, fileName) {
                     try {
-                        console.log('📱 Usando Capacitor Filesystem...');
-                        
-                        // ✅ FORMA CORRECTA de usar Capacitor Filesystem
+                        // 1. Guardar temporalmente con Filesystem
                         const { Filesystem, Directory } = await import('@capacitor/filesystem');
-                        
-                        // ✅ Guardar en Directorio de Descargas
-                        await Filesystem.writeFile({
+                        const result = await Filesystem.writeFile({
                             path: fileName,
                             data: dataStr,
-                            directory: Directory.Downloads,  // ✅ CORRECTO
-                            encoding: 'utf8',
-                            recursive: true
+                            directory: Directory.Cache, // Guardar en caché
+                            encoding: 'utf8'
                         });
-                        
-                        console.log('✅ Archivo guardado con éxito');
-                        this.showExportSuccess(`✅ Archivo guardado en Descargas: ${fileName}`);
-                        
-                        // Cerrar menús de exportación si existen
-                        if (this.exportMenuOpen !== undefined) this.exportMenuOpen = false;
-                        if (this.showExportMenu !== undefined) this.showExportMenu = false;
-                        if (this.exporting !== undefined) this.exporting = false;
-                        
-                    } catch (error) {
-                        console.error('❌ Error con Capacitor Filesystem:', error);
-                        
-                        // Fallback mejorado
-                        if (error.message.includes('permission') || error.message.includes('PERMISSION')) {
-                            alert('❌ Permiso denegado. La app necesita acceso al almacenamiento.');
+
+                        // 2. Obtener URI del archivo guardado
+                        const fileUri = result.uri;
+
+                        // 3. Compartir usando Share API
+                        if (navigator.share) {
+                            // Convertir URI a File object
+                            const response = await fetch(fileUri);
+                            const blob = await response.blob();
+                            const file = new File([blob], fileName, { type: 'application/json' });
+
+                            await navigator.share({
+                                title: 'Backup GymApp',
+                                files: [file]
+                            });
+                            
+                            this.showExportSuccess('✅ Archivo listo - Elige "Guardar archivo"');
                         } else {
-                            console.log('🔄 Intentando método tradicional...');
-                            this.useTraditionalDownload(dataStr, fileName);
+                            // Fallback: Abrir URI del archivo
+                            window.open(fileUri, '_system');
+                            this.showExportSuccess('✅ Abriendo archivo - Usa "Guardar como"');
                         }
+
+                    } catch (error) {
+                        console.error('Error en solución definitiva:', error);
+                        // Último recurso: Data URL
+                        const dataUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+                        window.open(dataUrl, '_system');
+                        this.showExportSuccess('✅ Abriendo en navegador - Usa "Guardar como"');
                     }
                 },
 
