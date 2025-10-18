@@ -809,65 +809,46 @@
     </style>
 </head>
 <script>
-// Función que usa Capacitor Filesystem SIN descargas externas
-async function guardarEnMemoriaInterna() {
-    try {
-        console.log('💾 Guardando en memoria interna...');
-        
-        const datos = {
-            usuario: "Usuario Gym",
-            fecha: new Date().toLocaleString(),
-            rutina: "Full Body",
-            ejercicios: [
-                { nombre: "Press Banca", peso: "80kg", series: 4, reps: 8 },
-                { nombre: "Sentadillas", peso: "100kg", series: 3, reps: 10 },
-                { nombre: "Peso Muerto", peso: "120kg", series: 3, reps: 6 }
-            ],
-            progreso: {
-                peso: 75.5,
-                altura: 175,
-                imc: 24.7
-            }
-        };
-        
-        const jsonData = JSON.stringify(datos, null, 2);
-        
-        // Guardar usando Capacitor Filesystem (memoria interna)
-        if (typeof Capacitor !== 'undefined' && Capacitor.isNativePlatform()) {
-            // Usar el plugin de Filesystem de Capacitor
-            const result = await Capacitor.Plugins.Filesystem.writeFile({
-                path: 'rutina_gym.json',
-                data: jsonData,
-                directory: Capacitor.Plugins.FilesystemDirectory.Documents,
-                encoding: Capacitor.Plugins.FilesystemEncoding.UTF8
-            });
-            
-            console.log('✅ Guardado en:', result.uri);
-            alert('✅ Rutina guardada en: ' + result.uri);
-            
-        } else {
-            // Fallback para navegador
-            const blob = new Blob([jsonData], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = 'rutina_gym.json';
-            link.click();
-            URL.revokeObjectURL(url);
-            alert('✅ Archivo descargado');
-        }
-        
-    } catch (error) {
-        console.error('❌ Error:', error);
-        alert('Error: ' + error.message);
+// Versión mínima y segura
+function guardarSimple() {
+    const datos = {
+        usuario: "Usuario Gym",
+        fecha: new Date().toLocaleString(),
+        rutina: "Full Body",
+        ejercicios: [
+            "Press Banca: 80kg 4x8",
+            "Sentadillas: 100kg 3x10", 
+            "Peso Muerto: 120kg 3x6"
+        ]
+    };
+    
+    // Guardar en localStorage (nunca falla)
+    localStorage.setItem('mi_rutina', JSON.stringify(datos));
+    
+    alert('✅ Rutina guardada correctamente');
+    console.log('Datos guardados:', datos);
+}
+
+function cargarSimple() {
+    const guardado = localStorage.getItem('mi_rutina');
+    
+    if (guardado) {
+        const datos = JSON.parse(guardado);
+        alert(`📖 RUTINA GUARDADA:\n\nUsuario: ${datos.usuario}\nFecha: ${datos.fecha}\nRutina: ${datos.rutina}`);
+    } else {
+        alert('No hay rutina guardada');
     }
 }
 </script>
 
 <div style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
-    <button onclick="guardarEnMemoriaInterna()" 
-            style="padding: 12px 20px; background: #10B981; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px;">
-        💾 GUARDAR INTERNO
+    <button onclick="guardarSimple()" 
+            style="padding: 12px 20px; background: #10B981; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin: 5px;">
+        💾 GUARDAR
+    </button>
+    <button onclick="cargarSimple()" 
+            style="padding: 12px 20px; background: #3B82F6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin: 5px;">
+        📖 CARGAR
     </button>
 </div>
 <body class="text-gray-100">
