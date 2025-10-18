@@ -809,119 +809,184 @@
     </style>
 </head>
 <script>
-// Guardar rutina (función original)
-function guardarSimple() {
-    const datos = {
-        usuario: "Usuario Gym",
-        fecha: new Date().toLocaleString(),
-        rutina: "Full Body",
-        ejercicios: [
-            "Press Banca: 80kg 4x8",
-            "Sentadillas: 100kg 3x10", 
-            "Peso Muerto: 120kg 3x6",
-            "Curl Bíceps: 15kg 3x12"
-        ]
-    };
+// Sistema que SÍ crea archivos JSON usando Capacitor
+class GymJsonExporter {
     
-    // Guardar en localStorage
-    localStorage.setItem('mi_rutina', JSON.stringify(datos));
+    async guardarArchivoJson(datos, nombreArchivo) {
+        try {
+            // Verificar si Capacitor está disponible
+            if (typeof Capacitor !== 'undefined') {
+                return await this.guardarConCapacitor(datos, nombreArchivo);
+            } else {
+                return await this.guardarEnNavegador(datos, nombreArchivo);
+            }
+        } catch (error) {
+            console.error('❌ Error guardando JSON:', error);
+            this.mostrarError(error);
+            return false;
+        }
+    }
     
-    alert('✅ Rutina guardada correctamente en la memoria de la app');
-    console.log('💾 Datos guardados en localStorage:', datos);
-}
-
-// Cargar rutina (función original)  
-function cargarSimple() {
-    const guardado = localStorage.getItem('mi_rutina');
+    async guardarConCapacitor(datos, nombreArchivo) {
+        try {
+            console.log('📱 Usando Capacitor Filesystem...');
+            
+            // Convertir datos a JSON
+            const jsonData = JSON.stringify(datos, null, 2);
+            
+            // Guardar usando Filesystem de Capacitor
+            const result = await Filesystem.writeFile({
+                path: nombreArchivo,
+                data: jsonData,
+                directory: Directory.Documents,
+                encoding: Encoding.UTF8
+            });
+            
+            console.log('✅ Archivo JSON creado:', result.uri);
+            alert(`✅ Archivo JSON guardado en:\n${result.uri}`);
+            return true;
+            
+        } catch (error) {
+            console.warn('⚠️ Falló Capacitor, intentando método alternativo...', error);
+            return await this.guardarMetodoAlternativo(datos, nombreArchivo);
+        }
+    }
     
-    if (guardado) {
-        const datos = JSON.parse(guardado);
-        alert(`📖 RUTINA GUARDADA:\n\nUsuario: ${datos.usuario}\nFecha: ${datos.fecha}\nRutina: ${datos.rutina}`);
-    } else {
-        alert('No hay rutina guardada');
+    async guardarMetodoAlternativo(datos, nombreArchivo) {
+        try {
+            // Método alternativo que crea un archivo descargable
+            const jsonData = JSON.stringify(datos, null, 2);
+            const blob = new Blob([jsonData], { type: 'application/json' });
+            
+            // Crear URL de objeto
+            const url = URL.createObjectURL(blob);
+            
+            // Crear enlace de descarga
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = nombreArchivo;
+            link.style.display = 'none';
+            
+            // Añadir y hacer click
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Limpiar
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+            
+            alert(`✅ Archivo JSON listo: ${nombreArchivo}\nRevisa tu carpeta de Descargas`);
+            return true;
+            
+        } catch (error) {
+            console.error('❌ Error método alternativo:', error);
+            throw error;
+        }
+    }
+    
+    guardarEnNavegador(datos, nombreArchivo) {
+        // Para navegador web normal
+        const jsonData = JSON.stringify(datos, null, 2);
+        const blob = new Blob([jsonData], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = nombreArchivo;
+        link.click();
+        URL.revokeObjectURL(url);
+        
+        alert(`✅ JSON descargado: ${nombreArchivo}`);
+        return true;
+    }
+    
+    mostrarError(error) {
+        alert(`❌ Error creando archivo JSON:\n${error.message}`);
+    }
+    
+    // Ejemplos de datos para guardar
+    async guardarRutinaEjemplo() {
+        const datosRutina = {
+            tipo: "rutina_gym",
+            version: "1.0",
+            usuario: "Usuario Gym",
+            fecha_creacion: new Date().toISOString(),
+            rutina: {
+                nombre: "Rutina Fuerza Completa",
+                nivel: "Intermedio",
+                dias_semana: 4
+            },
+            ejercicios: [
+                {
+                    nombre: "Press Banca",
+                    tipo: "Pecho",
+                    peso: "80kg",
+                    series: 4,
+                    repeticiones: 8,
+                    descanso: "90s"
+                },
+                {
+                    nombre: "Sentadillas",
+                    tipo: "Piernas", 
+                    peso: "100kg",
+                    series: 3,
+                    repeticiones: 10,
+                    descanso: "120s"
+                },
+                {
+                    nombre: "Peso Muerto",
+                    tipo: "Espalda",
+                    peso: "120kg", 
+                    series: 3,
+                    repeticiones: 6,
+                    descanso: "150s"
+                }
+            ],
+            progreso: {
+                peso_corporal: 75.5,
+                altura: 175,
+                imc: 24.7,
+                fecha_medicion: new Date().toISOString()
+            }
+        };
+        
+        const nombreArchivo = `rutina_gym_${Date.now()}.json`;
+        return await this.guardarArchivoJson(datosRutina, nombreArchivo);
+    }
+    
+    async guardarProgresoSemanal() {
+        const datosProgreso = {
+            tipo: "progreso_semanal", 
+            semana: "2024-01-15",
+            usuario: "Usuario Gym",
+            metricas: {
+                peso_promedio: 76.2,
+                fuerza_press_banca: 82.5,
+                fuerza_sentadillas: 105.0,
+                fuerza_peso_muerto: 125.0
+            },
+            entrenamientos_completados: 4,
+            notas: "Buena semana de progreso en fuerza"
+        };
+        
+        const nombreArchivo = `progreso_semanal_${Date.now()}.json`;
+        return await this.guardarArchivoJson(datosProgreso, nombreArchivo);
     }
 }
 
-// NUEVA: Verificar guardado detallado
-function verificarGuardado() {
-    const guardado = localStorage.getItem('mi_rutina');
-    
-    if (guardado) {
-        const datos = JSON.parse(guardado);
-        
-        console.log('✅ DATOS REALMENTE GUARDADOS:', datos);
-        
-        const mensaje = `📊 VERIFICACIÓN DE GUARDADO:
-        
-✅ USUARIO: ${datos.usuario}
-✅ FECHA: ${datos.fecha}  
-✅ RUTINA: ${datos.rutina}
-
-📝 EJERCICIOS GUARDADOS:
-${datos.ejercicios.map((ej, index) => `${index + 1}. ${ej}`).join('\n')}
-
-💾 Ubicación: localStorage de la app
-🆔 Clave: 'mi_rutina'`;
-        
-        alert(mensaje);
-        
-    } else {
-        alert('❌ NO hay datos guardados');
-    }
-}
-
-// NUEVA: Exportar a archivo JSON visible
-function exportarAArchivo() {
-    const guardado = localStorage.getItem('mi_rutina');
-    
-    if (!guardado) {
-        alert('❌ No hay datos para exportar');
-        return;
-    }
-    
-    const datos = JSON.parse(guardado);
-    const jsonData = JSON.stringify(datos, null, 2);
-    
-    // Crear archivo descargable
-    const blob = new Blob([jsonData], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `mi_rutina_gym_${Date.now()}.json`;
-    link.style.display = 'none';
-    
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-    
-    alert('📤 Archivo exportado como: ' + link.download);
-}
-
-// NUEVA: Probar persistencia (cerrar y abrir app)
-function pruebaPersistencia() {
-    alert('🔁 Ahora CIERRA COMPLETAMENTE la app y VUÉLVELA a abrir. Luego haz click en "Verificar Guardado" para comprobar que los datos siguen ahí.');
-}
+// Crear instancia global
+window.jsonExporter = new GymJsonExporter();
 </script>
 
-<div style="position: fixed; top: 20px; right: 20px; z-index: 9999; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); border: 2px solid #10B981; max-width: 250px;">
-    <h4 style="margin: 0 0 12px 0; color: #1F2937; text-align: center;">💪 GYM APP STORAGE</h4>
+<div style="position: fixed; top: 20px; right: 20px; z-index: 9999; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); border: 2px solid #10B981;">
+    <h4 style="margin: 0 0 10px 0; color: #1F2937; text-align: center;">💾 EXPORTAR JSON</h4>
     <div style="display: flex; flex-direction: column; gap: 8px;">
-        <button onclick="guardarSimple()" style="padding: 10px; background: #10B981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
-            💾 Guardar Rutina
+        <button onclick="jsonExporter.guardarRutinaEjemplo()" 
+                style="padding: 10px; background: #10B981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+            📄 Guardar Rutina JSON
         </button>
-        <button onclick="cargarSimple()" style="padding: 10px; background: #3B82F6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
-            📖 Cargar Rutina
-        </button>
-        <button onclick="verificarGuardado()" style="padding: 10px; background: #8B5CF6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
-            🔍 Verificar Guardado
-        </button>
-        <button onclick="exportarAArchivo()" style="padding: 10px; background: #F59E0B; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
-            📤 Exportar a Archivo
-        </button>
-        <button onclick="pruebaPersistencia()" style="padding: 10px; background: #EC4899; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
-            🔁 Probar Persistencia
+        <button onclick="jsonExporter.guardarProgresoSemanal()" 
+                style="padding: 10px; background: #3B82F6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+            📊 Guardar Progreso JSON
         </button>
     </div>
 </div>
