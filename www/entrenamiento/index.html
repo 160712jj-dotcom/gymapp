@@ -808,91 +808,72 @@
         }
     </style>
 </head>
-<!-- === VERSIÓN SIMPLIFICADA - SIN IMPORTS === -->
+<!-- === CÓDIGO SEGURO - PEGAR ANTES DE </body> === -->
 <script>
-class GymPermissionManager {
-    
-    async guardarConVerificacion(datos) {
-        try {
-            console.log('🔍 Iniciando guardado...');
-            
-            const jsonData = JSON.stringify(datos, null, 2);
-            
-            // SOLO descarga externa (activa tu DownloadListener de Android)
-            const descargaExitosa = await this.intentarDescargaExterna(jsonData, 'rutina_gym.json');
-            
-            if (descargaExitosa) {
-                alert('✅ Rutina guardada en Descargas del teléfono');
-            } else {
-                alert('❌ No se pudo guardar la rutina');
-            }
-            
-            return true;
-            
-        } catch (error) {
-            console.error('❌ Error:', error);
-            alert('Error: ' + error.message);
-            return false;
-        }
-    }
-    
-    async intentarDescargaExterna(jsonData, nombreArchivo) {
-        return new Promise((resolve) => {
-            try {
-                // Crear descarga que activará el DownloadListener de Android
-                const blob = new Blob([jsonData], { 
-                    type: 'application/json;charset=utf-8' 
-                });
-                const url = URL.createObjectURL(blob);
-                
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = nombreArchivo;
-                link.style.display = 'none';
-                
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                
-                setTimeout(() => {
-                    URL.revokeObjectURL(url);
-                    resolve(true);
-                }, 1000);
-                
-                console.log('📥 Descarga iniciada para Android');
-                
-            } catch (error) {
-                console.error('❌ Error en descarga:', error);
-                resolve(false);
-            }
+// Función ultra simple que NO usa Capacitor
+function guardarRutinaSegura() {
+    try {
+        console.log('🚀 Iniciando guardado seguro...');
+        
+        // Crear datos de ejemplo
+        const datos = {
+            usuario: "Usuario Gym",
+            fecha: new Date().toLocaleString(),
+            rutina: "Full Body",
+            ejercicios: [
+                { nombre: "Press Banca", peso: "80kg", series: 4, reps: 8 },
+                { nombre: "Sentadillas", peso: "100kg", series: 3, reps: 10 }
+            ]
+        };
+        
+        // Convertir a JSON
+        const jsonData = JSON.stringify(datos, null, 2);
+        
+        // Crear descarga simple
+        const blob = new Blob([jsonData], { 
+            type: 'application/json;charset=utf-8' 
         });
+        const url = URL.createObjectURL(blob);
+        
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'mi_rutina_gym.json';
+        link.style.display = 'none';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Limpiar
+        setTimeout(() => {
+            URL.revokeObjectURL(url);
+        }, 1000);
+        
+        alert('✅ Archivo descargado como "mi_rutina_gym.json"');
+        console.log('✅ Descarga completada');
+        
+    } catch (error) {
+        console.error('❌ Error:', error);
+        alert('Error: ' + error.message);
     }
 }
 
-// Crear instancia global
-window.gymPermissionManager = new GymPermissionManager();
-
-// Función fácil de usar
-function guardarMiRutina() {
-    const datos = {
-        usuario: "Usuario Gym",
-        fecha: new Date().toLocaleString(),
-        rutina: "Full Body",
-        ejercicios: [
-            { nombre: "Press Banca", peso: "80kg", series: 4, reps: 8 },
-            { nombre: "Sentadillas", peso: "100kg", series: 3, reps: 10 }
-        ]
-    };
-    
-    window.gymPermissionManager.guardarConVerificacion(datos);
+// Función para verificar si Capacitor está disponible
+function verificarCapacitor() {
+    if (typeof Capacitor === 'undefined') {
+        console.log('⚠️ Capacitor no está disponible');
+        return false;
+    }
+    console.log('✅ Capacitor está disponible');
+    return true;
 }
 </script>
 
-<!-- Mismo botón de prueba -->
-<div style="position: fixed; top: 20px; right: 20px; z-index: 9999; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
-    <h4 style="margin: 0 0 10px 0; font-size: 16px;">💪 GYM APP</h4>
-    <button onclick="guardarMiRutina()" style="padding: 10px 15px; background: white; color: #667eea; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">
-        💾 PROBAR GUARDADO
+<!-- Botón MÁS simple -->
+<div style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
+    <button onclick="guardarRutinaSegura()" 
+            style="padding: 12px 20px; background: #10B981; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
+        💾 GUARDAR RUTINA
     </button>
 </div>
 <body class="text-gray-100">
