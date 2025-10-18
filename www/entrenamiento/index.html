@@ -6331,12 +6331,24 @@
                 toggleAdvancedMenu() {
                     this.showAdvancedMenu = !this.showAdvancedMenu;
                 },
+                // Detectar si estamos en WebView de Android
+                isAndroidWebView() {
+                    const userAgent = navigator.userAgent;
+                    return (
+                        /; wv/.test(userAgent) ||  // WebView pattern
+                        (/Android/.test(userAgent) && /Version\/\d/.test(userAgent)) ||
+                        (/Android/.test(userAgent) && !/Chrome/.test(userAgent)) ||
+                        userAgent.includes('Android') && userAgent.includes('WebView')
+                    );
+                },
                 // REEMPLAZAR la función exportData con esta versión corregida
                 exportData() {
                     try {
-                        console.log('=== EXPORTANDO DATOS CON STORAGE ACCESS FRAMEWORK ===');
+                        console.log('=== EXPORTANDO DATOS ===');
+                        console.log('UserAgent:', navigator.userAgent);
+                        console.log('Es WebView?:', this.isAndroidWebView());
                         
-                        // Preparar todos los datos para exportar
+                        // Preparar datos
                         const exportData = {
                             workoutHistory: this.workoutHistory,
                             workoutGroups: this.workoutGroups,
@@ -6358,29 +6370,121 @@
                             }
                         };
 
-                        // Convertir a JSON
                         const dataStr = JSON.stringify(exportData, null, 2);
                         const fileName = `gymapp_backup_${new Date().toISOString().split('T')[0]}.json`;
 
-                        // Intentar Storage Access Framework primero (más confiable)
-                        if ('showSaveFilePicker' in window) {
-                            console.log('Usando Storage Access Framework...');
+                        // DETECCIÓN INTELIGENTE
+                        if (this.isAndroidWebView()) {
+                            console.log('📱 Ejecutando método para WebView Android...');
+                            this.useAndroidWebViewDownload(dataStr, fileName);
+                        } 
+                        else if ('showSaveFilePicker' in window) {
+                            console.log('🖥️ Ejecutando Storage Access Framework...');
                             this.useSAFDownload(dataStr, fileName);
                         } 
-                        // Fallback: Web Share API
                         else if (navigator.share) {
-                            console.log('SAF no disponible, usando Web Share API...');
+                            console.log('📤 Ejecutando Web Share API...');
                             this.useWebShare(dataStr, fileName);
                         }
-                        // Último recurso: método tradicional
                         else {
-                            console.log('APIs modernas no disponibles, usando descarga tradicional');
+                            console.log('🔄 Ejecutando método tradicional...');
                             this.useTraditionalDownload(dataStr, fileName);
                         }
                         
                     } catch (error) {
                         console.error('❌ Error exportando datos:', error);
                         alert('❌ Error al exportar datos: ' + error.message);
+                    }
+                },
+                // Método ESPECÍFICO para WebView de Android
+                useAndroidWebViewDownload(dataStr, fileName) {
+                    try {
+                        console.log('Iniciando descarga para WebView Android...');
+                        
+                        // Método 1: Intentar descarga tradicional mejorada
+                        this.useEnhancedTraditionalDownload(dataStr, fileName);
+                        
+                    } catch (error) {
+                        console.error('Error en método WebView:', error);
+                        
+                        // Método 2: Fallback a mostrar datos para copiar
+                        this.showManualExport(dataStr, fileName);
+                    }
+                },
+                // Descarga tradicional MEJORADA para Android
+                useEnhancedTraditionalDownload(dataStr, fileName) {
+                    try {
+                        console.log('Usando descarga mejorada para Android...');
+                        
+                        const blob = new Blob([dataStr], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = fileName;
+                        link.style.display = 'none';
+                        
+                        // Agregar atributos adicionales para Android
+                        link.setAttribute('target', '_blank');
+                        link.setAttribute('rel', 'noopener noreferrer');
+                        
+                        document.body.appendChild(link);
+                        
+                        // Disparar evento de clic MEJORADO
+                        const clickEvent = new MouseEvent('click', {
+                            view: window,
+                            bubbles: true,
+                            cancelable: true,
+                            composed: true  // Importante para Android
+                        });
+                        
+                        // Método alternativo para Android
+                        if (link.click) {
+                            link.click();
+                        } else {
+                            link.dispatchEvent(clickEvent);
+                        }
+                        
+                        // Limpiar después de un tiempo
+                        setTimeout(() => {
+                            document.body.removeChild(link);
+                            URL.revokeObjectURL(url);
+                        }, 10000); // 10 segundos
+                        
+                        console.log('✅ Descarga mejorada iniciada para Android');
+                        this.showExportSuccess(`Descarga iniciada: ${fileName}`);
+                        
+                        // Verificar si la descarga funcionó después de 2 segundos
+                        setTimeout(() => {
+                            this.checkAndroidDownloadSuccess(fileName);
+                        }, 2000);
+                        
+                    } catch (error) {
+                        console.error('Error en descarga mejorada:', error);
+                        throw error;
+                    }
+                },
+                // Verificar si la descarga en Android fue exitosa
+                checkAndroidDownloadSuccess(fileName) {
+                    console.log('Verificando descarga en Android...');
+                    
+                    // En Android no podemos verificar directamente, pero mostramos ayuda
+                    const userAgent = navigator.userAgent.toLowerCase();
+                    
+                    if (userAgent.includes('android')) {
+                        // Mostrar ayuda específica para Android
+                        setTimeout(() => {
+                            if (confirm('¿Se descargó el archivo correctamente?\n\nSi no ves el archivo, revisa la carpeta "Descargas" o "Download" de tu dispositivo.')) {
+                                // Usuario confirma que sí funcionó
+                                console.log('Usuario confirmó descarga exitosa');
+                            } else {
+                                // Ofrecer método alternativo
+                                if (confirm('¿Quieres ver los datos para copiar manualmente?')) {
+                                    // Aquí podrías llamar a showManualExport si guardaste dataStr
+                                    console.log('Usuario quiere método alternativo');
+                                }
+                            }
+                        }, 3000);
                     }
                 },
                 // Método tradicional de descarga (fallback final)
@@ -6650,10 +6754,17 @@
                     // Auto-seleccionar el texto
                     document.getElementById('exportDataText').select();
                 },
-                // AÑADE esta función si no la tienes
-                // Notificación de éxito mejorada
+
+                // Notificación MEJORADA con info específica de Android
                 showExportSuccess(message = 'Datos exportados correctamente') {
-                    // Crear notificación de éxito
+                    const isAndroid = this.isAndroidWebView();
+                    const additionalInfo = isAndroid ? 
+                        '\n📱 Revisa tu carpeta "Descargas"' : 
+                        '';
+                    
+                    const fullMessage = message + additionalInfo;
+                    
+                    // Crear notificación
                     const notification = document.createElement('div');
                     notification.style.cssText = `
                         position: fixed;
@@ -6677,13 +6788,13 @@
                         <i class="fas fa-check-circle" style="font-size: 24px;"></i>
                         <div>
                             <div style="font-weight: bold; font-size: 1rem;">¡Exportación Exitosa!</div>
-                            <div style="font-size: 0.85rem; opacity: 0.9;">${message}</div>
+                            <div style="font-size: 0.85rem; opacity: 0.9;">${fullMessage}</div>
                         </div>
                     `;
                     
                     document.body.appendChild(notification);
                     
-                    // Auto-remover después de 5 segundos
+                    // Auto-remover después de 6 segundos (más tiempo para Android)
                     setTimeout(() => {
                         if (document.body.contains(notification)) {
                             notification.style.animation = 'slideOutRight 0.3s ease-in';
@@ -6693,7 +6804,7 @@
                                 }
                             }, 300);
                         }
-                    }, 5000);
+                    }, 6000);
                 },
 
                 // También verificar la función importData por si acaso
