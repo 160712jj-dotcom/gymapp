@@ -808,72 +808,66 @@
         }
     </style>
 </head>
-<!-- === CÓDIGO SEGURO - PEGAR ANTES DE </body> === -->
 <script>
-// Función ultra simple que NO usa Capacitor
-function guardarRutinaSegura() {
+// Función que usa Capacitor Filesystem SIN descargas externas
+async function guardarEnMemoriaInterna() {
     try {
-        console.log('🚀 Iniciando guardado seguro...');
+        console.log('💾 Guardando en memoria interna...');
         
-        // Crear datos de ejemplo
         const datos = {
             usuario: "Usuario Gym",
             fecha: new Date().toLocaleString(),
             rutina: "Full Body",
             ejercicios: [
                 { nombre: "Press Banca", peso: "80kg", series: 4, reps: 8 },
-                { nombre: "Sentadillas", peso: "100kg", series: 3, reps: 10 }
-            ]
+                { nombre: "Sentadillas", peso: "100kg", series: 3, reps: 10 },
+                { nombre: "Peso Muerto", peso: "120kg", series: 3, reps: 6 }
+            ],
+            progreso: {
+                peso: 75.5,
+                altura: 175,
+                imc: 24.7
+            }
         };
         
-        // Convertir a JSON
         const jsonData = JSON.stringify(datos, null, 2);
         
-        // Crear descarga simple
-        const blob = new Blob([jsonData], { 
-            type: 'application/json;charset=utf-8' 
-        });
-        const url = URL.createObjectURL(blob);
-        
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'mi_rutina_gym.json';
-        link.style.display = 'none';
-        
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        // Limpiar
-        setTimeout(() => {
+        // Guardar usando Capacitor Filesystem (memoria interna)
+        if (typeof Capacitor !== 'undefined' && Capacitor.isNativePlatform()) {
+            // Usar el plugin de Filesystem de Capacitor
+            const result = await Capacitor.Plugins.Filesystem.writeFile({
+                path: 'rutina_gym.json',
+                data: jsonData,
+                directory: Capacitor.Plugins.FilesystemDirectory.Documents,
+                encoding: Capacitor.Plugins.FilesystemEncoding.UTF8
+            });
+            
+            console.log('✅ Guardado en:', result.uri);
+            alert('✅ Rutina guardada en: ' + result.uri);
+            
+        } else {
+            // Fallback para navegador
+            const blob = new Blob([jsonData], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'rutina_gym.json';
+            link.click();
             URL.revokeObjectURL(url);
-        }, 1000);
-        
-        alert('✅ Archivo descargado como "mi_rutina_gym.json"');
-        console.log('✅ Descarga completada');
+            alert('✅ Archivo descargado');
+        }
         
     } catch (error) {
         console.error('❌ Error:', error);
         alert('Error: ' + error.message);
     }
 }
-
-// Función para verificar si Capacitor está disponible
-function verificarCapacitor() {
-    if (typeof Capacitor === 'undefined') {
-        console.log('⚠️ Capacitor no está disponible');
-        return false;
-    }
-    console.log('✅ Capacitor está disponible');
-    return true;
-}
 </script>
 
-<!-- Botón MÁS simple -->
 <div style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
-    <button onclick="guardarRutinaSegura()" 
-            style="padding: 12px 20px; background: #10B981; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
-        💾 GUARDAR RUTINA
+    <button onclick="guardarEnMemoriaInterna()" 
+            style="padding: 12px 20px; background: #10B981; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px;">
+        💾 GUARDAR INTERNO
     </button>
 </div>
 <body class="text-gray-100">
