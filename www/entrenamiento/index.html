@@ -3875,32 +3875,23 @@
                 },
                 guardarConCapacitorDirecto(datos, nombreArchivo) {
                     try {
-                        console.log('🚀 Usando Capacitor directamente...');
-                        
-                        // Método DIRECTO igual que en las pruebas
                         const jsonData = JSON.stringify(datos, null, 2);
                         
-                        if (typeof Capacitor !== 'undefined' && Capacitor.Plugins && Capacitor.Plugins.Filesystem) {
-                            console.log('📁 Guardando con Filesystem de Capacitor...');
-                            
-                            Capacitor.Plugins.Filesystem.writeFile({
-                                path: nombreArchivo,
-                                data: btoa(unescape(encodeURIComponent(jsonData))),
-                                directory: 'DOCUMENTS',
-                                encoding: 'utf8'
-                            }).then(result => {
-                                alert(`✅ ARCHIVO JSON GUARDADO\n\n📍 ${result.uri}\n\nLos datos están guardados en el almacenamiento interno de la app.`);
-                            }).catch(error => {
-                                console.error('Error Filesystem:', error);
-                                this.guardarEnLocalStorageComoUltimoRecurso(datos, nombreArchivo);
-                            });
-                            
-                        } else {
-                            throw new Error('Capacitor Filesystem no disponible');
-                        }
+                        Capacitor.Plugins.Filesystem.writeFile({
+                            path: nombreArchivo,
+                            data: btoa(unescape(encodeURIComponent(jsonData))),
+                            directory: 'DOCUMENTS',
+                            encoding: 'utf8'
+                        }).then(result => {
+                            alert(`✅ ARCHIVO GUARDADO EN DOCUMENTS\n\n📍 ${result.uri}\n\nLos datos están guardados en el almacenamiento interno.`);
+                        }).catch(error => {
+                            console.error('Error Filesystem:', error);
+                            this.guardarEnLocalStorage(datos, nombreArchivo);
+                        });
+                        
                     } catch (error) {
                         console.error('Error en método directo:', error);
-                        this.guardarEnLocalStorageComoUltimoRecurso(datos, nombreArchivo);
+                        this.guardarEnLocalStorage(datos, nombreArchivo);
                     }
                 },
                 guardarEnLocalStorageComoUltimoRecurso(datos, nombreArchivo) {
@@ -4040,7 +4031,6 @@
                                 fecha: new Date().toISOString(),
                                 aplicacion: "GymApp",
                                 datos: {
-                                    // Todos los datos de la aplicación
                                     workoutHistory: this.workoutHistory,
                                     workoutGroups: this.workoutGroups,
                                     customExercises: this.obtenerEjerciciosPersonalizados(),
@@ -4054,11 +4044,25 @@
                             
                             const nombreArchivo = `gymapp_backup_${this.getTimestamp()}.json`;
                             
-                            // Usar Capacitor si está disponible
+                            // USAR EL MÉTODO ORIGINAL QUE SÍ FUNCIONABA
                             if (window.capacitorSaver && window.capacitorSaver.guardarJsonConCapacitor) {
+                                console.log('✅ Usando capacitorSaver.guardarJsonConCapacitor');
                                 window.capacitorSaver.guardarJsonConCapacitor(datos, nombreArchivo);
-                            } else {
-                                // Fallback a localStorage
+                            } 
+                            // Si no está disponible, intentar recrearlo
+                            else if (window.CapacitorJsonSaver) {
+                                console.log('🔄 Creando nueva instancia de CapacitorJsonSaver');
+                                window.capacitorSaver = new window.CapacitorJsonSaver();
+                                window.capacitorSaver.guardarJsonConCapacitor(datos, nombreArchivo);
+                            }
+                            // Último recurso: método directo de Capacitor
+                            else if (typeof Capacitor !== 'undefined' && Capacitor.Plugins && Capacitor.Plugins.Filesystem) {
+                                console.log('🚀 Usando Capacitor Filesystem directamente');
+                                this.guardarConCapacitorDirecto(datos, nombreArchivo);
+                            }
+                            // Fallback final
+                            else {
+                                console.log('📱 Usando localStorage como fallback');
                                 this.guardarEnLocalStorage(datos, nombreArchivo);
                             }
                             
@@ -4177,7 +4181,7 @@
                         
                         localStorage.setItem(clave, JSON.stringify(datosGuardar));
                         
-                        alert(`✅ DATOS EXPORTADOS\n\n📄 ${nombreArchivo}\n💾 Guardados en la aplicación\n\nLos datos se cargarán automáticamente al recargar.`);
+                        alert(`✅ DATOS GUARDADOS EN LA APP\n\n📄 ${nombreArchivo}\n💾 Clave: ${clave}\n\nLos datos están seguros en la memoria de la app.`);
                         
                     } catch (error) {
                         console.error('Error guardando en localStorage:', error);
