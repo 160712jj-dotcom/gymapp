@@ -809,186 +809,195 @@
     </style>
 </head>
 <script>
-// Sistema que SÍ crea archivos JSON usando Capacitor
-class GymJsonExporter {
+// Sistema que CREA archivos JSON REALES sin usar blob
+class JsonFileCreator {
     
-    async guardarArchivoJson(datos, nombreArchivo) {
+    crearYDescargarJson(datos, nombreArchivo) {
         try {
-            // Verificar si Capacitor está disponible
-            if (typeof Capacitor !== 'undefined') {
-                return await this.guardarConCapacitor(datos, nombreArchivo);
-            } else {
-                return await this.guardarEnNavegador(datos, nombreArchivo);
-            }
-        } catch (error) {
-            console.error('❌ Error guardando JSON:', error);
-            this.mostrarError(error);
-            return false;
-        }
-    }
-    
-    async guardarConCapacitor(datos, nombreArchivo) {
-        try {
-            console.log('📱 Usando Capacitor Filesystem...');
+            console.log('📄 Creando archivo JSON...');
             
-            // Convertir datos a JSON
+            // 1. Convertir datos a JSON string
             const jsonData = JSON.stringify(datos, null, 2);
             
-            // Guardar usando Filesystem de Capacitor
-            const result = await Filesystem.writeFile({
-                path: nombreArchivo,
-                data: jsonData,
-                directory: Directory.Documents,
-                encoding: Encoding.UTF8
-            });
+            // 2. Crear Data URL (NO es blob)
+            const dataUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(jsonData);
             
-            console.log('✅ Archivo JSON creado:', result.uri);
-            alert(`✅ Archivo JSON guardado en:\n${result.uri}`);
-            return true;
-            
-        } catch (error) {
-            console.warn('⚠️ Falló Capacitor, intentando método alternativo...', error);
-            return await this.guardarMetodoAlternativo(datos, nombreArchivo);
-        }
-    }
-    
-    async guardarMetodoAlternativo(datos, nombreArchivo) {
-        try {
-            // Método alternativo que crea un archivo descargable
-            const jsonData = JSON.stringify(datos, null, 2);
-            const blob = new Blob([jsonData], { type: 'application/json' });
-            
-            // Crear URL de objeto
-            const url = URL.createObjectURL(blob);
-            
-            // Crear enlace de descarga
+            // 3. Crear enlace de descarga
             const link = document.createElement('a');
-            link.href = url;
+            link.href = dataUrl;
             link.download = nombreArchivo;
             link.style.display = 'none';
             
-            // Añadir y hacer click
+            // 4. Añadir al documento y hacer click
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             
-            // Limpiar
-            setTimeout(() => URL.revokeObjectURL(url), 1000);
+            console.log('✅ Archivo JSON creado:', nombreArchivo);
+            alert(`✅ Archivo JSON creado:\n${nombreArchivo}`);
             
-            alert(`✅ Archivo JSON listo: ${nombreArchivo}\nRevisa tu carpeta de Descargas`);
             return true;
             
         } catch (error) {
-            console.error('❌ Error método alternativo:', error);
-            throw error;
+            console.error('❌ Error:', error);
+            alert('❌ Error creando archivo: ' + error.message);
+            return false;
         }
     }
     
-    guardarEnNavegador(datos, nombreArchivo) {
-        // Para navegador web normal
-        const jsonData = JSON.stringify(datos, null, 2);
-        const blob = new Blob([jsonData], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = nombreArchivo;
-        link.click();
-        URL.revokeObjectURL(url);
-        
-        alert(`✅ JSON descargado: ${nombreArchivo}`);
-        return true;
-    }
-    
-    mostrarError(error) {
-        alert(`❌ Error creando archivo JSON:\n${error.message}`);
-    }
-    
-    // Ejemplos de datos para guardar
-    async guardarRutinaEjemplo() {
-        const datosRutina = {
-            tipo: "rutina_gym",
-            version: "1.0",
-            usuario: "Usuario Gym",
-            fecha_creacion: new Date().toISOString(),
-            rutina: {
-                nombre: "Rutina Fuerza Completa",
-                nivel: "Intermedio",
-                dias_semana: 4
+    // Ejemplo: Guardar rutina de gym
+    guardarRutinaGym() {
+        const datos = {
+            "tipo_documento": "rutina_entrenamiento",
+            "version": "1.0",
+            "fecha_creacion": new Date().toISOString(),
+            "usuario": "Usuario Gym",
+            "rutina": {
+                "nombre": "Rutina Fuerza Completa",
+                "nivel": "Intermedio",
+                "duracion": "60 minutos",
+                "dias_semana": 4
             },
-            ejercicios: [
+            "ejercicios": [
                 {
-                    nombre: "Press Banca",
-                    tipo: "Pecho",
-                    peso: "80kg",
-                    series: 4,
-                    repeticiones: 8,
-                    descanso: "90s"
+                    "id": 1,
+                    "nombre": "Press de Banca",
+                    "musculo": "Pectorales",
+                    "series": 4,
+                    "repeticiones": 8,
+                    "peso": "80kg",
+                    "descanso": "90 segundos"
                 },
                 {
-                    nombre: "Sentadillas",
-                    tipo: "Piernas", 
-                    peso: "100kg",
-                    series: 3,
-                    repeticiones: 10,
-                    descanso: "120s"
+                    "id": 2,
+                    "nombre": "Sentadillas",
+                    "musculo": "Piernas",
+                    "series": 3,
+                    "repeticiones": 10,
+                    "peso": "100kg", 
+                    "descanso": "120 segundos"
                 },
                 {
-                    nombre: "Peso Muerto",
-                    tipo: "Espalda",
-                    peso: "120kg", 
-                    series: 3,
-                    repeticiones: 6,
-                    descanso: "150s"
+                    "id": 3,
+                    "nombre": "Peso Muerto",
+                    "musculo": "Espalda",
+                    "series": 3,
+                    "repeticiones": 6,
+                    "peso": "120kg",
+                    "descanso": "150 segundos"
                 }
             ],
-            progreso: {
-                peso_corporal: 75.5,
-                altura: 175,
-                imc: 24.7,
-                fecha_medicion: new Date().toISOString()
+            "metadata": {
+                "app": "GymApp",
+                "timestamp": Date.now(),
+                "formato": "JSON"
             }
         };
         
-        const nombreArchivo = `rutina_gym_${Date.now()}.json`;
-        return await this.guardarArchivoJson(datosRutina, nombreArchivo);
+        const nombreArchivo = `rutina_gym_${this.fechaActual()}.json`;
+        return this.crearYDescargarJson(datos, nombreArchivo);
     }
     
-    async guardarProgresoSemanal() {
-        const datosProgreso = {
-            tipo: "progreso_semanal", 
-            semana: "2024-01-15",
-            usuario: "Usuario Gym",
-            metricas: {
-                peso_promedio: 76.2,
-                fuerza_press_banca: 82.5,
-                fuerza_sentadillas: 105.0,
-                fuerza_peso_muerto: 125.0
+    // Ejemplo: Guardar progreso personal
+    guardarProgresoPersonal() {
+        const datos = {
+            "tipo_documento": "registro_progreso",
+            "fecha": new Date().toLocaleString(),
+            "usuario": "Usuario Gym",
+            "medidas_corporales": {
+                "peso": "75.5kg",
+                "altura": "175cm",
+                "imc": "24.7",
+                "pecho": "105cm",
+                "cintura": "85cm",
+                "brazo": "38cm"
             },
-            entrenamientos_completados: 4,
-            notas: "Buena semana de progreso en fuerza"
+            "marcas_personales": {
+                "press_banca": "85kg",
+                "sentadillas": "110kg", 
+                "peso_muerto": "125kg",
+                "dominadas": 8
+            },
+            "objetivos": {
+                "corto_plazo": "Aumentar 5kg en press banca",
+                "largo_plazo": "Alcanzar 100kg en press banca"
+            }
         };
         
-        const nombreArchivo = `progreso_semanal_${Date.now()}.json`;
-        return await this.guardarArchivoJson(datosProgreso, nombreArchivo);
+        const nombreArchivo = `progreso_${this.fechaActual()}.json`;
+        return this.crearYDescargarJson(datos, nombreArchivo);
+    }
+    
+    // Crear JSON desde datos personalizados
+    crearJsonPersonalizado() {
+        try {
+            const nombre = prompt('Nombre de tu rutina:', 'Mi Rutina Personalizada');
+            if (!nombre) return;
+            
+            const ejerciciosStr = prompt('Ejercicios (separar con coma):', 'Press Banca, Sentadillas, Peso Muerto, Curl Bíceps');
+            if (!ejerciciosStr) return;
+            
+            const ejercicios = ejerciciosStr.split(',').map((ej, index) => ({
+                id: index + 1,
+                nombre: ej.trim(),
+                series: 3,
+                repeticiones: 10,
+                peso: "0kg",
+                completado: false
+            }));
+            
+            const datos = {
+                "rutina": nombre,
+                "fecha_creacion": new Date().toISOString(),
+                "ejercicios": ejercicios,
+                "total_ejercicios": ejercicios.length,
+                "tiempo_estimado": `${ejercicios.length * 10} minutos`
+            };
+            
+            const nombreArchivo = `${nombre.replace(/[^a-zA-Z0-9]/g, '_')}.json`;
+            return this.crearYDescargarJson(datos, nombreArchivo);
+            
+        } catch (error) {
+            alert('Error: ' + error.message);
+        }
+    }
+    
+    fechaActual() {
+        return new Date().toISOString().slice(0, 10).replace(/-/g, '');
     }
 }
 
 // Crear instancia global
-window.jsonExporter = new GymJsonExporter();
+window.jsonCreator = new JsonFileCreator();
 </script>
 
+<!-- Botones de prueba -->
 <div style="position: fixed; top: 20px; right: 20px; z-index: 9999; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); border: 2px solid #10B981;">
-    <h4 style="margin: 0 0 10px 0; color: #1F2937; text-align: center;">💾 EXPORTAR JSON</h4>
+    <h4 style="margin: 0 0 10px 0; color: #1F2937; text-align: center;">💾 CREAR ARCHIVOS JSON</h4>
     <div style="display: flex; flex-direction: column; gap: 8px;">
-        <button onclick="jsonExporter.guardarRutinaEjemplo()" 
+        <button onclick="jsonCreator.guardarRutinaGym()" 
                 style="padding: 10px; background: #10B981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
-            📄 Guardar Rutina JSON
+            🏋️‍♂️ Rutina Gym JSON
         </button>
-        <button onclick="jsonExporter.guardarProgresoSemanal()" 
+        <button onclick="jsonCreator.guardarProgresoPersonal()" 
                 style="padding: 10px; background: #3B82F6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
-            📊 Guardar Progreso JSON
+            📊 Progreso JSON
+        </button>
+        <button onclick="jsonCreator.crearJsonPersonalizado()" 
+                style="padding: 10px; background: #8B5CF6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+            ✏️ Personalizado JSON
         </button>
     </div>
+</div>
+
+<!-- Información adicional -->
+<div style="position: fixed; bottom: 20px; left: 20px; z-index: 9999; background: #FFFBEB; padding: 15px; border-radius: 10px; border: 2px solid #F59E0B; max-width: 300px;">
+    <h4 style="margin: 0 0 10px 0; color: #92400E;">ℹ️ ¿Dónde se guardan?</h4>
+    <p style="margin: 0; font-size: 12px; color: #92400E;">
+        <strong>En Android:</strong> Carpeta "Descargas"<br>
+        <strong>En Navegador:</strong> Carpeta de descargas<br>
+        <strong>Formato:</strong> Archivo .json real
+    </p>
 </div>
 <body class="text-gray-100">
     <main x-data="gymApp()" x-init="init()">
