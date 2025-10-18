@@ -840,16 +840,122 @@ function cargarSimple() {
     }
 }
 </script>
+<script>
+// Guardar rutina (función original)
+function guardarSimple() {
+    const datos = {
+        usuario: "Usuario Gym",
+        fecha: new Date().toLocaleString(),
+        rutina: "Full Body",
+        ejercicios: [
+            "Press Banca: 80kg 4x8",
+            "Sentadillas: 100kg 3x10", 
+            "Peso Muerto: 120kg 3x6",
+            "Curl Bíceps: 15kg 3x12"
+        ]
+    };
+    
+    // Guardar en localStorage
+    localStorage.setItem('mi_rutina', JSON.stringify(datos));
+    
+    alert('✅ Rutina guardada correctamente en la memoria de la app');
+    console.log('💾 Datos guardados en localStorage:', datos);
+}
 
-<div style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
-    <button onclick="guardarSimple()" 
-            style="padding: 12px 20px; background: #10B981; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin: 5px;">
-        💾 GUARDAR
-    </button>
-    <button onclick="cargarSimple()" 
-            style="padding: 12px 20px; background: #3B82F6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin: 5px;">
-        📖 CARGAR
-    </button>
+// Cargar rutina (función original)  
+function cargarSimple() {
+    const guardado = localStorage.getItem('mi_rutina');
+    
+    if (guardado) {
+        const datos = JSON.parse(guardado);
+        alert(`📖 RUTINA GUARDADA:\n\nUsuario: ${datos.usuario}\nFecha: ${datos.fecha}\nRutina: ${datos.rutina}`);
+    } else {
+        alert('No hay rutina guardada');
+    }
+}
+
+// NUEVA: Verificar guardado detallado
+function verificarGuardado() {
+    const guardado = localStorage.getItem('mi_rutina');
+    
+    if (guardado) {
+        const datos = JSON.parse(guardado);
+        
+        console.log('✅ DATOS REALMENTE GUARDADOS:', datos);
+        
+        const mensaje = `📊 VERIFICACIÓN DE GUARDADO:
+        
+✅ USUARIO: ${datos.usuario}
+✅ FECHA: ${datos.fecha}  
+✅ RUTINA: ${datos.rutina}
+
+📝 EJERCICIOS GUARDADOS:
+${datos.ejercicios.map((ej, index) => `${index + 1}. ${ej}`).join('\n')}
+
+💾 Ubicación: localStorage de la app
+🆔 Clave: 'mi_rutina'`;
+        
+        alert(mensaje);
+        
+    } else {
+        alert('❌ NO hay datos guardados');
+    }
+}
+
+// NUEVA: Exportar a archivo JSON visible
+function exportarAArchivo() {
+    const guardado = localStorage.getItem('mi_rutina');
+    
+    if (!guardado) {
+        alert('❌ No hay datos para exportar');
+        return;
+    }
+    
+    const datos = JSON.parse(guardado);
+    const jsonData = JSON.stringify(datos, null, 2);
+    
+    // Crear archivo descargable
+    const blob = new Blob([jsonData], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `mi_rutina_gym_${Date.now()}.json`;
+    link.style.display = 'none';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    
+    alert('📤 Archivo exportado como: ' + link.download);
+}
+
+// NUEVA: Probar persistencia (cerrar y abrir app)
+function pruebaPersistencia() {
+    alert('🔁 Ahora CIERRA COMPLETAMENTE la app y VUÉLVELA a abrir. Luego haz click en "Verificar Guardado" para comprobar que los datos siguen ahí.');
+}
+</script>
+
+<div style="position: fixed; top: 20px; right: 20px; z-index: 9999; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); border: 2px solid #10B981; max-width: 250px;">
+    <h4 style="margin: 0 0 12px 0; color: #1F2937; text-align: center;">💪 GYM APP STORAGE</h4>
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+        <button onclick="guardarSimple()" style="padding: 10px; background: #10B981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+            💾 Guardar Rutina
+        </button>
+        <button onclick="cargarSimple()" style="padding: 10px; background: #3B82F6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+            📖 Cargar Rutina
+        </button>
+        <button onclick="verificarGuardado()" style="padding: 10px; background: #8B5CF6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+            🔍 Verificar Guardado
+        </button>
+        <button onclick="exportarAArchivo()" style="padding: 10px; background: #F59E0B; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+            📤 Exportar a Archivo
+        </button>
+        <button onclick="pruebaPersistencia()" style="padding: 10px; background: #EC4899; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+            🔁 Probar Persistencia
+        </button>
+    </div>
 </div>
 <body class="text-gray-100">
     <main x-data="gymApp()" x-init="init()">
