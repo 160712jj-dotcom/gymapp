@@ -809,176 +809,190 @@
     </style>
 </head>
 <script>
-class GymStorage {
+class GymManager {
     constructor() {
-        this.rutinas = this.cargarTodas();
+        this.rutinas = this.cargarRutinas();
     }
     
-    guardarRutina(nombre, ejercicios, notas = "") {
+    guardarNuevaRutina() {
+        const rutinaId = 'rutina_' + Date.now();
         const rutina = {
-            id: 'rutina_' + Date.now(),
-            nombre: nombre,
+            id: rutinaId,
+            usuario: "Usuario Gym",
             fecha: new Date().toLocaleString(),
-            ejercicios: ejercicios,
-            notas: notas,
-            usuario: "Usuario Gym"
+            nombre: "Rutina Personalizada",
+            ejercicios: [
+                { nombre: "Press Banca", peso: "80kg", series: 4, reps: 8 },
+                { nombre: "Sentadillas", peso: "100kg", series: 3, reps: 10 },
+                { nombre: "Peso Muerto", peso: "120kg", series: 3, reps: 6 }
+            ],
+            notas: "Buen entrenamiento hoy"
         };
         
-        this.rutinas[rutina.id] = rutina;
+        this.rutinas[rutinaId] = rutina;
         this.guardarEnStorage();
         
-        this.mostrarConfirmacion(rutina);
+        this.mostrarRutina(rutina);
         return rutina;
     }
     
-    mostrarConfirmacion(rutina) {
+    mostrarTodasLasRutinas() {
+        if (Object.keys(this.rutinas).length === 0) {
+            alert('No hay rutinas guardadas');
+            return;
+        }
+        
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            z-index: 10000;
+            max-width: 90%;
+            max-height: 80%;
+            overflow-y: auto;
+        `;
+        
+        let contenido = '<h3 style="color: #10B981; margin-bottom: 15px;">📖 TODAS MIS RUTINAS</h3>';
+        
+        Object.values(this.rutinas).forEach(rutina => {
+            contenido += `
+                <div style="border: 1px solid #E5E7EB; padding: 10px; margin: 10px 0; border-radius: 8px;">
+                    <strong>${rutina.nombre}</strong><br>
+                    <small>${rutina.fecha}</small><br>
+                    <button onclick="gymManager.mostrarRutinaDetalle('${rutina.id}')" 
+                            style="padding: 5px 10px; background: #3B82F6; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 5px;">
+                        Ver Detalles
+                    </button>
+                </div>
+            `;
+        });
+        
+        contenido += `<button onclick="this.parentElement.remove()" 
+                            style="padding: 8px 15px; background: #EF4444; color: white; border: none; border-radius: 6px; cursor: pointer; margin-top: 10px;">
+                        Cerrar
+                      </button>`;
+        
+        modal.innerHTML = contenido;
+        document.body.appendChild(modal);
+    }
+    
+    mostrarRutinaDetalle(rutinaId) {
+        const rutina = this.rutinas[rutinaId];
+        if (!rutina) return;
+        
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            z-index: 10001;
+            max-width: 90%;
+            max-height: 80%;
+            overflow-y: auto;
+        `;
+        
+        let ejerciciosHtml = '';
+        rutina.ejercicios.forEach(ej => {
+            ejerciciosHtml += `<li>${ej.nombre}: ${ej.peso} (${ej.series}x${ej.reps})</li>`;
+        });
+        
+        modal.innerHTML = `
+            <h3 style="color: #10B981; margin-bottom: 15px;">💪 ${rutina.nombre}</h3>
+            <p><strong>Fecha:</strong> ${rutina.fecha}</p>
+            <p><strong>Usuario:</strong> ${rutina.usuario}</p>
+            <p><strong>Ejercicios:</strong></p>
+            <ul>${ejerciciosHtml}</ul>
+            ${rutina.notas ? `<p><strong>Notas:</strong> ${rutina.notas}</p>` : ''}
+            <button onclick="this.parentElement.remove()" 
+                    style="padding: 8px 15px; background: #EF4444; color: white; border: none; border-radius: 6px; cursor: pointer; margin-top: 10px;">
+                Cerrar
+            </button>
+        `;
+        
+        document.body.appendChild(modal);
+    }
+    
+    mostrarRutina(rutina) {
         let ejerciciosTexto = rutina.ejercicios.map(ej => 
             `• ${ej.nombre}: ${ej.peso} (${ej.series}x${ej.reps})`
         ).join('\n');
         
-        const mensaje = `✅ RUTINA GUARDADA
+        const mensaje = `✅ RUTINA GUARDADA CORRECTAMENTE
 
-📅 ${rutina.fecha}
-💪 ${rutina.nombre}
+📅 Fecha: ${rutina.fecha}
+👤 Usuario: ${rutina.usuario}
+💪 Rutina: ${rutina.nombre}
 
 📝 Ejercicios:
 ${ejerciciosTexto}
 
 ${rutina.notas ? `📋 Notas: ${rutina.notas}` : ''}
 
-💾 Los datos están guardados en la memoria de la app
-🆔 ID: ${rutina.id}`;
+💾 Almacenado en: memoria interna de la app
+🆔 ID: ${rutina.id}
+
+Los datos persisten aunque cierres la app.`;
         
-        alert(mensaje);
-    }
-    
-    mostrarTodasLasRutinas() {
-        const rutinasArray = Object.values(this.rutinas);
-        
-        if (rutinasArray.length === 0) {
-            alert('No hay rutinas guardadas');
-            return;
-        }
-        
-        let contenido = '📖 MIS RUTINAS GUARDADAS:\n\n';
-        
-        rutinasArray.forEach((rutina, index) => {
-            contenido += `${index + 1}. ${rutina.nombre}\n   📅 ${rutina.fecha}\n   💪 ${rutina.ejercicios.length} ejercicios\n\n`;
-        });
-        
-        contenido += `Total: ${rutinasArray.length} rutinas guardadas`;
-        
-        alert(contenido);
-    }
-    
-    // Crear archivo de texto para compartir (NO usa blob)
-    crearArchivoTexto(rutinaId) {
-        const rutina = this.rutinas[rutinaId];
-        if (!rutina) return null;
-        
-        let contenido = `RUTINA DE GYM\n`;
-        contenido += `===============\n`;
-        contenido += `Usuario: ${rutina.usuario}\n`;
-        contenido += `Rutina: ${rutina.nombre}\n`;
-        contenido += `Fecha: ${rutina.fecha}\n\n`;
-        contenido += `EJERCICIOS:\n`;
-        
-        rutina.ejercicios.forEach((ej, index) => {
-            contenido += `${index + 1}. ${ej.nombre}\n`;
-            contenido += `   Peso: ${ej.peso}\n`;
-            contenido += `   Series: ${ej.series}\n`;
-            contenido += `   Repeticiones: ${ej.reps}\n\n`;
-        });
-        
-        if (rutina.notas) {
-            contenido += `NOTAS:\n${rutina.notas}\n`;
-        }
-        
-        return contenido;
-    }
-    
-    compartirRutina(rutinaId) {
-        const rutina = this.rutinas[rutinaId];
-        if (!rutina) {
-            alert('Rutina no encontrada');
-            return;
-        }
-        
-        const texto = this.crearArchivoTexto(rutinaId);
-        
-        // Usar Web Share API si está disponible
-        if (navigator.share) {
-            navigator.share({
-                title: `Rutina: ${rutina.nombre}`,
-                text: texto
-            }).then(() => {
-                console.log('✅ Rutina compartida');
-            }).catch(err => {
-                console.log('❌ Error compartiendo:', err);
-                this.mostrarTextoParaCopiar(texto);
-            });
-        } else {
-            this.mostrarTextoParaCopiar(texto);
-        }
-    }
-    
-    mostrarTextoParaCopiar(texto) {
-        const mensaje = `📤 COMPARTIR RUTINA\n\nCopia el siguiente texto y pégalo donde quieras:\n\n${texto}`;
         alert(mensaje);
     }
     
     guardarEnStorage() {
-        localStorage.setItem('gym_rutinas_avanzado', JSON.stringify(this.rutinas));
+        localStorage.setItem('gym_todas_rutinas', JSON.stringify(this.rutinas));
     }
     
-    cargarTodas() {
-        const guardado = localStorage.getItem('gym_rutinas_avanzado');
+    cargarRutinas() {
+        const guardado = localStorage.getItem('gym_todas_rutinas');
         return guardado ? JSON.parse(guardado) : {};
+    }
+    
+    // Estadísticas
+    mostrarEstadisticas() {
+        const totalRutinas = Object.keys(this.rutinas).length;
+        const primeraRutina = Object.values(this.rutinas)[0];
+        const ultimaRutina = Object.values(this.rutinas)[totalRutinas - 1];
+        
+        const mensaje = `📊 ESTADÍSTICAS GYM APP
+
+✅ Rutinas guardadas: ${totalRutinas}
+📅 Primera rutina: ${primeraRutina ? primeraRutina.fecha : 'N/A'}
+🆕 Última rutina: ${ultimaRutina ? ultimaRutina.fecha : 'N/A'}
+💾 Almacenamiento usado: ${JSON.stringify(this.rutinas).length} caracteres
+
+Los datos están seguros en la memoria de la app.`;
+        
+        alert(mensaje);
     }
 }
 
 // Crear instancia global
-window.gymStorage = new GymStorage();
-
-// Funciones de ejemplo
-function guardarRutinaEjemplo() {
-    const ejercicios = [
-        { nombre: "Press Banca", peso: "80kg", series: 4, reps: 8 },
-        { nombre: "Sentadillas", peso: "100kg", series: 3, reps: 10 },
-        { nombre: "Peso Muerto", peso: "120kg", series: 3, reps: 6 }
-    ];
-    
-    window.gymStorage.guardarRutina("Rutina Fuerza", ejercicios, "Buen entrenamiento de fuerza");
-}
-
-function verRutinas() {
-    window.gymStorage.mostrarTodasLasRutinas();
-}
-
-// Función para obtener la última rutina y compartirla
-function compartirUltimaRutina() {
-    const rutinas = Object.values(window.gymStorage.rutinas);
-    if (rutinas.length === 0) {
-        alert('No hay rutinas para compartir');
-        return;
-    }
-    
-    const ultimaRutina = rutinas[rutinas.length - 1];
-    window.gymStorage.compartirRutina(ultimaRutina.id);
-}
+window.gymManager = new GymManager();
 </script>
 
-<div style="position: fixed; top: 20px; right: 20px; z-index: 9999; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); border: 2px solid #10B981;">
-    <h4 style="margin: 0 0 10px 0; color: #1F2937; text-align: center;">💪 GYM STORAGE</h4>
+<div style="position: fixed; top: 20px; right: 20px; z-index: 9999; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); border: 2px solid #10B981; max-width: 250px;">
+    <h4 style="margin: 0 0 12px 0; color: #1F2937; text-align: center;">💪 GYM MANAGER</h4>
     <div style="display: flex; flex-direction: column; gap: 8px;">
-        <button onclick="guardarRutinaEjemplo()" style="padding: 10px; background: #10B981; color: white; border: none; border-radius: 6px; cursor: pointer;">
-            💾 Guardar Ejemplo
+        <button onclick="gymManager.guardarNuevaRutina()" style="padding: 10px; background: #10B981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+            💾 Nueva Rutina
         </button>
-        <button onclick="verRutinas()" style="padding: 10px; background: #3B82F6; color: white; border: none; border-radius: 6px; cursor: pointer;">
-            📖 Ver Rutinas
+        <button onclick="gymManager.mostrarTodasLasRutinas()" style="padding: 10px; background: #3B82F6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+            📖 Ver Todas
         </button>
-        <button onclick="compartirUltimaRutina()" style="padding: 10px; background: #8B5CF6; color: white; border: none; border-radius: 6px; cursor: pointer;">
-            📤 Compartir
+        <button onclick="gymManager.mostrarEstadisticas()" style="padding: 10px; background: #8B5CF6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+            📊 Estadísticas
+        </button>
+        <button onclick="mostrarDatosEnPantalla()" style="padding: 10px; background: #F59E0B; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+            📄 Ver JSON
         </button>
     </div>
 </div>
