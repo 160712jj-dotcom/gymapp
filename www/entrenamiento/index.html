@@ -3879,7 +3879,7 @@
                         
                         Capacitor.Plugins.Filesystem.writeFile({
                             path: nombreArchivo,
-                            data: btoa(unescape(encodeURIComponent(jsonData))),
+                            data: jsonData, // ← DIRECTAMENTE EL JSON, SIN btoa()
                             directory: 'DOCUMENTS',
                             encoding: 'utf8'
                         }).then(result => {
