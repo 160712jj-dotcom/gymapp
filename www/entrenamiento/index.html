@@ -806,6 +806,48 @@
             background-color: #10b981 !important;
             transform: translateY(-1px);
         }
+        /* FORZAR 2 COLUMNAS EN INPUTS DE PESO Y REPS EN MÓVILES */
+        @media (max-width: 768px) {
+            .workout-set .grid.grid-cols-2 {
+                grid-template-columns: 1fr 1fr !important;
+                display: grid !important;
+                gap: 0.75rem;
+            }
+            
+            .workout-set .grid.grid-cols-2 > div {
+                min-width: 0; /* Evitar desbordamiento */
+            }
+            
+            .workout-set input[type="number"] {
+                min-height: 44px; /* Mejor touch target */
+                font-size: 16px; /* Evitar zoom en iOS */
+            }
+        }
+
+        /* Asegurar que los inputs sean responsivos pero mantengan 2 columnas */
+        @media (max-width: 480px) {
+            .workout-set .grid.grid-cols-2 {
+                grid-template-columns: 1fr 1fr !important;
+                gap: 0.5rem;
+            }
+            
+            .workout-set .text-center {
+                padding: 0 2px;
+            }
+        }
+
+        /* Backup adicional para dispositivos muy pequeños */
+        @media (max-width: 360px) {
+            .workout-set .grid.grid-cols-2 {
+                grid-template-columns: 1fr 1fr !important;
+                gap: 0.25rem;
+            }
+            
+            .workout-set input[type="number"] {
+                padding: 0.5rem 0.25rem;
+                font-size: 14px;
+            }
+        }
     </style>
 </head>
 <body class="text-gray-100">
@@ -889,8 +931,8 @@
                 <div class="level-card bg-gray-700 p-6 md:p-8 rounded-xl cursor-pointer transition-all duration-300 hover:transform hover:scale-105 border-2 border-blue-500"
                     @click="currentScreen = 'level'">
                     <div class="text-5xl mb-5 text-blue-400"><i class="fas fa-dumbbell"></i></div>
-                    <h3 class="text-xl font-semibold mb-3 text-white">Crear Entrenamiento Manual</h3>
-                    <p class="text-gray-400 mb-4">Configura tu entrenamiento personalizado seleccionando ejercicios y grupos musculares.</p>
+                    <h3 class="text-xl font-semibold mb-3 text-white">Crear Nueva Rutina</h3>
+                    <p class="text-gray-400 mb-4">Crea tu entrenamiento personalizado seleccionando ejercicios y grupos musculares.</p>
                     <div class="text-sm text-blue-300 flex items-center">
                         <i class="fas fa-check-circle mr-2"></i> Total control sobre tu rutina
                     </div>
@@ -900,8 +942,8 @@
                 <div class="level-card bg-gray-700 p-6 md:p-8 rounded-xl cursor-pointer transition-all duration-300 hover:transform hover:scale-105 border-2 border-green-500"
                     @click="currentScreen = 'history-selection'">
                     <div class="text-5xl mb-5 text-green-400"><i class="fas fa-history"></i></div>
-                    <h3 class="text-xl font-semibold mb-3 text-white">Recuperar Historial</h3>
-                    <p class="text-gray-400 mb-4">Usa entrenamientos anteriores como plantilla para nuevos entrenamientos.</p>
+                    <h3 class="text-xl font-semibold mb-3 text-white">Usar Rutinas Guardadas</h3>
+                    <p class="text-gray-400 mb-4">Usa entrenamientos anteriores como plantilla.</p>
                     <div class="text-sm text-green-300 flex items-center">
                         <i class="fas fa-check-circle mr-2"></i> Reutiliza rutinas anteriores
                     </div>
@@ -930,9 +972,9 @@
                 <div class="level-card bg-gray-700 p-6 md:p-8 rounded-xl cursor-pointer transition-all duration-300 hover:transform hover:scale-105 border-2 border-blue-500"
                     @click="viewAllHistory()">
                     <div class="text-5xl mb-5 text-blue-400"><i class="fas fa-dumbbell"></i></div>
-                    <h3 class="text-xl font-semibold mb-3 text-white">Ejercicios en Ejecución</h3>
+                    <h3 class="text-xl font-semibold mb-3 text-white">Rutinas en Ejecución</h3>
                     <div class="text-sm text-blue-300 flex items-center">
-                        <i class="fas fa-check-circle mr-2"></i> Ver historial completo de ejercicios en ejecución
+                        <i class="fas fa-check-circle mr-2"></i> Historial completo de rutinas en ejecución
                     </div>
                 </div>
                 
@@ -942,7 +984,7 @@
                     <div class="text-5xl mb-5 text-green-400"><i class="fas fa-layer-group"></i></div>
                     <h3 class="text-xl font-semibold mb-3 text-white">Rutinas Guardadas</h3>
                     <div class="text-sm text-green-300 flex items-center">
-                        <i class="fas fa-check-circle mr-2"></i> Rutinas guardadas
+                        <i class="fas fa-check-circle mr-2"></i> Recupera rutinas guardadas y comprueba tu evolución
                     </div>
                 </div>
             </div>
