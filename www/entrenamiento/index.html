@@ -254,9 +254,11 @@
         .chart-tab {
             transition: all 0.3s ease;
             cursor: pointer;
-            padding: 0.5rem 1rem;
-            border-radius: 0.375rem;
-            text-align: center;
+            padding: 0.75rem 0.5rem;
+            border-radius: 0.5rem;
+            min-height: 70px;
+            min-width: 0;
+            flex: 1;
         }
         .chart-tab.active {
             background-color: #4299e1;
@@ -1200,26 +1202,30 @@
             <!-- Selector de métricas -->
             <div class="bg-gray-700 rounded-xl p-5 mb-6">
                 <h3 class="text-lg font-semibold mb-4">Selecciona Métrica a Visualizar</h3>
-                <div class="metric-selector">
-                    <div class="chart-tab" 
+                <div class="metric-selector grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <div class="chart-tab flex flex-col items-center justify-center text-center p-3" 
                         :class="{'active': selectedMetric === 'volume'}"
                         @click="changeMetric('volume')">
-                        <i class="fas fa-weight-hanging mr-1"></i> Volumen Total
+                        <i class="fas fa-weight-hanging mb-1 text-lg"></i>
+                        <span class="text-xs font-medium">Volumen Total</span>
                     </div>
-                    <div class="chart-tab" 
+                    <div class="chart-tab flex flex-col items-center justify-center text-center p-3" 
                         :class="{'active': selectedMetric === 'weight'}"
                         @click="changeMetric('weight')">
-                        <i class="fas fa-dumbbell mr-1"></i> Peso Máximo
+                        <i class="fas fa-dumbbell mb-1 text-lg"></i>
+                        <span class="text-xs font-medium">Peso Máximo</span>
                     </div>
-                    <div class="chart-tab" 
+                    <div class="chart-tab flex flex-col items-center justify-center text-center p-3" 
                         :class="{'active': selectedMetric === 'reps'}"
                         @click="changeMetric('reps')">
-                        <i class="fas fa-redo mr-1"></i> Repeticiones
+                        <i class="fas fa-redo mb-1 text-lg"></i>
+                        <span class="text-xs font-medium">Repeticiones</span>
                     </div>
-                    <div class="chart-tab" 
+                    <div class="chart-tab flex flex-col items-center justify-center text-center p-3" 
                         :class="{'active': selectedMetric === 'consistency'}"
                         @click="changeMetric('consistency')">
-                        <i class="fas fa-calendar-check mr-1"></i> Consistencia
+                        <i class="fas fa-calendar-check mb-1 text-lg"></i>
+                        <span class="text-xs font-medium">Consistencia</span>
                     </div>
                 </div>
             </div>
@@ -1255,47 +1261,81 @@
             </div>
             <!-- Gráfico de evolución -->
             <div class="bg-gray-700 rounded-xl p-5 mb-6">
-                <h3 class="text-lg font-semibold mb-4">Progreso en el Tiempo</h3>
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
+                    <h3 class="text-lg font-semibold">Progreso en el Tiempo</h3>
+                    
+                    <!-- Controles de navegación -->
+                    <div class="flex items-center space-x-2 bg-gray-800 rounded-lg p-2">
+                        <button @click="previousChartPage()" 
+                                class="px-3 py-1 bg-gray-700 rounded hover:bg-gray-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                :disabled="chartStartIndex === 0">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        
+                        <span class="text-sm text-gray-300 px-2">
+                            <span x-text="chartStartIndex + 1"></span>-<span 
+                                x-text="Math.min(chartStartIndex + chartVisibleCount, getFilteredWorkoutsForChart().length)"></span> 
+                            de <span x-text="getFilteredWorkoutsForChart().length"></span>
+                            <span x-show="evolutionFilter === 'specific' && selectedExercise" class="text-blue-400">
+                                (<span x-text="selectedExercise"></span>)
+                            </span>
+                            <span x-show="evolutionFilter.startsWith('muscle_')" class="text-green-400">
+                                (<span x-text="getMuscleLabel(evolutionFilter.replace('muscle_', ''))"></span>)
+                            </span>
+                        </span>
+                        
+                        <button @click="nextChartPage()" 
+                                class="px-3 py-1 bg-gray-700 rounded hover:bg-gray-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                :disabled="chartStartIndex + chartVisibleCount >= getFilteredWorkouts().length">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                        
+                        <!-- Botón para resetear a los últimos -->
+                        <button @click="resetToLatest()" 
+                                class="px-3 py-1 bg-blue-600 rounded hover:bg-blue-500 transition text-sm ml-2"
+                                :class="{'opacity-50 cursor-not-allowed': chartStartIndex === 0}"
+                                :disabled="chartStartIndex === 0">
+                            <i class="fas fa-clock mr-1"></i> Últimos
+                        </button>
+                    </div>
+                </div>
+                
                 <div class="chart-container">
                     <canvas id="evolutionChart"></canvas>
                 </div>
-                <!-- Resumen de progreso -->
-                <div class="mt-6 stats-grid" x-show="workoutHistory.length > 0">
-                    <div class="bg-gray-800 p-4 rounded-lg">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-sm">Valor actual:</span>
-                            <span class="font-semibold" x-text="calculateProgress().current + (selectedMetric === 'consistency' ? '%' : '')"></span>
-                        </div>
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-sm">Mejor valor:</span>
-                            <span class="font-semibold" x-text="calculateProgress().best + (selectedMetric === 'consistency' ? '%' : '')"></span>
-                        </div>
+                <div class="mt-6" x-show="workoutHistory.length > 0">
+                <div class="bg-gray-800 p-4 rounded-lg">
+                    <div class="space-y-3">
                         <div class="flex justify-between items-center">
-                            <span class="text-sm">Progreso:</span>
+                            <span class="text-sm text-gray-300">Actual:</span>
+                            <span class="font-semibold text-white" 
+                                x-text="calculateProgress().current + (selectedMetric === 'consistency' ? '%' : '')"></span>
+                        </div>
+                        
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-300">Mejor:</span>
+                            <span class="font-semibold text-white" 
+                                x-text="calculateProgress().best + (selectedMetric === 'consistency' ? '%' : '')"></span>
+                        </div>
+                        
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-300">Tendencia:</span>
                             <span class="font-semibold" 
                                 :class="{
-                                    'trend-up': calculateProgress().progress > 0,
-                                    'trend-down': calculateProgress().progress < 0,
-                                    'trend-neutral': calculateProgress().progress === 0
+                                    'trend-up': calculateProgress().trend > 0,
+                                    'trend-down': calculateProgress().trend < 0,
+                                    'trend-neutral': calculateProgress().trend === 0
                                 }"
-                                x-text="(calculateProgress().progress > 0 ? '+' : '') + calculateProgress().progress + '%'"></span>
+                                x-text="(calculateProgress().trend > 0 ? '+' : '') + calculateProgress().trend + '%'"></span>
                         </div>
-                    </div>
-                    <div class="bg-gray-800 p-4 rounded-lg">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-sm">Entrenamientos:</span>
-                            <span class="font-semibold" x-text="workoutHistory.length"></span>
-                        </div>
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-sm">Período:</span>
-                            <span class="font-semibold" x-text="getTrainingPeriod()"></span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm">Consistencia:</span>
-                            <span class="font-semibold" x-text="calculateProgress().consistency + '%'"></span>
+                        
+                        <div class="flex justify-between items-center pt-2 border-t border-gray-700">
+                            <span class="text-sm text-gray-300">Período:</span>
+                            <span class="font-semibold text-xs text-white" x-text="getCurrentChartPeriod()"></span>
                         </div>
                     </div>
                 </div>
+            </div>
                 <div x-show="workoutHistory.length === 0" class="text-center py-8">
                     <div class="text-5xl mb-4 text-gray-500"><i class="fas fa-chart-line"></i></div>
                     <h3 class="text-xl font-semibold mb-2">No hay datos de evolución</h3>
@@ -1303,21 +1343,14 @@
                 </div>
             </div>
             <!-- Botones de acción -->
-            <div class="flex flex-col md:flex-row justify-between gap-3">
-                <button @click="goBack()" class="btn-mobile px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition">
+            <div class="flex flex-row justify-between gap-3">
+                <button @click="goBack()" class="flex-1 px-4 py-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition flex items-center justify-center">
                     <i class="fas fa-arrow-left mr-2"></i> Volver
                 </button>
-                <div class="flex flex-col md:flex-row gap-3">
-                    <button @click="exportProgressReport()" 
-                            class="btn-mobile px-4 py-2 bg-green-600 rounded-lg hover:bg-green-500 transition"
-                            :disabled="workoutHistory.length === 0">
-                        <i class="fas fa-file-export mr-2"></i> Exportar Reporte
-                    </button>
-                    <button @click="updateChart()" 
-                            class="btn-mobile px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-500 transition">
-                        <i class="fas fa-sync-alt mr-2"></i> Actualizar
-                    </button>
-                </div>
+                <button @click="updateChart()" 
+                        class="flex-1 px-4 py-3 bg-blue-600 rounded-lg hover:bg-blue-500 transition flex items-center justify-center">
+                    <i class="fas fa-sync-alt mr-2"></i> Actualizar
+                </button>
             </div>
         </div>
         <!-- Contenedor para todas las demás pantallas -->
@@ -2168,23 +2201,24 @@
                         </div>
                     </template>
                 </div>
-            <div class="flex space-x-2">
-                    <!-- Botón para volver según el contexto -->
+            <div class="flex flex-row justify-between gap-3">
+                <div class="flex-1">
                     <template x-if="currentView.type === 'all'">
-                        <button @click="currentScreen = 'history-selection'" class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition">
+                        <button @click="currentScreen = 'history-selection'" class="w-full px-4 py-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition flex items-center justify-center">
                             <i class="fas fa-arrow-left mr-2"></i> Volver
                         </button>
                     </template>
                     <template x-if="currentView.type === 'routine'">
-                        <button @click="currentScreen = 'workout-group-details'" class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition">
+                        <button @click="currentScreen = 'workout-group-details'" class="w-full px-4 py-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition flex items-center justify-center">
                             <i class="fas fa-arrow-left mr-2"></i> Volver a Rutina
                         </button>
                     </template>
-                
-                    <button @click="viewEvolution()" class="px-4 py-2 bg-purple-600 rounded-lg hover:bg-purple-500 transition">
-                        <i class="fas fa-chart-line mr-2"></i> Evolución
-                    </button>
                 </div>
+                
+                <button @click="viewEvolution()" 
+                        class="flex-1 px-4 py-3 bg-purple-600 rounded-lg hover:bg-purple-500 transition flex items-center justify-center">
+                    <i class="fas fa-chart-line mr-2"></i> Evolución
+                </button>
             </div>
             
             <!-- Pantalla de detalles del entrenamiento - ORDEN CORREGIDO -->
@@ -2622,6 +2656,8 @@
                 evolutionFilter: 'all',
                 selectedExercise: '',
                 evolutionChart: null,
+                chartStartIndex: 0, // Índice de inicio para la gráfica
+                chartVisibleCount: 8, // Número máximo de entrenamientos a mostrar
                 // Ejercicios personalizados
                 newCustomExerciseName: '',
                 newCustomExerciseMuscle: '',
@@ -6339,7 +6375,7 @@
                                 return;
                             }
                             
-                            const chartData = this.prepareEvolutionData();
+                            const chartData = this.prepareEvolutionDataLimited();
                             
                             console.log('Inicializando gráfico con:', chartData);
 
@@ -6437,11 +6473,77 @@
                         }, 300);
                     });
                 },
+                
+
+                getMaxWeightFromWorkout(workout) {
+                    if (!workout.exercisesData) return 0;
+                    
+                    let maxWeight = 0;
+                    Object.values(workout.exercisesData).forEach(muscleExercises => {
+                        muscleExercises.forEach(exercise => {
+                            if (exercise.setsData) {
+                                exercise.setsData.forEach(set => {
+                                    if (set.completed && set.weight > maxWeight) {
+                                        maxWeight = set.weight;
+                                    }
+                                });
+                            }
+                        });
+                    });
+                    
+                    return maxWeight;
+                },
+
+                getTotalRepsFromWorkout(workout) {
+                    if (!workout.exercisesData) return 0;
+                    
+                    let totalReps = 0;
+                    Object.values(workout.exercisesData).forEach(muscleExercises => {
+                        muscleExercises.forEach(exercise => {
+                            if (exercise.setsData) {
+                                exercise.setsData.forEach(set => {
+                                    if (set.completed) {
+                                        totalReps += set.reps || 0;
+                                    }
+                                });
+                            }
+                        });
+                    });
+                    
+                    return totalReps;
+                },
+
+                getMetricLabel() {
+                    let baseLabel = '';
+                    switch(this.selectedMetric) {
+                        case 'volume': baseLabel = 'Volumen'; break;
+                        case 'weight': baseLabel = 'Peso Máximo'; break;
+                        case 'reps': baseLabel = 'Repeticiones'; break;
+                        case 'consistency': baseLabel = 'Consistencia'; break;
+                        default: baseLabel = 'Métrica';
+                    }
+                    
+                    // Añadir información del filtro específico
+                    if (this.evolutionFilter === 'specific' && this.selectedExercise) {
+                        baseLabel += ` - ${this.selectedExercise}`;
+                    } else if (this.evolutionFilter.startsWith('muscle_')) {
+                        const muscle = this.evolutionFilter.replace('muscle_', '');
+                        baseLabel += ` - ${this.getMuscleLabel(muscle)}`;
+                    }
+                    
+                    // Añadir unidades
+                    if (this.selectedMetric === 'volume') baseLabel += ' (kg)';
+                    if (this.selectedMetric === 'weight') baseLabel += ' (kg)';
+                    if (this.selectedMetric === 'consistency') baseLabel += ' (%)';
+                    
+                    return baseLabel;
+                },
                 updateChart() {
                     console.log('=== ACTUALIZANDO GRÁFICO ===');
                     console.log('Filtro:', this.evolutionFilter);
                     console.log('Ejercicio:', this.selectedExercise);
                     console.log('Métrica:', this.selectedMetric);
+                    console.log('Start Index:', this.chartStartIndex);
                     
                     this.$nextTick(() => {
                         setTimeout(() => {
@@ -6657,32 +6759,185 @@
 
                     return { labels, values, label };
                 },
-                
-                calculateProgress() {
-                    const chartData = this.prepareEvolutionData();
-                    const values = chartData.values.filter(v => v > 0);
-                    if (values.length === 0) {
-                        return {
-                            current: 0,
-                            best: 0,
-                            progress: 0,
-                            consistency: 0
-                        };
+
+                prepareEvolutionDataLimited() {
+                    const workoutData = this.getLimitedWorkoutData();
+                    console.log('Preparando datos limitados y filtrados:', workoutData.length, 'entrenamientos');
+                    
+                    if (workoutData.length === 0) {
+                        return { labels: [], values: [], label: this.getMetricLabel() };
                     }
-                    const current = values[values.length - 1];
-                    const best = Math.max(...values);
-                    const initial = values[0];
-                    let progress = 0;
-                    if (initial > 0) {
-                        progress = Math.round(((current - initial) / initial) * 100);
-                    }
-                    const totalDays = Math.ceil((new Date() - new Date(this.workoutHistory[0].date)) / (1000 * 60 * 60 * 24));
-                    const consistency = totalDays > 0 ? Math.round((this.workoutHistory.length / totalDays) * 100) : 0;
+
+                    const labels = [];
+                    const values = [];
+
+                    // Ordenar por fecha (más antiguo primero para la gráfica)
+                    const sortedWorkouts = [...workoutData].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+                    sortedWorkouts.forEach(workout => {
+                        const date = new Date(workout.date);
+                        labels.push(date.toLocaleDateString('es-ES', { 
+                            day: '2-digit', 
+                            month: '2-digit',
+                            year: '2-digit'
+                        }));
+
+                        let value = this.calculateMetricValue(workout);
+                        values.push(value);
+                    });
+
+                    console.log('Datos finales para gráfica:', { labels, values });
+                    
                     return {
-                        current: current,
-                        best: best,
+                        labels: labels,
+                        values: values,
+                        label: this.getMetricLabel()
+                    };
+                },
+
+                // Función para calcular el valor de la métrica (incluye filtros)
+                calculateMetricValue(workout) {
+                    if (!workout || !workout.exercisesData) return 0;
+                    
+                    let value = 0;
+                    
+                    switch (this.selectedMetric) {
+                        case 'volume':
+                            if (this.evolutionFilter === 'specific' && this.selectedExercise) {
+                                // Volumen para ejercicio específico
+                                value = this.getExerciseVolume(workout, this.selectedExercise);
+                            } else if (this.evolutionFilter.startsWith('muscle_')) {
+                                // Volumen para músculo específico
+                                const muscle = this.evolutionFilter.replace('muscle_', '');
+                                value = this.getMuscleVolume(workout, muscle);
+                            } else {
+                                // Volumen total
+                                value = workout.totalVolume || 0;
+                            }
+                            break;
+                            
+                        case 'weight':
+                            if (this.evolutionFilter === 'specific' && this.selectedExercise) {
+                                // Peso máximo para ejercicio específico
+                                value = this.getExerciseMaxWeight(workout, this.selectedExercise);
+                            } else {
+                                // Peso máximo general
+                                value = this.getMaxWeightFromWorkout(workout);
+                            }
+                            break;
+                            
+                        case 'reps':
+                            if (this.evolutionFilter === 'specific' && this.selectedExercise) {
+                                // Reps para ejercicio específico
+                                value = this.getExerciseTotalReps(workout, this.selectedExercise);
+                            } else {
+                                // Reps totales
+                                value = this.getTotalRepsFromWorkout(workout);
+                            }
+                            break;
+                            
+                        case 'consistency':
+                            value = workout.sets > 0 ? Math.round((workout.completedSets / workout.sets) * 100) : 0;
+                            break;
+                    }
+                    
+                    return value;
+                },
+                // Obtener volumen de un ejercicio específico
+                getExerciseVolume(workout, exerciseName) {
+                    if (!workout.exercisesData) return 0;
+                    
+                    let volume = 0;
+                    Object.values(workout.exercisesData).forEach(muscleExercises => {
+                        muscleExercises.forEach(exercise => {
+                            if (exercise.name === exerciseName && exercise.setsData) {
+                                exercise.setsData.forEach(set => {
+                                    if (set.completed) {
+                                        volume += (set.weight || 0) * (set.reps || 0);
+                                    }
+                                });
+                            }
+                        });
+                    });
+                    
+                    return volume;
+                },
+
+                // Obtener volumen de un músculo específico
+                getMuscleVolume(workout, muscleKey) {
+                    if (!workout.exercisesData || !workout.exercisesData[muscleKey]) return 0;
+                    
+                    let volume = 0;
+                    workout.exercisesData[muscleKey].forEach(exercise => {
+                        if (exercise.setsData) {
+                            exercise.setsData.forEach(set => {
+                                if (set.completed) {
+                                    volume += (set.weight || 0) * (set.reps || 0);
+                                }
+                            });
+                        }
+                    });
+                    
+                    return volume;
+                },
+
+                // Obtener peso máximo de un ejercicio específico
+                getExerciseMaxWeight(workout, exerciseName) {
+                    if (!workout.exercisesData) return 0;
+                    
+                    let maxWeight = 0;
+                    Object.values(workout.exercisesData).forEach(muscleExercises => {
+                        muscleExercises.forEach(exercise => {
+                            if (exercise.name === exerciseName && exercise.setsData) {
+                                exercise.setsData.forEach(set => {
+                                    if (set.completed && set.weight > maxWeight) {
+                                        maxWeight = set.weight;
+                                    }
+                                });
+                            }
+                        });
+                    });
+                    
+                    return maxWeight;
+                },
+
+                // Obtener reps totales de un ejercicio específico
+                getExerciseTotalReps(workout, exerciseName) {
+                    if (!workout.exercisesData) return 0;
+                    
+                    let totalReps = 0;
+                    Object.values(workout.exercisesData).forEach(muscleExercises => {
+                        muscleExercises.forEach(exercise => {
+                            if (exercise.name === exerciseName && exercise.setsData) {
+                                exercise.setsData.forEach(set => {
+                                    if (set.completed) {
+                                        totalReps += set.reps || 0;
+                                    }
+                                });
+                            }
+                        });
+                    });
+                    
+                    return totalReps;
+                },
+                calculateProgress() {
+                    const workouts = this.getLimitedWorkoutData();
+                    if (workouts.length === 0) {
+                        return { current: 0, best: 0, progress: 0, consistency: 0, trend: 0 };
+                    }
+                    
+                    const values = workouts.map(workout => this.calculateMetricValue(workout));
+                    const current = values[values.length - 1] || 0;
+                    const best = Math.max(...values);
+                    const progress = values.length > 1 ? Math.round(((current - values[0]) / values[0]) * 100) : 0;
+                    const trend = values.length > 1 ? Math.round(((current - values[values.length - 2]) / values[values.length - 2]) * 100) : 0;
+                    
+                    return {
+                        current: Math.round(current),
+                        best: Math.round(best),
                         progress: progress,
-                        consistency: consistency
+                        consistency: Math.round((values.filter(v => v > 0).length / values.length) * 100),
+                        trend: trend
                     };
                 },
                 exportProgressReport() {
@@ -6728,16 +6983,16 @@
                 },
                 changeMetric(metric) {
                     this.selectedMetric = metric;
-                    console.log('Cambiando métrica a:', metric);
+                    this.chartStartIndex = 0;
                     this.updateChart();
                 },
+
                 changeEvolutionFilter(filter) {
                     this.evolutionFilter = filter;
-                    // Resetear ejercicio específico si no es el filtro correspondiente
+                    this.chartStartIndex = 0;
                     if (filter !== 'specific') {
                         this.selectedExercise = '';
                     }
-                    console.log('Cambiando filtro a:', filter);
                     this.updateChart();
                 },
                 getTrainingPeriod() {
@@ -6748,6 +7003,106 @@
                     if (days < 30) return `${days} días`;
                     if (days < 365) return `${Math.round(days / 30)} meses`;
                     return `${Math.round(days / 365)} años`;
+                },
+                previousChartPage() {
+                    const filteredWorkouts = this.getFilteredWorkoutsForChart();
+                    const newStartIndex = Math.max(0, this.chartStartIndex - this.chartVisibleCount);
+                    if (newStartIndex !== this.chartStartIndex) {
+                        this.chartStartIndex = newStartIndex;
+                        console.log('Navegando a página anterior, nuevo start:', this.chartStartIndex);
+                        this.updateChart();
+                    }
+                },
+                nextChartPage() {
+                    const filteredWorkouts = this.getFilteredWorkoutsForChart();
+                    const newStartIndex = this.chartStartIndex + this.chartVisibleCount;
+                    if (newStartIndex < filteredWorkouts.length) {
+                        this.chartStartIndex = newStartIndex;
+                        console.log('Navegando a página siguiente, nuevo start:', this.chartStartIndex);
+                        this.updateChart();
+                    }
+                },
+                resetToLatest() {
+                    const filteredWorkouts = this.getFilteredWorkoutsForChart();
+                    this.chartStartIndex = Math.max(0, filteredWorkouts.length - this.chartVisibleCount);
+                    console.log('Reset a últimos entrenamientos, start:', this.chartStartIndex);
+                    this.updateChart();
+                },
+                isShowingLatest() {
+                    const filteredWorkouts = this.getFilteredWorkoutsForChart();
+                    return this.chartStartIndex >= Math.max(0, filteredWorkouts.length - this.chartVisibleCount);
+                },
+                getFilteredWorkoutsForChart() {
+                    let filteredWorkouts = this.workoutHistory;
+                    
+                    // Aplicar filtros específicos de ejercicio/músculo
+                    if (this.evolutionFilter === 'specific' && this.selectedExercise) {
+                        filteredWorkouts = filteredWorkouts.filter(workout => 
+                            this.hasExercise(workout, this.selectedExercise)
+                        );
+                    } else if (this.evolutionFilter.startsWith('muscle_')) {
+                        const muscle = this.evolutionFilter.replace('muscle_', '');
+                        filteredWorkouts = filteredWorkouts.filter(workout => 
+                            this.hasMuscle(workout, muscle)
+                        );
+                    }
+                    
+                    return filteredWorkouts;
+                },
+
+                // Obtener los datos limitados para la gráfica
+                getLimitedWorkoutData() {
+                    // Obtener todos los workouts del historial
+                    let filteredWorkouts = this.workoutHistory;
+                    
+                    // Aplicar filtros específicos de ejercicio/músculo
+                    if (this.evolutionFilter === 'specific' && this.selectedExercise) {
+                        filteredWorkouts = filteredWorkouts.filter(workout => 
+                            this.hasExercise(workout, this.selectedExercise)
+                        );
+                    } else if (this.evolutionFilter.startsWith('muscle_')) {
+                        const muscle = this.evolutionFilter.replace('muscle_', '');
+                        filteredWorkouts = filteredWorkouts.filter(workout => 
+                            this.hasMuscle(workout, muscle)
+                        );
+                    }
+                    
+                    console.log('Workouts después de filtrar:', filteredWorkouts.length);
+                    
+                    // Aplicar paginación
+                    const safeStartIndex = Math.min(this.chartStartIndex, Math.max(0, filteredWorkouts.length - this.chartVisibleCount));
+                    const safeEndIndex = Math.min(safeStartIndex + this.chartVisibleCount, filteredWorkouts.length);
+                    
+                    console.log(`Rango paginado: ${safeStartIndex} a ${safeEndIndex}`);
+                    
+                    return filteredWorkouts.slice(safeStartIndex, safeEndIndex);
+                },
+                getCurrentChartPeriod() {
+                    const workouts = this.getLimitedWorkoutData();
+                    if (workouts.length === 0) return 'Sin datos';
+                    
+                    const firstDate = new Date(workouts[workouts.length - 1].date);
+                    const lastDate = new Date(workouts[0].date);
+                    
+                    return `${firstDate.toLocaleDateString()} - ${lastDate.toLocaleDateString()}`;
+                },
+                // Verificar si un workout contiene un ejercicio específico
+                hasExercise(workout, exerciseName) {
+                    if (!workout.exercisesData) return false;
+                    
+                    for (const muscleExercises of Object.values(workout.exercisesData)) {
+                        for (const exercise of muscleExercises) {
+                            if (exercise.name === exerciseName) {
+                                return true;
+                            }
+                        }
+                    }
+                    return false;
+                },
+
+                // Verificar si un workout contiene un músculo específico
+                hasMuscle(workout, muscleKey) {
+                    return !!(workout.exercisesData && workout.exercisesData[muscleKey]);
                 },
 
                 // ==================================================
