@@ -1276,9 +1276,7 @@
                             <span x-text="chartStartIndex + 1"></span>-<span 
                                 x-text="Math.min(chartStartIndex + chartVisibleCount, getFilteredWorkoutsForChart().length)"></span> 
                             de <span x-text="getFilteredWorkoutsForChart().length"></span>
-                            <span x-show="evolutionFilter === 'specific' && selectedExercise" class="text-blue-400">
-                                (<span x-text="selectedExercise"></span>)
-                            </span>
+                        </span>
                             <span x-show="evolutionFilter.startsWith('muscle_')" class="text-green-400">
                                 (<span x-text="getMuscleLabel(evolutionFilter.replace('muscle_', ''))"></span>)
                             </span>
@@ -6544,6 +6542,7 @@
                     console.log('Ejercicio:', this.selectedExercise);
                     console.log('Métrica:', this.selectedMetric);
                     console.log('Start Index:', this.chartStartIndex);
+                    console.log('Total workouts filtrados:', this.getFilteredWorkoutsForChart().length);
                     
                     this.$nextTick(() => {
                         setTimeout(() => {
@@ -7007,27 +7006,48 @@
                 previousChartPage() {
                     const filteredWorkouts = this.getFilteredWorkoutsForChart();
                     const newStartIndex = Math.max(0, this.chartStartIndex - this.chartVisibleCount);
+                    
+                    console.log('Intentando navegar a anterior:', {
+                        startActual: this.chartStartIndex,
+                        startNuevo: newStartIndex,
+                        totalFiltrados: filteredWorkouts.length
+                    });
+                    
                     if (newStartIndex !== this.chartStartIndex) {
                         this.chartStartIndex = newStartIndex;
                         console.log('Navegando a página anterior, nuevo start:', this.chartStartIndex);
                         this.updateChart();
+                    } else {
+                        console.log('No se puede navegar más atrás');
                     }
                 },
+
                 nextChartPage() {
                     const filteredWorkouts = this.getFilteredWorkoutsForChart();
                     const newStartIndex = this.chartStartIndex + this.chartVisibleCount;
+                    
+                    console.log('Intentando navegar a siguiente:', {
+                        startActual: this.chartStartIndex,
+                        startNuevo: newStartIndex,
+                        totalFiltrados: filteredWorkouts.length
+                    });
+                    
                     if (newStartIndex < filteredWorkouts.length) {
                         this.chartStartIndex = newStartIndex;
                         console.log('Navegando a página siguiente, nuevo start:', this.chartStartIndex);
                         this.updateChart();
+                    } else {
+                        console.log('No se puede navegar más adelante');
                     }
                 },
+
                 resetToLatest() {
                     const filteredWorkouts = this.getFilteredWorkoutsForChart();
                     this.chartStartIndex = Math.max(0, filteredWorkouts.length - this.chartVisibleCount);
                     console.log('Reset a últimos entrenamientos, start:', this.chartStartIndex);
                     this.updateChart();
                 },
+
                 isShowingLatest() {
                     const filteredWorkouts = this.getFilteredWorkoutsForChart();
                     return this.chartStartIndex >= Math.max(0, filteredWorkouts.length - this.chartVisibleCount);
@@ -7035,16 +7055,24 @@
                 getFilteredWorkoutsForChart() {
                     let filteredWorkouts = this.workoutHistory;
                     
+                    console.log('Filtros aplicados:', {
+                        evolutionFilter: this.evolutionFilter,
+                        selectedExercise: this.selectedExercise,
+                        totalWorkouts: filteredWorkouts.length
+                    });
+                    
                     // Aplicar filtros específicos de ejercicio/músculo
                     if (this.evolutionFilter === 'specific' && this.selectedExercise) {
                         filteredWorkouts = filteredWorkouts.filter(workout => 
                             this.hasExercise(workout, this.selectedExercise)
                         );
+                        console.log('Después de filtrar por ejercicio:', filteredWorkouts.length);
                     } else if (this.evolutionFilter.startsWith('muscle_')) {
                         const muscle = this.evolutionFilter.replace('muscle_', '');
                         filteredWorkouts = filteredWorkouts.filter(workout => 
                             this.hasMuscle(workout, muscle)
                         );
+                        console.log('Después de filtrar por músculo:', filteredWorkouts.length);
                     }
                     
                     return filteredWorkouts;
@@ -7052,30 +7080,24 @@
 
                 // Obtener los datos limitados para la gráfica
                 getLimitedWorkoutData() {
-                    // Obtener todos los workouts del historial
-                    let filteredWorkouts = this.workoutHistory;
-                    
-                    // Aplicar filtros específicos de ejercicio/músculo
-                    if (this.evolutionFilter === 'specific' && this.selectedExercise) {
-                        filteredWorkouts = filteredWorkouts.filter(workout => 
-                            this.hasExercise(workout, this.selectedExercise)
-                        );
-                    } else if (this.evolutionFilter.startsWith('muscle_')) {
-                        const muscle = this.evolutionFilter.replace('muscle_', '');
-                        filteredWorkouts = filteredWorkouts.filter(workout => 
-                            this.hasMuscle(workout, muscle)
-                        );
-                    }
-                    
+                    // Primero aplicar todos los filtros
+                    let filteredWorkouts = this.getFilteredWorkoutsForChart();
                     console.log('Workouts después de filtrar:', filteredWorkouts.length);
                     
-                    // Aplicar paginación
+                    if (filteredWorkouts.length === 0) {
+                        return [];
+                    }
+                    
+                    // Aplicar paginación a los workouts ya filtrados
                     const safeStartIndex = Math.min(this.chartStartIndex, Math.max(0, filteredWorkouts.length - this.chartVisibleCount));
                     const safeEndIndex = Math.min(safeStartIndex + this.chartVisibleCount, filteredWorkouts.length);
                     
-                    console.log(`Rango paginado: ${safeStartIndex} a ${safeEndIndex}`);
+                    console.log(`Rango paginado: ${safeStartIndex} a ${safeEndIndex} de ${filteredWorkouts.length} filtrados`);
                     
-                    return filteredWorkouts.slice(safeStartIndex, safeEndIndex);
+                    const paginatedData = filteredWorkouts.slice(safeStartIndex, safeEndIndex);
+                    console.log('Datos paginados finales:', paginatedData.length);
+                    
+                    return paginatedData;
                 },
                 getCurrentChartPeriod() {
                     const workouts = this.getLimitedWorkoutData();
