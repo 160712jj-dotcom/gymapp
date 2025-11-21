@@ -1848,7 +1848,7 @@
                                                     <div class="flex items-center space-x-1">
                                                         <span class="text-xs text-gray-400 whitespace-nowrap">P (Kg):</span>
                                                         <input type="number" min="0" 
-                                                            class="w-full bg-gray-700 rounded px-2 py-2 text-center border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                                            class="w-full bg-gray-700 rounded px-2 py-2 text-center border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white disabled:opacity-50 disabled:cursor-not-allowed text-sm h-9"
                                                             x-model="exerciseWeights[muscle][exercise.name][setIndex]"
                                                             @change="updateSetData(muscle, exercise.name, setIndex)"
                                                             placeholder="0"
@@ -1861,7 +1861,7 @@
                                                     <div class="flex items-center space-x-1">
                                                         <span class="text-xs text-gray-400 whitespace-nowrap">Reps:</span>
                                                         <input type="number" min="0" 
-                                                            class="w-full bg-gray-700 rounded px-2 py-2 text-center border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                                            class="w-full bg-gray-700 rounded px-2 py-2 text-center border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white disabled:opacity-50 disabled:cursor-not-allowed text-sm h-9"
                                                             x-model="exerciseReps[muscle][exercise.name][setIndex]"
                                                             @change="updateSetData(muscle, exercise.name, setIndex)"
                                                             placeholder="0"
@@ -1870,7 +1870,7 @@
                                                 </div>
                                                 
                                                 <!-- Botón completar compacto -->
-                                                <button class="px-2 py-2 rounded text-xs transition font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[80px]"
+                                                <button class="px-2 py-2 rounded text-xs transition font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[80px] h-9"
                                                         @click="completeSetWithVisual(muscle, exercise.name, setIndex)"
                                                         :disabled="exerciseReps[muscle][exercise.name][setIndex] <= 0 || currentExercise.muscle !== muscle || currentExercise.name !== exercise.name"
                                                         :class="getCompleteButtonClass(muscle, exercise.name, setIndex)">
