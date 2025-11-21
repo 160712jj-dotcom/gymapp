@@ -2756,6 +2756,17 @@
                         }
 
                     }, 500);
+
+                    // Limpieza de músculos huérfanos después de la verificación de rutinas
+                    setTimeout(() => {
+                        console.log('=== LIMPIEZA DE MÚSCULOS PERSONALIZADOS HUÉRFANOS ===');
+                        const cleanedCount = this.cleanupOrphanCustomMuscles();
+                        if (cleanedCount > 0) {
+                            console.log(`🧹 Se eliminaron ${cleanedCount} músculos personalizados huérfanos`);
+                        } else {
+                            console.log('✅ No se encontraron músculos personalizados huérfanos');
+                        }
+                    }, 800);
                     
                     // Cargar configuración del temporizador
                     const savedRestConfig = localStorage.getItem('gymApp_restTimerConfig');
@@ -4880,28 +4891,20 @@
                 removeExercise(muscle, exercise) {
                     if (confirm(`¿Estás seguro de que quieres eliminar el ejercicio "${exercise}"?`)) {
                         
-                        // Guardar estado actual para determinar navegación después
-                        const wasSelected = this.isExerciseSelected(muscle, exercise);
-                        const hadOtherExercises = this.exercisesByMuscle[muscle] && 
-                                                this.exercisesByMuscle[muscle].length > 1;
-                        const isLastExerciseInMuscle = this.exercisesByMuscle[muscle] && 
-                                                    this.exercisesByMuscle[muscle].length === 1;
-                        const isCustomMuscle = muscle.startsWith('custom_');
-
                         // 1. Eliminar de exercisesByMuscle
                         if (this.exercisesByMuscle[muscle]) {
                             this.exercisesByMuscle[muscle] = this.exercisesByMuscle[muscle].filter(e => e !== exercise);
                             
-                            // Si es músculo personalizado y no quedan ejercicios, eliminar el músculo
-                            if (isCustomMuscle && this.exercisesByMuscle[muscle].length === 0) {
+                            // VERIFICAR SI EL MÚSCULO PERSONALIZADO QUEDA VACÍO Y ELIMINARLO
+                            if (muscle.startsWith('custom_') && this.exercisesByMuscle[muscle].length === 0) {
+                                console.log(`🗑️ Eliminando músculo personalizado vacío: ${muscle}`);
                                 delete this.exercisesByMuscle[muscle];
                                 this.customMuscles = this.customMuscles.filter(m => m !== muscle);
                                 this.muscleGroups = this.muscleGroups.filter(m => m.key !== muscle);
                                 
                                 // También eliminar de selectedMuscles si estaba seleccionado
                                 if (this.selectedMuscles.includes(muscle)) {
-                                    this.selectedMuscles = this.selectedMuscles.filter(m => m !== muscleKey);
-                                    this.selectedMuscles = [...this.selectedMuscles];
+                                    this.selectedMuscles = this.selectedMuscles.filter(m => m !== muscle);
                                     delete this.selectedExercises[muscle];
                                 }
                             }
@@ -4919,51 +4922,66 @@
                         // 3. Eliminar datos de pesos y reps
                         if (this.exerciseWeights[muscle]) {
                             delete this.exerciseWeights[muscle][exercise];
+                            // Si no quedan ejercicios en este músculo, eliminar el objeto completo
+                            if (Object.keys(this.exerciseWeights[muscle]).length === 0) {
+                                delete this.exerciseWeights[muscle];
+                            }
                         }
                         if (this.exerciseReps[muscle]) {
                             delete this.exerciseReps[muscle][exercise];
+                            // Si no quedan ejercicios en este músculo, eliminar el objeto completo
+                            if (Object.keys(this.exerciseReps[muscle]).length === 0) {
+                                delete this.exerciseReps[muscle];
+                            }
                         }
 
-                        // 4. Guardar cambios si es ejercicio personalizado
+                        // 4. Guardar cambios SIEMPRE que sea ejercicio personalizado
                         if (this.isCustomExercise(muscle, exercise)) {
                             this.saveCustomExercises();
                         }
 
-                        // 5. Determinar navegación después de eliminar
-                        setTimeout(() => {
-                            // Caso 1: Se eliminó el último ejercicio de un músculo personalizado
-                            if (isCustomMuscle && isLastExerciseInMuscle) {
-                                if (this.selectedMuscles.length === 0) {
-                                    // No hay más músculos seleccionados, ir a selección de músculos
-                                    this.currentScreen = 'muscles';
-                                    alert('Se eliminó el último ejercicio del grupo muscular personalizado. Redirigiendo a selección de músculos.');
-                                } else {
-                                    // Hay otros músculos seleccionados, permanecer en ejercicios
-                                    alert('Se eliminó el grupo muscular personalizado porque no tenía más ejercicios.');
-                                }
-                            }
-                            // Caso 2: Se eliminó un ejercicio pero quedan más en el músculo
-                            else if (hadOtherExercises && wasSelected) {
-                                // Permanecer en la pantalla de ejercicios
-                                alert('Ejercicio eliminado correctamente.');
-                            }
-                            // Caso 3: Se eliminó el último ejercicio de un músculo no personalizado
-                            else if (isLastExerciseInMuscle && !isCustomMuscle) {
-                                alert('Ejercicio eliminado. Este grupo muscular ya no tiene ejercicios disponibles.');
-                            }
-                            // Caso 4: Ejercicio no seleccionado fue eliminado
-                            else {
-                                alert('Ejercicio eliminado correctamente.');
-                            }
-                        }, 100);
-
-                        // 6. Forzar actualización de la interfaz
+                        // 5. Forzar actualización de la interfaz
                         this.$nextTick(() => {
-                            // Actualizar cálculos de fatiga
                             this.muscleFatigue;
                             this.totalFatigue;
                         });
+
+                        alert('Ejercicio eliminado correctamente.' + (muscle.startsWith('custom_') && this.exercisesByMuscle[muscle] === undefined ? '\n\nEl grupo muscular personalizado también se eliminó por estar vacío.' : ''));
                     }
+                },
+                // Función para limpiar músculos personalizados huérfanos
+                cleanupOrphanCustomMuscles() {
+                    let cleanedCount = 0;
+                    
+                    // Limpiar customMuscles
+                    this.customMuscles = this.customMuscles.filter(muscle => {
+                        const hasExercises = this.exercisesByMuscle[muscle] && this.exercisesByMuscle[muscle].length > 0;
+                        if (!hasExercises) {
+                            console.log(`🧹 Eliminando músculo huérfano: ${muscle}`);
+                            cleanedCount++;
+                        }
+                        return hasExercises;
+                    });
+                    
+                    // Limpiar muscleGroups de músculos personalizados sin ejercicios
+                    this.muscleGroups = this.muscleGroups.filter(muscle => {
+                        if (muscle.key.startsWith('custom_')) {
+                            const hasExercises = this.exercisesByMuscle[muscle.key] && this.exercisesByMuscle[muscle.key].length > 0;
+                            if (!hasExercises) {
+                                console.log(`🧹 Eliminando muscleGroup huérfano: ${muscle.key}`);
+                                cleanedCount++;
+                            }
+                            return hasExercises;
+                        }
+                        return true; // Mantener músculos predefinidos
+                    });
+                    
+                    if (cleanedCount > 0) {
+                        this.saveCustomExercises();
+                        console.log(`✅ Limpiados ${cleanedCount} músculos personalizados huérfanos`);
+                    }
+                    
+                    return cleanedCount;
                 },
                 // REEMPLAZAR la función removeCustomMuscle con esta versión mejorada
                 removeCustomMuscle(muscleKey) {
