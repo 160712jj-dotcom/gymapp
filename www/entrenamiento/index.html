@@ -584,16 +584,30 @@
         .container {
             scroll-behavior: smooth;
         }
-        .workout-exercise[data-muscle-index="0"] {
-            border-left: 4px solid #48bb78 !important;
+        /* ELIMINAR o COMENTAR los estilos por índice y reemplazar por: */
+        .workout-exercise[data-muscle="chest"] {
+            border-left-color: #ef4444 !important;
         }
-
-        .workout-exercise[data-muscle-index="1"] {
-            border-left: 4px solid #3b82f6 !important;
+        .workout-exercise[data-muscle="back"] {
+            border-left-color: #3b82f6 !important;
         }
-
-        .workout-exercise[data-muscle-index="2"] {
-            border-left: 4px solid #8b5cf6 !important;
+        .workout-exercise[data-muscle="shoulders"] {
+            border-left-color: #eab308 !important;
+        }
+        .workout-exercise[data-muscle="biceps"] {
+            border-left-color: #22c55e !important;
+        }
+        .workout-exercise[data-muscle="triceps"] {
+            border-left-color: #a855f7 !important;
+        }
+        .workout-exercise[data-muscle="legs"] {
+            border-left-color: #f97316 !important;
+        }
+        .workout-exercise[data-muscle="abs"] {
+            border-left-color: #ec4899 !important;
+        }
+        .workout-exercise[data-muscle="traps"] {
+            border-left-color: #6366f1 !important;
         }
 
         /* Efecto de pulso para ejercicio activo */
@@ -601,10 +615,7 @@
             animation: pulseActive 2s infinite;
         }
 
-        .workout-exercise:first-of-type {
-            border-left: 4px solid #48bb78 !important;
-            background: rgba(72, 187, 120, 0.05);
-        }
+
         /* Estilos adicionales para mejorar la visualización en móviles */
         @media (max-width: 640px) {
             .routine-card {
@@ -850,6 +861,16 @@
                 font-size: 14px;
             }
         }
+        /* Bordes de músculos con !important para sobrescribir */
+        .border-muscle-chest { border-left-color: #ef4444 !important; }
+        .border-muscle-back { border-left-color: #3b82f6 !important; }
+        .border-muscle-shoulders { border-left-color: #eab308 !important; }
+        .border-muscle-biceps { border-left-color: #22c55e !important; }
+        .border-muscle-triceps { border-left-color: #a855f7 !important; }
+        .border-muscle-legs { border-left-color: #f97316 !important; }
+        .border-muscle-abs { border-left-color: #ec4899 !important; }
+        .border-muscle-traps { border-left-color: #6366f1 !important; }
+        .border-muscle-custom { border-left-color: #6b7280 !important; }
     </style>
 </head>
 <body class="text-gray-100">
@@ -1754,36 +1775,38 @@
                     <template x-for="(muscle, muscleIndex) in selectedMuscles" :key="muscle">
                         <template x-for="(exercise, exerciseIndex) in selectedExercises[muscle]" :key="exercise.name">
                             <div class="workout-exercise bg-gray-700 rounded-xl p-5 border-l-4 transition-all duration-300 muscle-exercise-container"
-                                :data-muscle-index="muscleIndex"
+                                :data-muscle="muscle"
                                 :data-exercise-index="exerciseIndex"
                                 :class="{
-                                    'border-green-500 bg-blue-900 bg-opacity-30': currentExercise.muscle === muscle && currentExercise.name === exercise.name,
-                                    'border-green-500 opacity-80': exercise.completed === exercise.sets && exercise.completed > 0,
-                                    'border-gray-600 opacity-70': currentExercise.muscle !== muscle && currentExercise.name !== exercise.name
+                                    'opacity-80': exercise.completed === exercise.sets && exercise.completed > 0,
+                                    'opacity-70': currentExercise.muscle !== muscle && currentExercise.name !== exercise.name
                                 }">
                                 
-                                <!-- INDICADOR DE ORDEN Y POSICIÓN (SIMPLIFICADO) -->
+                                <!-- Header unificado con círculo de color y número de ejercicio -->
                                 <div class="flex items-center justify-between mb-3 pb-2 border-b border-gray-600">
                                     <div class="flex items-center">
-                                        <!-- QUITADO: Número de orden del músculo -->
+                                        <div class="w-4 h-4 rounded-full mr-2" :class="muscleGroups.find(m => m.key === muscle).color"></div>
                                         <span class="text-sm font-semibold text-white" 
                                             x-text="muscleGroups.find(m => m.key === muscle).label"></span>
                                     </div>
                                     <div class="text-xs text-gray-400" 
-                                        x-text="'Ejercicio ' + (exerciseIndex + 1) + ' de ' + selectedExercises[muscle].length">
+                                        x-text="'Ejercicio ' + (exerciseIndex + 1) + ' de ' + selectedExercises[muscle].length + ' · ' + exercise.sets + ' series'">
                                     </div>
                                 </div>
 
+                                <!-- Nombre del ejercicio y estado -->
                                 <div class="flex justify-between items-start mb-4">
                                     <div class="flex-1">
-                                        <h4 class="font-semibold text-lg text-white wrap-text mb-1" x-text="exercise.name"></h4>
+                                        <h4 class="font-semibold text-lg text-white wrap-text mb-2" x-text="exercise.name"></h4>
+                                        
+                                        <!-- Línea inferior: Progreso y Estado -->
                                         <div class="flex items-center">
-                                            <div class="w-3 h-3 rounded-full mr-2" :class="muscleGroups.find(m => m.key === muscle).color"></div>
-                                            <span class="text-sm text-gray-400" x-text="muscleGroups.find(m => m.key === muscle).label"></span>
-                                            <span class="text-sm text-blue-400 ml-3">
+                                            <!-- Progreso de series -->
+                                            <span class="text-sm text-blue-400">
                                                 <i class="fas fa-check-circle mr-1"></i>
                                                 <span x-text="exercise.completed + '/' + exercise.sets + ' series'"></span>
                                             </span>
+                                            
                                             <!-- Indicador de estado -->
                                             <span x-show="!currentExercise.muscle" 
                                                 class="ml-3 text-xs text-yellow-400 bg-yellow-900 bg-opacity-30 px-2 py-1 rounded">
@@ -1799,6 +1822,7 @@
                                             </span>
                                         </div>
                                     </div>
+
                                     <div class="text-right">
                                         <div class="text-sm font-semibold text-blue-400" x-show="exercise.completed > 0">
                                             <span x-text="calculateExerciseVolume(muscle, exercise.name) + ' kg'"></span>
@@ -1809,38 +1833,34 @@
                                 <!-- Series del ejercicio -->
                                 <div class="space-y-3">
                                     <template x-for="(set, setIndex) in Array.from({length: exercise.sets})" :key="setIndex">
-                                        <div class="workout-set bg-gray-800 rounded-lg border border-gray-700"
+                                        <div class="workout-set bg-gray-800 rounded-lg border border-gray-700 p-3"
                                             :class="{'opacity-60': currentExercise.muscle !== muscle || currentExercise.name !== exercise.name}">
-                                            <!-- Encabezado de la serie -->
-                                            <div class="flex items-center justify-between p-3 border-b border-gray-700">
-                                                <span class="font-medium text-white">Serie <span x-text="setIndex + 1"></span></span>
-                                                    <!-- BOTÓN COMPLETAR - VERSIÓN FUNCIONAL -->
-                                                <button class="px-3 py-1 rounded text-sm transition font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-                                                        @click="completeSetWithVisual(muscle, exercise.name, setIndex)"
-                                                        :disabled="exerciseReps[muscle][exercise.name][setIndex] <= 0 || currentExercise.muscle !== muscle || currentExercise.name !== exercise.name"
-                                                        :class="getCompleteButtonClass(muscle, exercise.name, setIndex)">
-                                                    <i class="fas fa-check mr-1"></i> 
-                                                    <span x-text="isSetCompletedVisually(muscle, exercise.name, setIndex) ? 'Completado' : 'Completar'"></span>
-                                                </button>
-                                            </div>
                                             
-                                            <!-- Controles de peso y reps - MEJORADO PARA MÓVIL -->
-                                            <div class="p-3">
-                                                <div class="grid grid-cols-2 gap-3">
-                                                    <!-- Peso -->
-                                                    <div class="text-center">
-                                                        <label class="text-xs text-gray-400 block mb-2">Peso (kg)</label>
+                                            <!-- Todo en una línea -->
+                                            <div class="flex items-center justify-between space-x-2">
+                                                <!-- Número de serie -->
+                                                <span class="font-medium text-white text-sm whitespace-nowrap w-12">
+                                                    Serie <span x-text="setIndex + 1"></span>
+                                                </span>
+                                                
+                                                <!-- Peso -->
+                                                <div class="flex-1">
+                                                    <div class="flex items-center space-x-1">
+                                                        <span class="text-xs text-gray-400 whitespace-nowrap">P:</span>
                                                         <input type="number" min="0" 
                                                             class="w-full bg-gray-700 rounded px-2 py-2 text-center border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                                                             x-model="exerciseWeights[muscle][exercise.name][setIndex]"
                                                             @change="updateSetData(muscle, exercise.name, setIndex)"
                                                             placeholder="0"
                                                             :disabled="currentExercise.muscle !== muscle || currentExercise.name !== exercise.name">
+                                                        <span class="text-xs text-gray-400 whitespace-nowrap">kg</span>
                                                     </div>
-                                                    
-                                                    <!-- Reps -->
-                                                    <div class="text-center">
-                                                        <label class="text-xs text-gray-400 block mb-2">Repeticiones</label>
+                                                </div>
+                                                
+                                                <!-- Reps -->
+                                                <div class="flex-1">
+                                                    <div class="flex items-center space-x-1">
+                                                        <span class="text-xs text-gray-400 whitespace-nowrap">R:</span>
                                                         <input type="number" min="0" 
                                                             class="w-full bg-gray-700 rounded px-2 py-2 text-center border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                                                             x-model="exerciseReps[muscle][exercise.name][setIndex]"
@@ -1849,7 +1869,17 @@
                                                             :disabled="currentExercise.muscle !== muscle || currentExercise.name !== exercise.name">
                                                     </div>
                                                 </div>
+                                                
+                                                <!-- Botón completar compacto -->
+                                                <button class="px-2 py-2 rounded text-xs transition font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[80px]"
+                                                        @click="completeSetWithVisual(muscle, exercise.name, setIndex)"
+                                                        :disabled="exerciseReps[muscle][exercise.name][setIndex] <= 0 || currentExercise.muscle !== muscle || currentExercise.name !== exercise.name"
+                                                        :class="getCompleteButtonClass(muscle, exercise.name, setIndex)">
+                                                    <i class="fas fa-check mr-1"></i> 
+                                                    <span x-text="isSetCompletedVisually(muscle, exercise.name, setIndex) ? 'Hecho' : 'Hacer'"></span>
+                                                </button>
                                             </div>
+                                        </div>
                                     </template>
                                 </div>
 
