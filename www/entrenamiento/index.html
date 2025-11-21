@@ -1846,21 +1846,20 @@
                                                 <!-- Peso -->
                                                 <div class="flex-1">
                                                     <div class="flex items-center space-x-1">
-                                                        <span class="text-xs text-gray-400 whitespace-nowrap">P:</span>
+                                                        <span class="text-xs text-gray-400 whitespace-nowrap">P (Kg):</span>
                                                         <input type="number" min="0" 
                                                             class="w-full bg-gray-700 rounded px-2 py-2 text-center border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                                                             x-model="exerciseWeights[muscle][exercise.name][setIndex]"
                                                             @change="updateSetData(muscle, exercise.name, setIndex)"
                                                             placeholder="0"
                                                             :disabled="currentExercise.muscle !== muscle || currentExercise.name !== exercise.name">
-                                                        <span class="text-xs text-gray-400 whitespace-nowrap">kg</span>
                                                     </div>
                                                 </div>
                                                 
                                                 <!-- Reps -->
                                                 <div class="flex-1">
                                                     <div class="flex items-center space-x-1">
-                                                        <span class="text-xs text-gray-400 whitespace-nowrap">R:</span>
+                                                        <span class="text-xs text-gray-400 whitespace-nowrap">Reps:</span>
                                                         <input type="number" min="0" 
                                                             class="w-full bg-gray-700 rounded px-2 py-2 text-center border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                                                             x-model="exerciseReps[muscle][exercise.name][setIndex]"
