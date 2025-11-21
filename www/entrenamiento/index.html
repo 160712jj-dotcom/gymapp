@@ -1953,24 +1953,25 @@
                     </div>
                 </div>
 
-                <!-- Botones de control del entrenamiento -->
-                <div class="mt-8 flex justify-between">
+                <div class="mt-8 flex justify-between items-center">
+                    <!-- Izquierda: Volver -->
                     <button @click="cancelWorkout()" 
-                            class="px-6 py-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition flex items-center font-medium text-white">
+                            class="px-6 py-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition flex items-center justify-center font-medium text-white flex-1 max-w-[120px]">
                         <i class="fas fa-arrow-left mr-2"></i> Volver
                     </button>
                     
-                    <div class="flex space-x-4">
-                        <button @click="pauseWorkout()" 
-                                class="px-6 py-3 bg-yellow-600 rounded-lg hover:bg-yellow-500 transition flex items-center font-medium text-white">
-                            <i class="fas fa-pause mr-2"></i> 
-                            <span x-text="workoutTimer ? 'Pausar' : 'Reanudar'"></span>
-                        </button>
-                        <button @click="finishWorkout()" 
-                                class="px-6 py-3 bg-green-600 rounded-lg hover:bg-green-500 transition flex items-center font-medium text-white">
-                            <i class="fas fa-flag-checkered mr-2"></i> Finalizar
-                        </button>
-                    </div>    
+                    <!-- Centro: Pausar/Reanudar -->
+                    <button @click="pauseWorkout()" 
+                            class="px-6 py-3 bg-yellow-600 rounded-lg hover:bg-yellow-500 transition flex items-center justify-center font-medium text-white flex-1 max-w-[140px] mx-4">
+                        <i class="fas mr-2" :class="workoutTimer ? 'fa-pause' : 'fa-play'"></i> 
+                        <span x-text="workoutTimer ? 'Pausar' : 'Reanudar'"></span>
+                    </button>
+                    
+                    <!-- Derecha: Finalizar -->
+                    <button @click="finishWorkout()" 
+                            class="px-6 py-3 bg-green-600 rounded-lg hover:bg-green-500 transition flex items-center justify-center font-medium text-white flex-1 max-w-[120px]">
+                        <i class="fas fa-flag-checkered mr-2"></i> Finalizar
+                    </button>
                 </div>
             </div>
             <!-- PANTALLA DE RESUMEN CORREGIDA -->
