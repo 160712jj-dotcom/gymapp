@@ -919,7 +919,7 @@
                 <h1 class="text-4xl font-bold mb-3 bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">GymApp</h1>
             </header>
             
-            <!-- SECCIÓN ESTADO ACTUAL SIMPLIFICADA - SOLO EL CUADRO -->
+            <!-- SECCIÓN ESTADO ACTUAL - MÉTRICAS REORGANIZADAS -->
             <div class="bg-gray-750 p-4 rounded-lg max-w-md mx-auto mb-8">
                 <div class="text-blue-400 text-xl mb-2">
                     <i class="fas fa-chart-bar"></i>
@@ -927,23 +927,19 @@
                 <h5 class="font-medium text-white mb-2">Estado Actual</h5>
                 <div class="text-sm text-gray-300 space-y-1">
                     <div class="flex justify-between">
-                        <span>Total entrenamientos:</span>
-                        <span class="font-semibold" x-text="getHistoryStats().total"></span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span>En rutinas:</span>
+                        <span>Ejercicios en ejecución:</span>
                         <span class="font-semibold text-green-400" 
-                            x-text="getHistoryStats().inRoutines"></span>
+                            x-text="getExerciseGroupsInProgress()"></span>
                     </div>
                     <div class="flex justify-between">
-                        <span>Sueltos disponibles:</span>
+                        <span>Rutinas guardadas:</span>
                         <span class="font-semibold text-blue-400" 
-                            x-text="getHistoryStats().solo"></span>
+                            x-text="workoutGroups.length"></span>
                     </div>
                     <div class="flex justify-between">
-                        <span>Rutinas creadas:</span>
+                        <span>Total ejercicios:</span>
                         <span class="font-semibold text-purple-400" 
-                            x-text="getHistoryStats().routineGroups"></span>
+                            x-text="getTotalExerciseGroups()"></span>
                     </div>
                 </div>
             </div>
@@ -7292,6 +7288,52 @@
                             alert(`El grupo muscular "${muscleKey}" no es válido. Usa: chest, back, legs, shoulders, biceps, triceps, abs, traps.`);
                         }
                     }
+                },
+
+                // Obtener número de ejercicios en ejecución (workouts activos)
+                getCurrentWorkoutsCount() {
+                    // Contar workouts que no están en rutinas (considerados "en ejecución")
+                    const workoutsInRoutines = new Set();
+                    this.workoutGroups.forEach(group => {
+                        if (group.workouts) {
+                            group.workouts.forEach(index => workoutsInRoutines.add(index));
+                        }
+                    });
+                    
+                    const soloWorkouts = this.workoutHistory.filter((_, index) => !workoutsInRoutines.has(index));
+                    return soloWorkouts.length;
+                },
+
+                // Grupos de ejercicios en ejecución (sueltos)
+                getExerciseGroupsInProgress() {
+                    const workoutsInRoutines = new Set();
+                    this.workoutGroups.forEach(group => {
+                        if (group.workouts) {
+                            group.workouts.forEach(index => workoutsInRoutines.add(index));
+                        }
+                    });
+                    
+                    const uniqueGroupsInProgress = new Set();
+                    this.workoutHistory.forEach((workout, index) => {
+                        if (!workoutsInRoutines.has(index) && workout.routineKey && workout.routineKey !== 'unknown') {
+                            uniqueGroupsInProgress.add(workout.routineKey);
+                        }
+                    });
+                    
+                    return uniqueGroupsInProgress.size;
+                },
+
+                // Total de grupos de ejercicios (en ejecución + en rutinas)
+                getTotalExerciseGroups() {
+                    const uniqueGroups = new Set();
+                    
+                    this.workoutHistory.forEach(workout => {
+                        if (workout.routineKey && workout.routineKey !== 'unknown') {
+                            uniqueGroups.add(workout.routineKey);
+                        }
+                    });
+                    
+                    return uniqueGroups.size;
                 },
 
                 // ==================================================
