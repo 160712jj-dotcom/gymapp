@@ -1103,6 +1103,132 @@
                         </div>
                     </template>
                 </div>
+                <!-- Modal para crear/editar rutinas de trabajo - VERSIÓN CORREGIDA -->
+                <div class="modal-overlay fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50" 
+                    x-show="showCreateWorkoutGroupModal" 
+                    x-cloak
+                    :class="{ 'active': showCreateWorkoutGroupModal }"
+                    @click="showCreateWorkoutGroupModal = false">
+                    <div class="modal-container bg-gray-800 rounded-xl p-6 max-w-2xl w-full mx-4 max-h-90vh overflow-y-auto" @click.stop>
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-xl font-bold">
+                                <i class="fas fa-layer-group mr-2" :class="editingWorkoutGroup ? 'text-yellow-400' : 'text-blue-400'"></i>
+                                <span x-text="editingWorkoutGroup ? 'Editar Rutina: ' + editingWorkoutGroup.name : 'Crear Nueva Rutina de Trabajo'"></span>
+                            </h2>
+                            <button class="text-gray-400 hover:text-white" @click="cancelWorkoutGroupModal()">
+                                <i class="fas fa-times text-xl"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Nombre de la rutina -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium mb-2 text-white">Nombre de la rutina:</label>
+                            <input type="text" 
+                                x-model="newWorkoutGroupName"
+                                placeholder="Ej: Rutina Semana 1, Full Body, etc."
+                                class="w-full bg-gray-700 rounded-lg px-4 py-2 border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white">
+                        </div>
+                        
+                        <!-- Lista de GRUPOS disponibles -->
+                        <div class="mb-6">
+                            <h3 class="text-lg font-semibold mb-3 text-white">Seleccionar plantillas base:</h3>
+                            
+                            <!-- Información de estado -->
+                            <div class="bg-blue-900 bg-opacity-30 border border-blue-500 rounded-lg p-3 mb-3">
+                                <div class="flex items-center">
+                                    <i class="fas fa-info-circle text-blue-400 mr-2"></i>
+                                    <div>
+                                        <span class="text-blue-300" x-text="'Workouts disponibles: ' + getFilteredWorkouts().length"></span>
+                                        <span class="text-green-300 ml-3" x-text="'Grupos encontrados: ' + getGroupedManualWorkouts().length"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="border border-gray-700 rounded-lg p-3 max-h-64 overflow-y-auto">
+                                <template x-for="(group, index) in getGroupedManualWorkouts()" :key="group.routineKey">
+                                    <div class="bg-gray-750 p-3 rounded mb-2 flex items-start transition-all hover:bg-gray-700">
+                                        <input type="checkbox" 
+                                            class="mr-3 mt-1 h-5 w-5 text-blue-500" 
+                                            :checked="isGroupSelected(group.routineKey)"
+                                            @change="toggleGroupForWorkoutGroup(group.routineKey)">
+                                        <div class="flex-1">
+                                            <!-- NOMBRE DEL GRUPO -->
+                                            <div class="font-medium text-white text-sm mb-1">
+                                                <i class="fas fa-dumbbell text-blue-400 mr-1"></i>
+                                                <span x-text="getWorkoutTitleFromWorkout(group.representative)"></span>
+                                            </div>
+                                            
+                                            <!-- FECHA Y ESTADÍSTICAS -->
+                                            <div class="text-xs text-gray-400 mb-1">
+                                                <span x-text="'Último: ' + formatDateShort(group.latestDate)"></span>
+                                                <span class="ml-2 text-blue-400" x-text="group.latestExercises + ' ejercicios'"></span>
+                                                <span class="ml-2 text-green-400" x-text="group.latestSets + ' series'"></span>
+                                                <span class="ml-2 text-yellow-400" x-text="'(' + group.count + ' ejecuciones)'"></span>
+                                            </div>
+                                            
+                                            <!-- LISTA DE EJERCICIOS (NOMBRES VISIBLES) -->
+                                            <div class="mt-2">
+                                                <div class="text-xs text-gray-300 font-medium mb-1">Ejercicios:</div>
+                                                <div class="flex flex-wrap gap-1">
+                                                    <template x-for="(exercise, exIndex) in group.exercisesList" :key="exIndex">
+                                                        <span class="text-xs bg-gray-600 px-2 py-1 rounded text-white border border-gray-500">
+                                                            <i class="fas fa-dumbbell mr-1 text-blue-300"></i>
+                                                            <span class="font-medium" x-text="exercise.name"></span>
+                                                            <span class="text-gray-400 ml-1" x-text="'(' + exercise.sets + ')'"></span>
+                                                        </span>
+                                                    </template>
+                                                    <span x-show="group.exercisesList.length === 0" 
+                                                        class="text-xs text-red-400 italic">
+                                                        No se pudieron cargar los ejercicios
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="text-sm text-blue-400 font-bold" x-text="group.latestVolume + ' kg'"></div>
+                                            <div class="text-xs text-green-400" x-text="group.count + ' veces'"></div>
+                                        </div>
+                                    </div>
+                                </template>
+                                
+                                <!-- Mensaje cuando no hay grupos -->
+                                <div x-show="getGroupedManualWorkouts().length === 0" class="text-center py-8 text-gray-500">
+                                    <div class="text-4xl mb-3">
+                                        <i class="fas fa-inbox"></i>
+                                    </div>
+                                    <h4 class="font-medium text-white mb-2">No hay workouts disponibles</h4>
+                                    <p class="text-sm mb-4">Completa algunos entrenamientos manuales primero.</p>
+                                    <button @click="currentScreen = 'level'" 
+                                            class="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-500 transition">
+                                        <i class="fas fa-dumbbell mr-2"></i> Crear Entrenamiento
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Contador de selección -->
+                            <div class="text-sm text-gray-400 mt-2">
+                                <span x-text="selectedGroupsForWorkoutGroup.length + ' grupos seleccionados'"></span>
+                                <span x-show="selectedGroupsForWorkoutGroup.length > 0" class="ml-2 text-green-400">
+                                    (<span x-text="calculateTotalWorkoutsInSelectedGroups()"></span> workouts)
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Botones de acción -->
+                        <div class="flex justify-end gap-3 pt-4 border-t border-gray-700">
+                            <button @click="cancelWorkoutGroupModal()" 
+                                    class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition">
+                                Cancelar
+                            </button>
+                            <button @click="editingWorkoutGroup ? updateWorkoutGroup() : createWorkoutGroup()" 
+                                    class="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-500 transition disabled:opacity-50" 
+                                    :disabled="selectedGroupsForWorkoutGroup.length === 0 || !newWorkoutGroupName.trim()">
+                                <i class="fas fa-save mr-1"></i> 
+                                <span x-text="editingWorkoutGroup ? 'Actualizar Rutina' : 'Crear Rutina'"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- BOTONES VOLVER Y NUEVA RUTINA EN LA PARTE INFERIOR CENTRADOS - NUEVA POSICIÓN -->
@@ -2506,132 +2632,7 @@
                 </div>
             </div>
              
-            <!-- Modal para crear/editar rutinas de trabajo - VERSIÓN CORREGIDA -->
-            <div class="modal-overlay fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50" 
-                x-show="showCreateWorkoutGroupModal" 
-                x-cloak
-                :class="{ 'active': showCreateWorkoutGroupModal }"
-                @click="showCreateWorkoutGroupModal = false">
-                <div class="modal-container bg-gray-800 rounded-xl p-6 max-w-2xl w-full mx-4 max-h-90vh overflow-y-auto" @click.stop>
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xl font-bold">
-                            <i class="fas fa-layer-group mr-2" :class="editingWorkoutGroup ? 'text-yellow-400' : 'text-blue-400'"></i>
-                            <span x-text="editingWorkoutGroup ? 'Editar Rutina: ' + editingWorkoutGroup.name : 'Crear Nueva Rutina de Trabajo'"></span>
-                        </h2>
-                        <button class="text-gray-400 hover:text-white" @click="cancelWorkoutGroupModal()">
-                            <i class="fas fa-times text-xl"></i>
-                        </button>
-                    </div>
-                    
-                    <!-- Nombre de la rutina -->
-                    <div class="mb-6">
-                        <label class="block text-sm font-medium mb-2 text-white">Nombre de la rutina:</label>
-                        <input type="text" 
-                            x-model="newWorkoutGroupName"
-                            placeholder="Ej: Rutina Semana 1, Full Body, etc."
-                            class="w-full bg-gray-700 rounded-lg px-4 py-2 border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white">
-                    </div>
-                    
-                    <!-- Lista de GRUPOS disponibles -->
-                    <div class="mb-6">
-                        <h3 class="text-lg font-semibold mb-3 text-white">Seleccionar plantillas base:</h3>
-                        
-                        <!-- Información de estado -->
-                        <div class="bg-blue-900 bg-opacity-30 border border-blue-500 rounded-lg p-3 mb-3">
-                            <div class="flex items-center">
-                                <i class="fas fa-info-circle text-blue-400 mr-2"></i>
-                                <div>
-                                    <span class="text-blue-300" x-text="'Workouts disponibles: ' + getFilteredWorkouts().length"></span>
-                                    <span class="text-green-300 ml-3" x-text="'Grupos encontrados: ' + getGroupedManualWorkouts().length"></span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="border border-gray-700 rounded-lg p-3 max-h-64 overflow-y-auto">
-                            <template x-for="(group, index) in getGroupedManualWorkouts()" :key="group.routineKey">
-                                <div class="bg-gray-750 p-3 rounded mb-2 flex items-start transition-all hover:bg-gray-700">
-                                    <input type="checkbox" 
-                                        class="mr-3 mt-1 h-5 w-5 text-blue-500" 
-                                        :checked="isGroupSelected(group.routineKey)"
-                                        @change="toggleGroupForWorkoutGroup(group.routineKey)">
-                                    <div class="flex-1">
-                                        <!-- NOMBRE DEL GRUPO -->
-                                        <div class="font-medium text-white text-sm mb-1">
-                                            <i class="fas fa-dumbbell text-blue-400 mr-1"></i>
-                                            <span x-text="getWorkoutTitleFromWorkout(group.representative)"></span>
-                                        </div>
-                                        
-                                        <!-- FECHA Y ESTADÍSTICAS -->
-                                        <div class="text-xs text-gray-400 mb-1">
-                                            <span x-text="'Último: ' + formatDateShort(group.latestDate)"></span>
-                                            <span class="ml-2 text-blue-400" x-text="group.latestExercises + ' ejercicios'"></span>
-                                            <span class="ml-2 text-green-400" x-text="group.latestSets + ' series'"></span>
-                                            <span class="ml-2 text-yellow-400" x-text="'(' + group.count + ' ejecuciones)'"></span>
-                                        </div>
-                                        
-                                        <!-- LISTA DE EJERCICIOS (NOMBRES VISIBLES) -->
-                                        <div class="mt-2">
-                                            <div class="text-xs text-gray-300 font-medium mb-1">Ejercicios:</div>
-                                            <div class="flex flex-wrap gap-1">
-                                                <template x-for="(exercise, exIndex) in group.exercisesList" :key="exIndex">
-                                                    <span class="text-xs bg-gray-600 px-2 py-1 rounded text-white border border-gray-500">
-                                                        <i class="fas fa-dumbbell mr-1 text-blue-300"></i>
-                                                        <span class="font-medium" x-text="exercise.name"></span>
-                                                        <span class="text-gray-400 ml-1" x-text="'(' + exercise.sets + ')'"></span>
-                                                    </span>
-                                                </template>
-                                                <span x-show="group.exercisesList.length === 0" 
-                                                    class="text-xs text-red-400 italic">
-                                                    No se pudieron cargar los ejercicios
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="text-right">
-                                        <div class="text-sm text-blue-400 font-bold" x-text="group.latestVolume + ' kg'"></div>
-                                        <div class="text-xs text-green-400" x-text="group.count + ' veces'"></div>
-                                    </div>
-                                </div>
-                            </template>
-                            
-                            <!-- Mensaje cuando no hay grupos -->
-                            <div x-show="getGroupedManualWorkouts().length === 0" class="text-center py-8 text-gray-500">
-                                <div class="text-4xl mb-3">
-                                    <i class="fas fa-inbox"></i>
-                                </div>
-                                <h4 class="font-medium text-white mb-2">No hay workouts disponibles</h4>
-                                <p class="text-sm mb-4">Completa algunos entrenamientos manuales primero.</p>
-                                <button @click="currentScreen = 'level'" 
-                                        class="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-500 transition">
-                                    <i class="fas fa-dumbbell mr-2"></i> Crear Entrenamiento
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <!-- Contador de selección -->
-                        <div class="text-sm text-gray-400 mt-2">
-                            <span x-text="selectedGroupsForWorkoutGroup.length + ' grupos seleccionados'"></span>
-                            <span x-show="selectedGroupsForWorkoutGroup.length > 0" class="ml-2 text-green-400">
-                                (<span x-text="calculateTotalWorkoutsInSelectedGroups()"></span> workouts)
-                            </span>
-                        </div>
-                    </div>
-                    
-                    <!-- Botones de acción -->
-                    <div class="flex justify-end gap-3 pt-4 border-t border-gray-700">
-                        <button @click="cancelWorkoutGroupModal()" 
-                                class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition">
-                            Cancelar
-                        </button>
-                        <button @click="editingWorkoutGroup ? updateWorkoutGroup() : createWorkoutGroup()" 
-                                class="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-500 transition disabled:opacity-50" 
-                                :disabled="selectedGroupsForWorkoutGroup.length === 0 || !newWorkoutGroupName.trim()">
-                            <i class="fas fa-save mr-1"></i> 
-                            <span x-text="editingWorkoutGroup ? 'Actualizar Rutina' : 'Crear Rutina'"></span>
-                        </button>
-                    </div>
-                </div>
-            </div>
+            
         </main>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script defer>
