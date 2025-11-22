@@ -1157,20 +1157,22 @@
                                             </div>
                                             
                                             <!-- SOLO FECHA DE ÚLTIMA EJECUCIÓN -->
-                                            <div class="text-xs text-gray-400">
+                                            <div class="text-xs text-gray-400 mb-2">
                                                 <i class="fas fa-calendar mr-1"></i>
                                                 <span x-text="'Último: ' + formatDateShort(group.latestDate)"></span>
                                             </div>
                                             
-                                            <!-- LISTA SIMPLIFICADA DE EJERCICIOS -->
-                                            <div class="mt-2">
-                                                <div class="flex flex-wrap gap-1">
-                                                    <template x-for="(exercise, exIndex) in group.exercisesList" :key="exIndex">
-                                                        <span class="text-xs bg-gray-600 px-2 py-1 rounded text-white">
-                                                            <span class="font-medium" x-text="exercise.name"></span>
-                                                        </span>
-                                                    </template>
-                                                </div>
+                                            <!-- LISTA DE EJERCICIOS EN COLUMNA CON PUNTOS DE COLOR -->
+                                            <div class="space-y-1">
+                                                <template x-for="(exercise, exIndex) in group.exercisesList" :key="exIndex">
+                                                    <div class="flex items-center">
+                                                        <!-- Punto de color del músculo -->
+                                                        <div class="w-3 h-3 rounded-full mr-2" 
+                                                            :style="'background-color: ' + getMuscleColorForExercise(group.representative, exercise.name)"></div>
+                                                        <!-- Nombre del ejercicio -->
+                                                        <span class="text-xs text-white" x-text="exercise.name"></span>
+                                                    </div>
+                                                </template>
                                             </div>
                                         </div>
                                     </div>
@@ -8378,6 +8380,33 @@
                         });
                     });
                     return exercises.slice(0, 3).join(', ') + (exercises.length > 3 ? '...' : '');
+                },
+
+                // Obtener color del músculo para un ejercicio específico
+                getMuscleColorForExercise(workout, exerciseName) {
+                    if (!workout || !workout.exercisesData) return '#ef4444'; // Rojo por defecto
+                    
+                    // Buscar en qué músculo está este ejercicio
+                    for (const muscleKey in workout.exercisesData) {
+                        const exercises = workout.exercisesData[muscleKey] || [];
+                        const foundExercise = exercises.find(ex => ex.name === exerciseName);
+                        if (foundExercise) {
+                            // Devolver color según el músculo
+                            const colorMap = {
+                                'chest': '#ef4444',      // Rojo
+                                'back': '#3b82f6',       // Azul  
+                                'shoulders': '#eab308',  // Amarillo
+                                'biceps': '#22c55e',     // Verde
+                                'triceps': '#a855f7',    // Morado
+                                'legs': '#f97316',       // Naranja
+                                'abs': '#ec4899',        // Rosa
+                                'traps': '#6366f1'       // Índigo
+                            };
+                            return colorMap[muscleKey] || '#6b7280'; // Gris por defecto
+                        }
+                    }
+                    
+                    return '#ef4444'; // Rojo por defecto si no se encuentra
                 },
 
                 // ==================================================
