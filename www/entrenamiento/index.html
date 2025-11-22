@@ -980,7 +980,7 @@
         <!-- ================================================== -->
         <!-- PANTALLA DE SELECCIÓN DE TIPO DE HISTORIAL - COMPLETA -->
         <!-- ================================================== -->
-        <div x-show="currentScreen === 'history-selection'" x-transition:enter.duration.300 x-transition:leave.duration.300>
+        <div x-show="currentScreen === 'history-selection'" x-transition:enter.duration.300 x-transition:leave.duration.300 class="container mx-auto px-4 py-8 max-w-6xl">
             <div class="mb-8">
                 <h2 class="text-2xl font-bold mb-2 text-white">Recuperar de Historial</h2>
                 <p class="text-gray-400">¿Qué tipo de historial quieres ver?</p>
@@ -1018,7 +1018,7 @@
         </div>
 
         <!-- Pantalla de grupos de trabajo -->
-        <div x-show="currentScreen === 'workout-groups'" x-transition:enter.duration.300 x-transition:leave.duration.300>
+        <div x-show="currentScreen === 'workout-groups'" x-transition:enter.duration.300 x-transition:leave.duration.300 class="container mx-auto px-4 py-8 max-w-6xl">
             <!-- Encabezado simplificado -->
             <div class="mb-6">
                 <div>
@@ -1043,8 +1043,6 @@
                                     <h4 class="font-semibold text-lg text-white mb-1" x-text="group.name"></h4>
                                     <div class="text-sm text-gray-400">
                                         <span x-text="'Creada: ' + formatDateShort(group.creationDate)"></span>
-                                        <span class="ml-3 text-blue-400" x-text="getUniqueRoutinesCount(group) + ' tipos de entrenamiento'"></span>
-                                        <span class="ml-3 text-green-400" x-text="group.workouts.length + ' sesiones totales'"></span>
                                     </div>
                                 </div>
                                 <div class="flex space-x-2">
@@ -1079,22 +1077,10 @@
                                                     <span class="ml-2 text-blue-400" x-text="routineGroup.representative.exercises + ' ejercicios'"></span>
                                                     <span class="ml-2 text-green-400" x-text="routineGroup.representative.sets + ' series'"></span>
                                                 </div>
-                                                <!-- Músculos trabajados -->
-                                                <div class="mt-2 flex flex-wrap gap-1">
-                                                    <template x-for="muscle in getWorkoutMusclesFromWorkout(routineGroup.representative)" :key="muscle.key">
-                                                        <span class="text-xs px-2 py-1 rounded-full flex items-center"
-                                                            :class="muscle.color + ' bg-opacity-20 text-white'">
-                                                            <div class="w-2 h-2 rounded-full mr-1" :class="muscle.color"></div>
-                                                            <span x-text="muscle.label"></span>
-                                                        </span>
-                                                    </template>
-                                                </div>
+                                                
                                             </div>
                                             <div class="text-right text-xs">
                                                 <div class="text-white" x-text="formatTime(routineGroup.representative.time)"></div>
-                                                <div class="text-blue-400 mt-1" x-text="routineGroup.representative.totalVolume + ' kg'"></div>
-                                                <div class="text-green-400 mt-1" 
-                                                    x-text="routineGroup.representative.completedSets + '/' + routineGroup.representative.sets + ' series'"></div>
                                             </div>
                                         </div>
                                     </div>
@@ -1102,119 +1088,6 @@
                             </div>
                         </div>
                     </template>
-                </div>
-                <!-- Modal para crear/editar rutinas de trabajo - VERSIÓN CORREGIDA -->
-                <div class="modal-overlay fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50" 
-                    x-show="showCreateWorkoutGroupModal" 
-                    x-cloak
-                    :class="{ 'active': showCreateWorkoutGroupModal }"
-                    @click="showCreateWorkoutGroupModal = false">
-                    <div class="modal-container bg-gray-800 rounded-xl p-6 max-w-2xl w-full mx-4 max-h-90vh overflow-y-auto" @click.stop>
-                        <div class="flex justify-between items-center mb-4">
-                            <h2 class="text-xl font-bold">
-                                <i class="fas fa-layer-group mr-2" :class="editingWorkoutGroup ? 'text-yellow-400' : 'text-blue-400'"></i>
-                                <span x-text="editingWorkoutGroup ? 'Editar Rutina: ' + editingWorkoutGroup.name : 'Crear Nueva Rutina de Trabajo'"></span>
-                            </h2>
-                            <button class="text-gray-400 hover:text-white" @click="cancelWorkoutGroupModal()">
-                                <i class="fas fa-times text-xl"></i>
-                            </button>
-                        </div>
-                        
-                        <!-- Nombre de la rutina -->
-                        <div class="mb-6">
-                            <label class="block text-sm font-medium mb-2 text-white">Nombre de la rutina:</label>
-                            <input type="text" 
-                                x-model="newWorkoutGroupName"
-                                placeholder="Ej: Rutina Semana 1, Full Body, etc."
-                                class="w-full bg-gray-700 rounded-lg px-4 py-2 border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white">
-                        </div>
-                        
-                        <!-- Lista de GRUPOS disponibles -->
-                        <div class="mb-6">
-                            <h3 class="text-lg font-semibold mb-3 text-white">Seleccionar plantillas base:</h3>
-                            
-                            <!-- Información de estado simplificada -->
-                            <div class="bg-green-900 bg-opacity-30 border border-green-500 rounded-lg p-3 mb-3">
-                                <div class="flex items-center justify-center">
-                                    <i class="fas fa-dumbbell text-green-400 mr-2"></i>
-                                    <span class="text-green-300 font-medium" 
-                                        x-text="'Ejercicios disponibles: ' + getGroupedManualWorkouts().length"></span>
-                                </div>
-                            </div>
-                            
-                            <div class="border border-gray-700 rounded-lg p-3 max-h-64 overflow-y-auto">
-                                <template x-for="(group, index) in getGroupedManualWorkouts()" :key="group.routineKey">
-                                    <div class="bg-gray-750 p-3 rounded mb-2 flex items-start transition-all hover:bg-gray-700">
-                                        <input type="checkbox" 
-                                            class="mr-3 mt-1 h-5 w-5 text-blue-500" 
-                                            :checked="isGroupSelected(group.routineKey)"
-                                            @change="toggleGroupForWorkoutGroup(group.routineKey)">
-                                        <div class="flex-1">
-                                            <!-- NOMBRE DE LOS MÚSCULOS -->
-                                            <div class="font-medium text-white text-sm mb-1">
-                                                <i class="fas fa-dumbbell text-blue-400 mr-1"></i>
-                                                <span x-text="getWorkoutTitleFromWorkout(group.representative)"></span>
-                                            </div>
-                                            
-                                            <!-- SOLO FECHA DE ÚLTIMA EJECUCIÓN -->
-                                            <div class="text-xs text-gray-400 mb-2">
-                                                <i class="fas fa-calendar mr-1"></i>
-                                                <span x-text="'Último: ' + formatDateShort(group.latestDate)"></span>
-                                            </div>
-                                            
-                                            <!-- LISTA DE EJERCICIOS EN COLUMNA CON PUNTOS DE COLOR -->
-                                            <div class="space-y-1">
-                                                <template x-for="(exercise, exIndex) in group.exercisesList" :key="exIndex">
-                                                    <div class="flex items-center">
-                                                        <!-- Punto de color del músculo -->
-                                                        <div class="w-3 h-3 rounded-full mr-2" 
-                                                            :style="'background-color: ' + getMuscleColorForExercise(group.representative, exercise.name)"></div>
-                                                        <!-- Nombre del ejercicio -->
-                                                        <span class="text-xs text-white" x-text="exercise.name"></span>
-                                                    </div>
-                                                </template>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </template>
-                                
-                                <!-- Mensaje cuando no hay grupos -->
-                                <div x-show="getGroupedManualWorkouts().length === 0" class="text-center py-8 text-gray-500">
-                                    <div class="text-4xl mb-3">
-                                        <i class="fas fa-inbox"></i>
-                                    </div>
-                                    <h4 class="font-medium text-white mb-2">No hay workouts disponibles</h4>
-                                    <p class="text-sm mb-4">Completa algunos entrenamientos manuales primero.</p>
-                                    <button @click="currentScreen = 'level'" 
-                                            class="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-500 transition">
-                                        <i class="fas fa-dumbbell mr-2"></i> Crear Entrenamiento
-                                    </button>
-                                </div>
-                            </div>
-                            
-                            <!-- Contador de selección -->
-                            <div class="text-sm text-gray-400 mt-2">
-                                <span x-text="selectedGroupsForWorkoutGroup.length + ' grupos seleccionados'"></span>
-                                <span x-show="selectedGroupsForWorkoutGroup.length > 0" class="ml-2 text-green-400">
-                                    (<span x-text="calculateTotalWorkoutsInSelectedGroups()"></span> workouts)
-                                </span>
-                            </div>
-                        </div>
-                        
-                        <!-- Botones de acción -->
-                        <div class="flex justify-end gap-3 pt-4 border-t border-gray-700">
-                            <button @click="cancelWorkoutGroupModal()" 
-                                    class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition">
-                                Cancelar
-                            </button>
-                            <button @click="editingWorkoutGroup ? updateWorkoutGroup() : createWorkoutGroup()" 
-                                    class="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-500 transition disabled:opacity-50" 
-                                    :disabled="selectedGroupsForWorkoutGroup.length === 0 || !newWorkoutGroupName.trim()">
-                                <i class="fas fa-save mr-1"></i> 
-                                <span x-text="editingWorkoutGroup ? 'Actualizar Rutina' : 'Crear Rutina'"></span>
-                            </button>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -1231,9 +1104,10 @@
                     <i class="fas fa-plus mr-3"></i> Nueva Rutina
                 </button>
             </div>
-        </div> 
+        </div>
+
         <!-- Pantalla de detalles de rutina de trabajo -->
-        <div x-show="currentScreen === 'workout-group-details'" x-transition:enter.duration.300 x-transition:leave.duration.300>
+        <div x-show="currentScreen === 'workout-group-details'" x-transition:enter.duration.300 x-transition:leave.duration.300 class="container mx-auto px-4 py-8 max-w-6xl">
             <!-- Encabezado simplificado -->
             <div class="mb-6">
                 <h2 class="text-2xl font-bold mb-2 text-white" x-text="currentWorkoutGroup?.name"></h2>
@@ -1248,43 +1122,34 @@
                                 <h4 class="font-semibold text-lg text-white" x-text="getWorkoutTitleFromWorkout(group.representative)"></h4>
                                 <div class="text-sm text-gray-400 mt-1">
                                     <span x-text="'Última ejecución: ' + formatDate(group.latestDate)"></span>
-                                    <span class="ml-3 text-green-400" x-text="group.representative.exercises + ' ejercicios'"></span>
                                 </div>
-                                <!-- Músculos trabajados -->
-                                <div class="mt-2 flex flex-wrap gap-1">
-                                    <template x-for="muscle in getWorkoutMusclesFromWorkout(group.representative)" :key="muscle.key">
-                                        <span class="text-xs px-2 py-1 rounded-full flex items-center"
-                                            :class="muscle.color + ' bg-opacity-20 text-white'">
-                                            <div class="w-2 h-2 rounded-full mr-1" :class="muscle.color"></div>
-                                            <span x-text="muscle.label"></span>
-                                        </span>
-                                    </template>
-                                </div>
+                                
                             </div>
                             <div class="text-right">
                                 <div class="text-sm text-white" x-text="formatTime(group.representative.time)"></div>
-                                <div class="text-xs text-blue-400 mt-1" x-text="group.representative.totalVolume + ' kg'"></div>
-                                <div class="text-xs text-green-400 mt-1" 
-                                    x-text="group.representative.completedSets + '/' + group.representative.sets + ' series'"></div>
+
                             </div>
                         </div>
-                        
-                        <!-- Estadísticas del grupo -->
+
+                        <!-- Estadísticas del grupo - 3 CUADROS -->
                         <div class="bg-gray-800 rounded-lg p-3 mb-4">
-                            <div class="grid grid-cols-3 gap-2 text-center">
-                                <div>
-                                    <div class="text-lg font-bold text-white" x-text="group.count"></div>
-                                    <div class="text-xs text-gray-400">Veces realizado</div>
+                            <div class="grid grid-cols-3 gap-3">
+                                <!-- 1. Ejercicios -->
+                                <div class="bg-gray-750 p-2 rounded text-center">
+                                    <div class="text-xs text-gray-400 mb-1">Ejercicios</div>
+                                    <div class="font-bold text-red-400" x-text="group.representative.exercises"></div>
                                 </div>
-                                <div>
-                                    <div class="text-lg font-bold text-blue-400" 
-                                        x-text="calculateGroupVolume(group.workoutIndices) + ' kg'"></div>
-                                    <div class="text-xs text-gray-400">Volumen promedio</div>
+                                
+                                <!-- 2. Series -->
+                                <div class="bg-gray-750 p-2 rounded text-center">
+                                    <div class="text-xs text-gray-400 mb-1">Series</div>
+                                    <div class="font-bold text-white" x-text="group.representative.sets"></div>
                                 </div>
-                                <div>
-                                    <div class="text-lg font-bold text-green-400" 
-                                        x-text="calculateGroupCompletion(group.workoutIndices) + '%'"></div>
-                                    <div class="text-xs text-gray-400">Tasa de completado</div>
+                                
+                                <!-- 3. Volumen -->
+                                <div class="bg-gray-750 p-2 rounded text-center">
+                                    <div class="text-xs text-gray-400 mb-1">Volumen</div>
+                                    <div class="font-bold text-blue-400" x-text="calculateGroupVolume(group.workoutIndices) + ' kg'"></div>
                                 </div>
                             </div>
                         </div>
@@ -1324,9 +1189,10 @@
                     </div>
                 </div>
             </div>
-        </div>     
+        </div>
+
         <!-- Pantalla de Evolución -->
-        <div x-show="currentScreen === 'evolution'" x-transition:enter.duration.300 x-transition:leave.duration.300>
+        <div x-show="currentScreen === 'evolution'" x-transition:enter.duration.300 x-transition:leave.duration.300 class="container mx-auto px-4 py-8 max-w-6xl">
             <h2 class="text-2xl font-bold mb-2">Evolución y Progreso</h2>
             <p class="text-gray-400 mb-6">Analiza tu progreso a lo largo del tiempo</p>
             <!-- Selector de métricas -->
@@ -1475,8 +1341,16 @@
                 </button>
             </div>
         </div>
-        <!-- Contenedor para todas las demás pantallas -->
-        <div x-show="currentScreen !== 'mode-selection'" class="container mx-auto px-4 py-8 max-w-6xl">
+
+        <!-- ================================================== -->
+        <!-- CONTENEDOR PARA LAS PANTALLAS PRINCIPALES -->
+        <!-- ================================================== -->
+        <div x-show="currentScreen !== 'mode-selection' && 
+                    currentScreen !== 'history-selection' && 
+                    currentScreen !== 'workout-groups' && 
+                    currentScreen !== 'workout-group-details' && 
+                    currentScreen !== 'evolution'" 
+             class="container mx-auto px-4 py-8 max-w-6xl">
 
             <!-- Pantalla de selección de nivel (MODO MANUAL) -->
             <div x-show="currentScreen === 'level'" x-transition:enter.duration.300 x-transition:leave.duration.300 class="text-center">
@@ -1678,6 +1552,7 @@
                         </button>
                     </div>
                 </div>
+
             <!-- Pantalla de selección de ejercicios -->
             <div x-show="currentScreen === 'exercises'" x-transition:enter.duration.300 x-transition:leave.duration.300>
             <h2 class="text-2xl font-bold mb-2">Configura tu entrenamiento</h2>
@@ -1713,8 +1588,10 @@
             <template x-for="muscle in selectedMuscles" :key="muscle">
                 <div class="mb-6 md:mb-8 bg-gray-700 rounded-xl p-4 md:p-5">
                     <h4 class="font-medium mb-4 text-xl flex items-center">
-                        <div class="w-4 h-4 rounded-full mr-3" :class="muscleGroups.find(m => m.key === muscle).color"></div>
-                        <span class="wrap-text" x-text="muscleGroups.find(m => m.key === muscle).label"></span>
+                        <div class="w-4 h-4 rounded-full mr-3" 
+                            :class="(muscleGroups.find(m => m.key === muscle) || {}).color || 'bg-gray-500'"></div>
+                        <span class="wrap-text" 
+                            x-text="(muscleGroups.find(m => m.key === muscle) || {}).label || muscle"></span>
                         <span class="text-sm text-gray-400 ml-2" x-text="'(' + (selectedExercises[muscle]?.length || 0) + ' ejercicios)'"></span>
                     </h4>
                     <div class="exercise-list max-h-60 overflow-y-auto pr-2 mb-4">
@@ -1765,6 +1642,7 @@
                                     </button>
                                 </div>
                             </div>
+                        </div>
                         </template>
                     </div>
                     <!-- Indicador de fatiga por grupo muscular -->
@@ -1805,6 +1683,7 @@
                 </button>
             </div>
         </div>
+
             <!-- PANTALLA DE ENTRENAMIENTO - LÓGICA CORREGIDA -->
             <div x-show="currentScreen === 'workout'" 
                 x-transition:enter.duration.300 
@@ -1894,10 +1773,11 @@
                                 <!-- Header unificado con círculo de color y número de ejercicio -->
                                 <div class="flex items-center justify-between mb-3 pb-2 border-b border-gray-600">
                                     <div class="flex items-center">
-                                        <div class="w-4 h-4 rounded-full mr-2" :class="muscleGroups.find(m => m.key === muscle).color"></div>
+                                        <div class="w-4 h-4 rounded-full mr-2" 
+                                            :class="muscleGroups.find(m => m.key === muscle)?.color || 'bg-gray-500'"></div>
                                         <span class="text-sm font-semibold text-white" 
-                                            x-text="muscleGroups.find(m => m.key === muscle).label"></span>
-                                    </div>
+                                            x-text="muscleGroups.find(m => m.key === muscle)?.label || muscle"></span>
+                                        </div>
                                     <div class="text-xs text-gray-400" 
                                         x-text="'Ejercicio ' + (exerciseIndex + 1) + ' de ' + selectedExercises[muscle].length + ' · ' + exercise.sets + ' series'">
                                     </div>
@@ -2083,6 +1963,7 @@
                     </button>
                 </div>
             </div>
+
             <!-- PANTALLA DE RESUMEN CORREGIDA -->
             <div x-show="currentScreen === 'summary'" x-transition:enter.duration.300 x-transition:leave.duration.300>
                 <h2 class="text-2xl font-bold mb-2 text-white">Resumen del Entrenamiento</h2>
@@ -2178,6 +2059,7 @@
                     </button>
                 </div>
             </div>
+
             <!-- Pantalla de historial UNIFICADA -->
             <div x-show="currentScreen === 'history-manual'" x-transition:enter.duration.300 x-transition:leave.duration.300>
                 <!-- Encabezado dinámico -->
@@ -2198,7 +2080,6 @@
                                     <h4 class="font-semibold text-white" x-text="getTrainedMuscles(workout)"></h4>
                                     <div class="text-sm text-gray-400 mt-1">
                                         <span x-text="'Fecha: ' + formatDate(workout.date)"></span>
-                                        <span class="ml-3 text-blue-400" x-text="workout.exercises + ' ejercicios'"></span>
                                     </div>
                                     <!-- Músculos trabajados -->
                                     <div class="mt-2 flex flex-wrap gap-1">
@@ -2213,34 +2094,33 @@
                                 </div>
                                 <div class="text-right">
                                     <div class="text-sm text-white" x-text="formatTime(workout.time)"></div>
-                                    <div class="text-xs text-blue-400 mt-1" x-text="workout.totalVolume + ' kg'"></div>
-                                    <div class="text-xs text-green-400 mt-1" x-text="workout.completedSets + '/' + workout.sets + ' series'"></div>
+
                                 </div>
                             </div>
                             
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
-                                <!-- 1. Repeticiones -->
+                                <!-- 1. Ejercicios -->
                                 <div class="bg-gray-800 p-2 rounded text-center">
-                                    <div class="font-bold text-yellow-400" x-text="calculateTotalReps(workout)"></div>
-                                    <div class="text-xs text-gray-400">Repeticiones</div>
+                                    <div class="text-xs text-gray-400 mb-1">Ejercicios</div>
+                                    <div class="font-bold text-red-400" x-text="workout.exercises"></div>
                                 </div>
                                 
-                                <!-- 2. Ejercicios -->
+                                <!-- 2. Repeticiones -->
                                 <div class="bg-gray-800 p-2 rounded text-center">
-                                    <div class="font-bold text-white" x-text="workout.exercises"></div>
-                                    <div class="text-xs text-gray-400">Ejercicios</div>
+                                    <div class="text-xs text-gray-400 mb-1">Repeticiones</div>
+                                    <div class="font-bold text-yellow-400" x-text="calculateTotalReps(workout)"></div>
                                 </div>
                                 
                                 <!-- 3. Series -->
                                 <div class="bg-gray-800 p-2 rounded text-center">
+                                    <div class="text-xs text-gray-400 mb-1">Series</div>
                                     <div class="font-bold text-white" x-text="workout.sets"></div>
-                                    <div class="text-xs text-gray-400">Series</div>
                                 </div>
                                 
                                 <!-- 4. Volumen -->
                                 <div class="bg-gray-800 p-2 rounded text-center">
+                                    <div class="text-xs text-gray-400 mb-1">Volumen</div>
                                     <div class="font-bold text-blue-400" x-text="workout.totalVolume + ' kg'"></div>
-                                    <div class="text-xs text-gray-400">Volumen</div>
                                 </div>
                             </div>
                             
@@ -2351,7 +2231,8 @@
                     <i class="fas fa-chart-line mr-2"></i> Evolución
                 </button>
             </div>
-            
+            </div>
+
             <!-- Pantalla de detalles del entrenamiento - ORDEN CORREGIDO -->
             <div x-show="currentScreen === 'details'" x-transition:enter.duration.300 x-transition:leave.duration.300>
                 <h2 class="text-2xl font-bold mb-2">Detalles del Entrenamiento</h2>
@@ -2481,20 +2362,20 @@
                     </button>
                 </div>
             </div>
-            
+
             <!-- Pantalla de Limpieza de Historial -->
             <div x-show="currentScreen === 'cleanup'" x-transition:enter.duration.300>
                 <h2 class="text-2xl font-bold mb-2">Gestionar Historial</h2>
                 <p class="text-gray-400 mb-6">Selecciona las rutinas que quieres eliminar.</p>
                 <div class="flex justify-between mb-4">
                     <div class="flex items-center">
-                        <input type="checkbox" id="selectAll" class="mr-2" 
+                        <input type="checkbox" id="selectAll" class="mr-2"> 
                         <label for="selectAll" class="text-sm">Seleccionar todo</label>
                     </div>
                 </div>
                 <div class="space-y-3 mb-6 max-h-96 overflow-y-auto">
                     <template x-for="workout in getFilteredWorkouts()" :key="workout.originalIndex">
-                        <div class="routine-card bg-gray-700 p-4 rounded-lg flex items-start"
+                        <div class="routine-card bg-gray-700 p-4 rounded-lg flex items-start">
                             <input type="checkbox" class="mr-3 mt-1" 
                                 :value="index" x-model="selectedRoutines">
                             <div class="flex-1">
@@ -2527,100 +2408,219 @@
                     </button>
                 </div>
             </div>
-            <!-- Modal de Estadísticas -->
-            <div class="modal-overlay fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50" 
-                 :class="{ 'active': showStatsModal }"
-                 @click="showStatsModal = false"
-                 x-show="showStatsModal" x-cloak>
-                <div class="modal-container bg-gray-800 rounded-xl p-6" @click.stop>
-                    <h3 class="text-xl font-bold mb-4 flex items-center">
-                        <i class="fas fa-chart-bar mr-2 text-blue-400"></i> Estadísticas de Progreso
-                    </h3>
-                    <div class="stats-grid mb-6">
-                        <div class="bg-gray-700 p-4 rounded-lg">
-                            <div class="text-2xl font-bold mb-1" x-text="workoutHistory.length"></div>
-                            <div class="text-sm text-gray-400">Entrenamientos Totales</div>
-                        </div>
-                        <div class="bg-gray-700 p-4 rounded-lg">
-                            <div class="text-2xl font-bold mb-1" x-text="totalHistorySets"></div>
-                            <div class="text-sm text-gray-400">Series Totales</div>
-                        </div>
-                        <div class="bg-gray-700 p-4 rounded-lg">
-                            <div class="text-2xl font-bold mb-1" x-text="totalHistoryVolume + ' kg'"></div>
-                            <div class="text-sm text-gray-400">Volumen Total</div>
+
+        </div>
+        <!-- FIN DEL CONTENEDOR PRINCIPAL -->
+
+        <!-- ================================================== -->
+        <!-- MODALES GLOBALES (fuera de cualquier contenedor) -->
+        <!-- ================================================== -->
+
+        <!-- Modal de Estadísticas -->
+        <div class="modal-overlay fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50" 
+             :class="{ 'active': showStatsModal }"
+             @click="showStatsModal = false"
+             x-show="showStatsModal" x-cloak>
+            <div class="modal-container bg-gray-800 rounded-xl p-6" @click.stop>
+                <h3 class="text-xl font-bold mb-4 flex items-center">
+                    <i class="fas fa-chart-bar mr-2 text-blue-400"></i> Estadísticas de Progreso
+                </h3>
+                <div class="stats-grid mb-6">
+                    <div class="bg-gray-700 p-4 rounded-lg">
+                        <div class="text-2xl font-bold mb-1" x-text="workoutHistory.length"></div>
+                        <div class="text-sm text-gray-400">Entrenamientos Totales</div>
+                    </div>
+                    <div class="bg-gray-700 p-4 rounded-lg">
+                        <div class="text-2xl font-bold mb-1" x-text="totalHistorySets"></div>
+                        <div class="text-sm text-gray-400">Series Totales</div>
+                    </div>
+                    <div class="bg-gray-700 p-4 rounded-lg">
+                        <div class="text-2xl font-bold mb-1" x-text="totalHistoryVolume + ' kg'"></div>
+                        <div class="text-sm text-gray-400">Volumen Total</div>
+                    </div>
+                </div>
+                <div class="bg-gray-700 p-4 rounded-lg mb-6">
+                    <h4 class="font-semibold mb-3">Progreso por Grupo Muscular</h4>
+                    <div class="space-y-3">
+                        <template x-for="muscle in muscleGroups" :key="muscle.key">
+                            <div x-show="hasDataForMuscle(muscle.key)">
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm" x-text="muscle.label"></span>
+                                    <span class="text-sm font-semibold" x-text="calculateMuscleProgress(muscle.key) + ' kg'"></span>
+                                </div>
+                                <div class="progress-bar-stats">
+                                    <div class="progress-fill bg-blue-500" 
+                                         :style="'width: ' + Math.min(100, calculateMuscleProgress(muscle.key) / Math.max(...muscleGroups.map(m => calculateMuscleProgress(m.key))) * 100) + '%'"></div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+                <div class="flex justify-end">
+                    <button @click="showStatsModal = false" class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Configuración -->
+        <div class="modal-overlay fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50" 
+             :class="{ 'active': showSettingsModal }"
+             @click="showSettingsModal = false"
+             x-show="showSettingsModal" x-cloak>
+            <div class="modal-container bg-gray-800 rounded-xl p-6" @click.stop>
+                <h3 class="text-xl font-bold mb-4 flex items-center">
+                    <i class="fas fa-cog mr-2 text-gray-400"></i> Configuración
+                </h3>
+                <div class="space-y-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Sonido al completar series</label>
+                        <div class="flex items-center">
+                            <input type="checkbox" class="mr-2 h-5 w-5 text-blue-500 rounded" 
+                                x-model="soundEnabled"
+                                @change="saveSoundPreference()">
+                            <span x-text="soundEnabled ? 'Activado' : 'Desactivado'"></span>
                         </div>
                     </div>
-                    <div class="bg-gray-700 p-4 rounded-lg mb-6">
-                        <h4 class="font-semibold mb-3">Progreso por Grupo Muscular</h4>
-                        <div class="space-y-3">
-                            <template x-for="muscle in muscleGroups" :key="muscle.key">
-                                <div x-show="hasDataForMuscle(muscle.key)">
-                                    <div class="flex justify-between mb-1">
-                                        <span class="text-sm" x-text="muscle.label"></span>
-                                        <span class="text-sm font-semibold" x-text="calculateMuscleProgress(muscle.key) + ' kg'"></span>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Modo Oscuro</label>
+                        <div class="flex items-center">
+                            <input type="checkbox" class="mr-2 h-5 w-5 text-blue-500 rounded" checked>
+                            <span>Activado</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Notificaciones de Recordatorio</label>
+                        <div class="flex items-center">
+                            <input type="checkbox" class="mr-2 h-5 w-5 text-blue-500 rounded">
+                            <span>Activado</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-between">
+                    <button @click="resetApp()" class="px-4 py-2 bg-red-600 rounded-lg hover:bg-red-500 transition">
+                        <i class="fas fa-trash mr-1"></i> Restablecer
+                    </button>
+                    <button @click="showSettingsModal = false" class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para crear/editar rutinas de trabajo - VERSIÓN CORREGIDA -->
+        <div class="modal-overlay fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50" 
+            x-show="showCreateWorkoutGroupModal" 
+            x-cloak
+            :class="{ 'active': showCreateWorkoutGroupModal }"
+            @click="showCreateWorkoutGroupModal = false">
+            <div class="modal-container bg-gray-800 rounded-xl p-6 max-w-2xl w-full mx-4 max-h-90vh overflow-y-auto" @click.stop>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold">
+                        <i class="fas fa-layer-group mr-2" :class="editingWorkoutGroup ? 'text-yellow-400' : 'text-blue-400'"></i>
+                        <span x-text="editingWorkoutGroup ? 'Editar Rutina: ' + editingWorkoutGroup.name : 'Crear Nueva Rutina de Trabajo'"></span>
+                    </h2>
+                    <button class="text-gray-400 hover:text-white" @click="cancelWorkoutGroupModal()">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <!-- Nombre de la rutina -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium mb-2 text-white">Nombre de la rutina:</label>
+                    <input type="text" 
+                        x-model="newWorkoutGroupName"
+                        placeholder="Ej: Rutina Semana 1, Full Body, etc."
+                        class="w-full bg-gray-700 rounded-lg px-4 py-2 border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white">
+                </div>
+                
+                <!-- Lista de GRUPOS disponibles -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold mb-3 text-white">Seleccionar plantillas base:</h3>
+                    
+                    <!-- Información de estado simplificada -->
+                    <div class="bg-green-900 bg-opacity-30 border border-green-500 rounded-lg p-3 mb-3">
+                        <div class="flex items-center justify-center">
+                            <i class="fas fa-dumbbell text-green-400 mr-2"></i>
+                            <span class="text-green-300 font-medium" 
+                                x-text="`Ejercicios disponibles: ${getGroupedManualWorkouts().length}`"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="border border-gray-700 rounded-lg p-3 max-h-64 overflow-y-auto">
+                        <template x-for="(group, index) in getGroupedManualWorkouts()" :key="group.routineKey">
+                            <div class="bg-gray-750 p-3 rounded mb-2 flex items-start transition-all hover:bg-gray-700">
+                                <input type="checkbox" 
+                                    class="mr-3 mt-1 h-5 w-5 text-blue-500" 
+                                    :checked="isGroupSelected(group.routineKey)"
+                                    @change="toggleGroupForWorkoutGroup(group.routineKey)">
+                                <div class="flex-1">
+                                    <!-- NOMBRE DE LOS MÚSCULOS -->
+                                    <div class="font-medium text-white text-sm mb-1">
+                                        <i class="fas fa-dumbbell text-blue-400 mr-1"></i>
+                                        <span x-text="getWorkoutTitleFromWorkout(group.representative)"></span>
                                     </div>
-                                    <div class="progress-bar-stats">
-                                        <div class="progress-fill bg-blue-500" 
-                                             :style="'width: ' + Math.min(100, calculateMuscleProgress(muscle.key) / Math.max(...muscleGroups.map(m => calculateMuscleProgress(m.key))) * 100) + '%'"></div>
+                                    
+                                    <!-- SOLO FECHA DE ÚLTIMA EJECUCIÓN -->
+                                    <div class="text-xs text-gray-400 mb-2">
+                                        <i class="fas fa-calendar mr-1"></i>
+                                        <span x-text="'Último: ' + formatDateShort(group.latestDate)"></span>
+                                    </div>
+                                    
+                                    <!-- LISTA DE EJERCICIOS EN COLUMNA CON PUNTOS DE COLOR -->
+                                    <div class="space-y-1">
+                                        <template x-for="(exercise, exIndex) in group.exercisesList" :key="exIndex">
+                                            <div class="flex items-center">
+                                                <!-- Punto de color del músculo -->
+                                                <div class="w-3 h-3 rounded-full mr-2" 
+                                                    :style="'background-color: ' + getMuscleColorForExercise(group.representative, exercise.name)"></div>
+                                                <!-- Nombre del ejercicio -->
+                                                <span class="text-xs text-white" x-text="exercise.name"></span>
+                                            </div>
+                                        </template>
                                     </div>
                                 </div>
-                            </template>
+                            </div>
+                        </template>
+                        
+                        <!-- Mensaje cuando no hay grupos -->
+                        <div x-show="getGroupedManualWorkouts().length === 0" class="text-center py-8 text-gray-500">
+                            <div class="text-4xl mb-3">
+                                <i class="fas fa-inbox"></i>
+                            </div>
+                            <h4 class="font-medium text-white mb-2">No hay workouts disponibles</h4>
+                            <p class="text-sm mb-4">Completa algunos entrenamientos manuales primero.</p>
+                            <button @click="currentScreen = 'level'" 
+                                    class="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-500 transition">
+                                <i class="fas fa-dumbbell mr-2"></i> Crear Entrenamiento
+                            </button>
                         </div>
                     </div>
-                    <div class="flex justify-end">
-                        <button @click="showStatsModal = false" class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition">
-                            Cerrar
-                        </button>
+                    
+                    <!-- Contador de selección -->
+                    <div class="text-sm text-gray-400 mt-2">
+                        <span x-text="selectedGroupsForWorkoutGroup.length + ' grupos seleccionados'"></span>
                     </div>
                 </div>
-            </div>
-            <!-- Modal de Configuración -->
-            <div class="modal-overlay fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50" 
-                 :class="{ 'active': showSettingsModal }"
-                 @click="showSettingsModal = false"
-                 x-show="showSettingsModal" x-cloak>
-                <div class="modal-container bg-gray-800 rounded-xl p-6" @click.stop>
-                    <h3 class="text-xl font-bold mb-4 flex items-center">
-                        <i class="fas fa-cog mr-2 text-gray-400"></i> Configuración
-                    </h3>
-                    <div class="space-y-4 mb-6">
-                        <div>
-                            <label class="block text-sm font-medium mb-2">Sonido al completar series</label>
-                            <div class="flex items-center">
-                                <input type="checkbox" class="mr-2 h-5 w-5 text-blue-500 rounded" 
-                                    x-model="soundEnabled"
-                                    @change="saveSoundPreference()">
-                                <span x-text="soundEnabled ? 'Activado' : 'Desactivado'"></span>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-2">Modo Oscuro</label>
-                            <div class="flex items-center">
-                                <input type="checkbox" class="mr-2 h-5 w-5 text-blue-500 rounded" checked>
-                                <span>Activado</span>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-2">Notificaciones de Recordatorio</label>
-                            <div class="flex items-center">
-                                <input type="checkbox" class="mr-2 h-5 w-5 text-blue-500 rounded">
-                                <span>Activado</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex justify-between">
-                        <button @click="resetApp()" class="px-4 py-2 bg-red-600 rounded-lg hover:bg-red-500 transition">
-                            <i class="fas fa-trash mr-1"></i> Restablecer
-                        </button>
-                        <button @click="showSettingsModal = false" class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition">
-                            Cerrar
-                        </button>
-                    </div>
+                
+                <!-- Botones de acción -->
+                <div class="flex justify-end gap-3 pt-4 border-t border-gray-700">
+                    <button @click="cancelWorkoutGroupModal()" 
+                            class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition">
+                        Cancelar
+                    </button>
+                    <button @click="editingWorkoutGroup ? updateWorkoutGroup() : createWorkoutGroup()" 
+                            class="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-500 transition disabled:opacity-50" 
+                            :disabled="selectedGroupsForWorkoutGroup.length === 0 || !newWorkoutGroupName.trim()">
+                        <i class="fas fa-save mr-1"></i> 
+                        <span x-text="editingWorkoutGroup ? 'Actualizar Rutina' : 'Crear Rutina'"></span>
+                    </button>
                 </div>
             </div>
-             
-            
-        </main>
+        </div>
+
+    </main>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script defer>
         function gymApp() {
@@ -3273,14 +3273,21 @@
                 
                 // Función para seleccionar/deseleccionar entrenamientos para el grupo
                 toggleWorkoutForGroup(workoutIndex) {
-                    console.log('Toggle workout:', workoutIndex); // Debug
+                    // Validar que workoutIndex sea un número válido
+                    if (typeof workoutIndex !== 'number' || workoutIndex < 0) {
+                        console.warn('Invalid workout index:', workoutIndex);
+                        return;
+                    }
+                    
                     const index = this.selectedWorkoutsForGroup.indexOf(workoutIndex);
                     if (index === -1) {
                         this.selectedWorkoutsForGroup.push(workoutIndex);
+                        console.log('✅ Added workout:', workoutIndex);
                     } else {
                         this.selectedWorkoutsForGroup.splice(index, 1);
+                        console.log('❌ Removed workout:', workoutIndex);
                     }
-                    console.log('Selected workouts:', this.selectedWorkoutsForGroup); // Debug
+                    console.log('Selected workouts:', this.selectedWorkoutsForGroup);
                 },
                 isWorkoutUsedInGroups(workoutIndex) {
                     for (const group of this.workoutGroups) {
@@ -5081,7 +5088,6 @@
                 // NUEVO: SISTEMA UNIFICADO DE HISTORIAL
                 // ==================================================
 
-                // REEMPLAZAR completamente la función getFilteredWorkouts
                 getFilteredWorkouts() {
                     console.log('=== FILTRANDO WORKOUTS - VERSIÓN CORREGIDA ===');
                     console.log('Vista actual:', this.currentView.type);
@@ -5336,40 +5342,48 @@
                     console.log('Ver detalles del workout con índice:', originalIndex);
                     
                     if (originalIndex >= 0 && originalIndex < this.workoutHistory.length) {
-                        this.viewedWorkout = { ...this.workoutHistory[originalIndex] };
+                        this.viewedWorkout = JSON.parse(JSON.stringify(this.workoutHistory[originalIndex]));
                         this.viewedWorkoutIndex = originalIndex;
                         
-                        // DETERMINAR EL CONTEXTO ACTUAL
+                        // ESTABLECER CONTEXTO CORRECTO
                         if (this.currentScreen === 'workout-group-details' && this.currentWorkoutGroup) {
-                            // Viene desde una rutina específica
                             this.lastViewContext = {
                                 screen: 'workout-group-details',
-                                routineId: this.currentWorkoutGroup.id,
-                                routineName: this.currentWorkoutGroup.name,
-                                isRoutine: true
+                                routineId: this.currentWorkoutGroup.id
                             };
                         } else if (this.currentView.type === 'routine' && this.currentView.routineId) {
-                            // Viene desde el historial de una rutina
                             this.lastViewContext = {
                                 screen: 'history-manual',
-                                routineId: this.currentView.routineId,
-                                isRoutine: true
+                                routineId: this.currentView.routineId
                             };
                         } else {
-                            // Viene desde ejercicios sueltos
                             this.lastViewContext = {
                                 screen: 'history-manual',
-                                isRoutine: false
+                                routineId: null
                             };
                         }
                         
                         this.currentScreen = 'details';
-                        
-                        console.log('Contexto guardado:', this.lastViewContext);
-                    } else {
-                        console.error('Índice inválido:', originalIndex);
-                        alert('Error: No se pudo cargar el entrenamiento seleccionado.');
                     }
+                },
+                goBackFromSummary() {
+                    console.log('Volviendo desde resumen');
+                    
+                    // SIEMPRE volver a la rutina cuando estamos en contexto de rutina
+                    if (this.lastViewContext && this.lastViewContext.isRoutine) {
+                        this.currentScreen = 'workout-group-details';
+                    } else {
+                        // Volver al historial general
+                        this.currentView = {
+                            type: 'all',
+                            routineId: null,
+                            filter: 'current'
+                        };
+                        this.currentScreen = 'history-manual';
+                    }
+                    
+                    // Limpiar el contexto
+                    this.lastViewContext = null;
                 },
 
                 // Función para obtener orden por defecto si no existe
@@ -5795,44 +5809,48 @@
                                     latestTime: workout.time || 0,
                                     latestExercises: workout.exercises,
                                     latestSets: workout.sets,
-                                    latestVolume: workout.totalVolume,
-                                    latestWorkoutIndex: index,
+                                    workoutIndices: [index],
                                     count: 1
                                 };
                             } else {
-                                const g = groups[routineKey];
-                                g.count++;
-                                if (new Date(workout.date) > new Date(g.latestDate)) {
-                                    g.latestDate = workout.date;
-                                    g.latestTime = workout.time || 0;
-                                    g.latestExercises = workout.exercises;
-                                    g.latestSets = workout.sets;
-                                    g.latestVolume = workout.totalVolume;
-                                    g.latestWorkoutIndex = index;
+                                groups[routineKey].workoutIndices.push(index);
+                                groups[routineKey].count++;
+                                if (new Date(workout.date) > new Date(groups[routineKey].latestDate)) {
+                                    groups[routineKey].latestDate = workout.date;
+                                    groups[routineKey].latestTime = workout.time || 0;
+                                    groups[routineKey].latestExercises = workout.exercises;
+                                    groups[routineKey].latestSets = workout.sets;
                                 }
                             }
                         });
-                    return Object.values(groups).sort((a, b) => new Date(b.latestDate) - new Date(a.latestDate));
+                    
+                    return Object.values(groups);
                 },
 
-                // Función para obtener la clave de rutina de un workout existente - VERSIÓN CORREGIDA
+                // FUNCIÓN PARA OBTENER ROUTINE KEY (AÑADIR ESTA FUNCIÓN)
                 getRoutineKey(workout) {
-                    if (!workout.exercisesData || !workout.order || workout.order.length === 0) {
-                        // Fallback: usar orden de claves (pero esto es inconsistente)
-                        return 'unknown';
+                    if (workout.routineKey && workout.routineKey !== 'unknown') {
+                        return workout.routineKey;
                     }
-
+                    
+                    // Generar routineKey basado en los ejercicios y músculos
                     const parts = [];
-                    // ✅ USAR EL ORDEN GUARDADO EN `workout.order`
-                    for (const muscle of workout.order) {
+                    const muscles = workout.order && workout.order.length ? workout.order : Object.keys(workout.exercisesData || {});
+                    
+                    muscles.forEach(muscle => {
                         const exercises = workout.exercisesData[muscle] || [];
-                        if (exercises.length === 0) continue;
-
-                        // ✅ PRESERVAR EL ORDEN DE EJERCICIOS TAL CUAL ESTÁ GUARDADO
-                        const exParts = exercises.map(ex => `${ex.name}|${ex.sets}`).join(',');
+                        if (exercises.length === 0) return;
+                        
+                        const exParts = exercises.map(ex => {
+                            if (typeof ex === 'string') {
+                                return `${ex}|${this.seriesLimits.beginner.min}`;
+                            }
+                            return `${ex.name}|${ex.sets || this.seriesLimits.beginner.min}`;
+                        }).join(',');
+                        
                         parts.push(`${muscle}:${exParts}`);
-                    }
-
+                    });
+                    
                     return parts.join(';');
                 },
                 // AÑADIR esta función para corregir workouts sin modo
@@ -5879,33 +5897,20 @@
                     
                     return migratedCount;
                 },
-
                 getRoutineName(workout) {
                     if (!workout.exercisesData) return 'Rutina sin datos';
                     
-                    // Obtener todos los ejercicios únicos de la rutina
-                    const allExercises = [];
-                    const muscles = workout.order && workout.order.length > 0 
-                        ? workout.order 
-                        : Object.keys(workout.exercisesData || {});
-                    
-                    muscles.forEach(muscle => {
-                        const exercises = workout.exercisesData[muscle] || [];
-                        exercises.forEach(exercise => {
-                            if (!allExercises.includes(exercise.name)) {
-                                allExercises.push(exercise.name);
-                            }
-                        });
+                    const muscles = workout.order && workout.order.length ? workout.order : Object.keys(workout.exercisesData);
+                    const muscleNames = muscles.map(muscleKey => {
+                        const muscleGroup = this.muscleGroups.find(m => m.key === muscleKey);
+                        return muscleGroup ? muscleGroup.label : muscleKey;
                     });
                     
-                    // Si hay pocos ejercicios, mostrarlos todos
-                    if (allExercises.length <= 3) {
-                        return allExercises.join(' + ');
+                    if (muscleNames.length <= 2) {
+                        return muscleNames.join(" + ");
                     }
                     
-                    // Si hay muchos ejercicios, mostrar los primeros + contador
-                    const firstExercises = allExercises.slice(0, 2);
-                    return `${firstExercises.join(' + ')} + ${allExercises.length - 2} más`;
+                    return muscleNames.slice(0, 2).join(" + ") + ` + ${muscleNames.length - 2} más`;
                 },
                 viewLatestWorkout(index) {
                     // Validar índice
@@ -6033,19 +6038,37 @@
                 },
 
                 getPreviousExerciseData(muscle, exercise) {
-                    for (const workout of this.workoutHistory) {
-                        if (workout.exercisesData[muscle]) {
-                            for (const ex of workout.exercisesData[muscle]) {
-                                if (ex.name === exercise) {
-                                    const bestSet = ex.setsData.reduce((best, set) => {
-                                        return set.weight * set.reps > best.weight * best.reps ? set : best;
-                                    }, {weight: 0, reps: 0});
-                                    return `${bestSet.weight}kg x ${bestSet.reps} reps`;
+                    // Buscar en el historial el mismo ejercicio
+                    for (let i = this.workoutHistory.length - 1; i >= 0; i--) {
+                        const workout = this.workoutHistory[i];
+                        if (workout.exercisesData && workout.exercisesData[muscle]) {
+                            const previousExercise = workout.exercisesData[muscle].find(ex => ex.name === exercise);
+                            if (previousExercise && previousExercise.setsData) {
+                                const completedSets = previousExercise.setsData.filter(set => set.completed);
+                                if (completedSets.length > 0) {
+                                    const bestSet = completedSets.reduce((best, set) => 
+                                        (set.weight * set.reps) > (best.weight * best.reps) ? set : best
+                                    );
+                                    return `${bestSet.weight}kg × ${bestSet.reps}`;
                                 }
                             }
                         }
                     }
                     return null;
+                },
+                getExerciseHistoryCount(muscle, exerciseName, currentRoutineKey) {
+                    let count = 0;
+                    this.workoutHistory.forEach(workout => {
+                        if (workout.routineKey === currentRoutineKey && 
+                            workout.exercisesData && 
+                            workout.exercisesData[muscle]) {
+                            const exercise = workout.exercisesData[muscle].find(ex => ex.name === exerciseName);
+                            if (exercise && exercise.setsData && exercise.setsData.some(set => set.completed)) {
+                                count++;
+                            }
+                        }
+                    });
+                    return count;
                 },
 
                 deleteWorkoutGroup(groupId) {
@@ -6316,23 +6339,21 @@
                 // REEMPLAZAR la función goBackFromDetails
                 // Función para volver desde detalles - VERSIÓN SIMPLIFICADA
                 goBackFromDetails() {
-                    console.log('Volviendo desde detalles a rutina');
+                    console.log('Volviendo desde detalles...');
                     
-                    // SIEMPRE volver a la rutina cuando estamos en contexto de rutina
-                    if (this.lastViewContext && this.lastViewContext.isRoutine) {
-                        this.currentScreen = 'workout-group-details';
+                    if (this.lastViewContext) {
+                        if (this.lastViewContext.screen === 'workout-group-details') {
+                            this.currentScreen = 'workout-group-details';
+                        } else if (this.lastViewContext.screen === 'history-manual') {
+                            this.currentScreen = 'history-manual';
+                        } else {
+                            this.currentScreen = 'history-manual';
+                        }
                     } else {
-                        // Fallback: volver al historial general
-                        this.currentView = {
-                            type: 'all',
-                            routineId: null,
-                            filter: 'current'
-                        };
                         this.currentScreen = 'history-manual';
                     }
                     
-                    // Limpiar el contexto
-                    this.lastViewContext = null;
+                    console.log('Navegando a:', this.currentScreen);
                 },
 
                 getBackButtonText() {
@@ -8316,6 +8337,17 @@
                     // Ya están en orden descendente (más reciente primero) por el loop inverso
                     return history;
                 },
+                formatDateShort(isoString) {
+                    if (!isoString) return 'Fecha no disponible';
+                    const date = new Date(isoString);
+                    if (isNaN(date.getTime())) return 'Fecha inválida';
+                    
+                    return date.toLocaleDateString('es-ES', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                    });
+                },
                 // Función CORREGIDA para contar ejecuciones anteriores
                 getExerciseHistoryCount(muscle, exerciseName, routineKey) {
                     const currentWorkoutDate = this.viewedWorkout ? new Date(this.viewedWorkout.date) : null;
@@ -8408,255 +8440,6 @@
                     
                     return '#ef4444'; // Rojo por defecto si no se encuentra
                 },
-
-                // ==================================================
-                // 15. FUNCIONES PARA EL CENTRO DE ENTRENAMIENTO IA
-                // ==================================================
-                manageExistingPlans() {
-                    this.currentScreen = 'manage-ai-plans';
-                },
-                recoverRoutine(routine) {
-                    // Cargar la rutina seleccionada en currentWeek
-                    this.currentWeek = routine.plan;
-                    this.trainingDays = Object.keys(routine.plan);
-                    this.trainingGoal = routine.goal;
-                    this.userLevel = routine.level;
-                },
-                adjustRoutine(routine) {
-                    // Aquí iría la lógica para ajustar la rutina (cambiar ejercicios, etc.)
-                    alert('Funcionalidad de "Ajustar Rutina" en desarrollo.');
-                },
-                superchargeRoutine(routine) {
-                    // Aquí iría la lógica para "superar" la rutina (aumentar pesos, series, etc.)
-                    alert('Funcionalidad de "Superar Rutina" en desarrollo.');
-                },
-
-                // =============== FUNCIONES DEL ASISTENTE CONVERSACIONAL IA ===============
-                startAIChat() {
-                    this.isChatActive = true;
-                    this.currentStep = 0;
-                    this.chatMessages = [];
-                    this.userProfile = { goal: '', daysPerWeek: 0, preferredMuscles: [], limitations: '', level: '' };
-                    this.startTypingQuestion();
-                },
-
-                getChatQuestions() {
-                    return [
-                        {
-                            question: "¡Hola! 👋 Soy tu asistente de entrenamiento inteligente. ¿Cuál es tu objetivo principal?",
-                            options: ["Hipertrofia (aumentar músculo)", "Fuerza (levantar más peso)", "Resistencia (más repeticiones)"],
-                            key: "goal"
-                        },
-                        {
-                            question: "¿Cuántos días a la semana puedes entrenar consistentemente?",
-                            options: ["2 días", "3 días", "4 días", "5 días", "6 días"],
-                            key: "daysPerWeek"
-                        },
-                        {
-                            question: "¿Qué grupos musculares te gustaría priorizar o trabajar con más frecuencia?",
-                            options: ["Pecho", "Espalda", "Piernas", "Hombros", "Bíceps", "Tríceps", "Abdominales", "Trapecio"],
-                            key: "preferredMuscles",
-                            multiSelect: true
-                        },
-                        {
-                            question: "¿Tienes alguna lesión, limitación física o ejercicio que deba evitar?",
-                            type: "text",
-                            key: "limitations"
-                        },
-                        {
-                            question: "¿Cuál es tu nivel de experiencia?",
-                            options: ["Principiante (0-1 año)", "Intermedio (1-3 años)", "Avanzado (3+ años)"],
-                            key: "level"
-                        }
-                    ];
-                },
-
-                startTypingQuestion() {
-                    const questions = this.getChatQuestions();
-                    if (this.currentStep < questions.length) {
-                        const currentQuestion = questions[this.currentStep];
-                        this.isTyping = true;
-                        this.currentTypingText = currentQuestion.question;
-                        this.typingIndex = 0;
-                        this.typeCharacter();
-                    } else {
-                        this.generatePlanFromProfile();
-                    }
-                },
-
-                typeCharacter() {
-                    if (this.typingIndex < this.currentTypingText.length) {
-                        this.typingIndex++;
-                        setTimeout(() => {
-                            this.typeCharacter();
-                        }, this.typingSpeed);
-                    } else {
-                        this.isTyping = false;
-                        // Añadir la pregunta completa al historial
-                        const questions = this.getChatQuestions();
-                        const currentQuestion = questions[this.currentStep];
-                        this.chatMessages.push({
-                            sender: 'ia',
-                            text: currentQuestion.question,
-                            options: currentQuestion.options || [],
-                            type: currentQuestion.type || 'options',
-                            step: this.currentStep
-                        });
-                    }
-                },
-
-                handleUserResponse(response) {
-                    const questions = this.getChatQuestions();
-                    const currentQuestion = questions[this.currentStep];
-                    
-                    if (currentQuestion.multiSelect && Array.isArray(response)) {
-                        this.userProfile[currentQuestion.key] = response;
-                    } else if (currentQuestion.type === 'text') {
-                        this.userProfile[currentQuestion.key] = response;
-                    } else {
-                        this.userProfile[currentQuestion.key] = response;
-                    }
-                    
-                    this.chatMessages.push({
-                        sender: 'user',
-                        text: response,
-                        step: this.currentStep
-                    });
-                    
-                    this.currentStep++;
-                    this.startTypingQuestion();
-                },
-
-                goBackStep() {
-                    if (this.currentStep > 0) {
-                        this.currentStep--;
-                        // Eliminar la última respuesta del usuario
-                        this.chatMessages = this.chatMessages.filter(msg => !(msg.sender === 'user' && msg.step === this.currentStep));
-                        // Eliminar la última pregunta de la IA
-                        this.chatMessages = this.chatMessages.filter(msg => !(msg.sender === 'ia' && msg.step === this.currentStep));
-                        // Reiniciar la respuesta para esta pregunta
-                        const questions = this.getChatQuestions();
-                        const currentQuestion = questions[this.currentStep];
-                        if (currentQuestion.multiSelect) {
-                            this.userProfile[currentQuestion.key] = [];
-                        } else {
-                            this.userProfile[currentQuestion.key] = '';
-                        }
-                        // Volver a escribir la pregunta
-                        this.startTypingQuestion();
-                    }
-                },
-
-                generatePlanFromProfile() {
-                    // Extraer datos del perfil del usuario
-                    const availableDays = parseInt(this.userProfile.daysPerWeek.split(' ')[0]);
-                    const goal = this.userProfile.goal.split(' ')[0];
-                    const level = this.userProfile.level.split(' ')[0];
-
-                    // Validar datos
-                    if (!availableDays || !goal || !level) {
-                        this.chatMessages.push({
-                            sender: 'ia',
-                            text: "Lo siento, no pude generar un plan. Por favor, asegúrate de responder todas las preguntas."
-                        });
-                        return;
-                    }
-
-                    // Crear plan
-                    let plan = {};
-                    const days = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
-
-                    // Definir split de músculos según días
-                    let muscleSplit = {};
-                    if (availableDays === 3) {
-                        muscleSplit = {
-                            "Lunes": ["Pecho", "Tríceps", "Hombros"],
-                            "Miércoles": ["Piernas", "Abdominales"],
-                            "Viernes": ["Espalda", "Bíceps", "Trapecio"]
-                        };
-                    } else if (availableDays === 4) {
-                        muscleSplit = {
-                            "Lunes": ["Pecho", "Tríceps"],
-                            "Martes": ["Piernas", "Abdominales"],
-                            "Jueves": ["Espalda", "Bíceps"],
-                            "Viernes": ["Hombros", "Trapecio"]
-                        };
-                    } else if (availableDays >= 5) {
-                        muscleSplit = {
-                            "Lunes": ["Pecho"],
-                            "Martes": ["Piernas"],
-                            "Miércoles": ["Espalda"],
-                            "Jueves": ["Hombros", "Trapecio"],
-                            "Viernes": ["Bíceps", "Tríceps", "Abdominales"]
-                        };
-                    }
-
-                    // Asignar días reales
-                    let dayIndex = 0;
-                    const availableDayNames = days.filter(day => {
-                        return dayIndex++ < availableDays;
-                    }).slice(0, availableDays);
-
-                    dayIndex = 0;
-                    for (let day of availableDayNames) {
-                        if (dayIndex < Object.keys(muscleSplit).length) {
-                            const splitKey = Object.keys(muscleSplit)[dayIndex];
-                            plan[day] = {
-                                muscles: muscleSplit[splitKey],
-                                exercises: {}
-                            };
-                            muscleSplit[splitKey].forEach(muscle => {
-                                const muscleKey = this.getMuscleKeyFromLabel(muscle);
-                                const availableExercises = this.exercisesByMuscle[muscleKey] || [];
-                                const exerciseCount = level === 'Principiante' ? 2 : level === 'Intermedio' ? 3 : 4;
-                                plan[day].exercises[muscleKey] = availableExercises.slice(0, exerciseCount);
-                            });
-                            dayIndex++;
-                        }
-                    }
-
-                    // Mostrar mensaje final
-                    this.chatMessages.push({
-                        sender: 'ia',
-                        text: `¡Perfecto! 🎯 He generado tu plan semanal. Puedes verlo y empezar a entrenar.`
-                    });
-
-                    // Guardar el plan en el estado
-                    this.aiWorkoutPlan = { week1: plan };
-                    this.currentWeek = plan;
-                    this.trainingDays = Object.keys(plan);
-                    this.trainingGoal = goal.toLowerCase();
-                    this.userLevel = level.toLowerCase();
-
-                    // Redirigir después de un pequeño retraso
-                    setTimeout(() => {
-                        this.isChatActive = false;
-                    }, 2000);
-                },
-
-                getMuscleKeyFromLabel(label) {
-                    const mapping = {
-                        "Pecho": "chest",
-                        "Espalda": "back",
-                        "Piernas": "legs",
-                        "Hombros": "shoulders",
-                        "Bíceps": "biceps",
-                        "Tríceps": "triceps",
-                        "Abdominales": "abs",
-                        "Trapecio": "traps"
-                    };
-                    return mapping[label] || "chest";
-                },
-
-                // Función para volver al historial correcto
-                goBackToHistory() {
-                    if (this.viewedWorkout.mode === 'ai') {
-                        this.currentScreen = 'history-ia';
-                    } else {
-                        this.currentScreen = 'history-manual';
-                    }
-                },
-
 
                 // En la sección de estadísticas del historial vacío, actualizar los cálculos:
                 getHistoryStats() {
