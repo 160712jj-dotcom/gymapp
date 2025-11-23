@@ -1845,7 +1845,7 @@
                                                 </div>
                                                 
                                                 <!-- Botón completar -->
-                                                <button class="px-2 py-0 rounded text-xs transition font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[60px] h-7 leading-none"
+                                                <button class="px-2 py-1 rounded text-xs transition font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center w-16 h-7 leading-none"
                                                         @click="completeSetWithVisual(muscle, exercise.name, setIndex)"
                                                         :disabled="exerciseReps[muscle][exercise.name][setIndex] <= 0 || currentExercise.muscle !== muscle || currentExercise.name !== exercise.name"
                                                         :class="getCompleteButtonClass(muscle, exercise.name, setIndex)">
@@ -3685,9 +3685,9 @@
                     const isCompleted = this.isSetCompletedVisually(muscle, exercise, setIndex);
                     
                     if (isCompleted) {
-                        return 'bg-blue-700 border-2 border-blue-800 text-white cursor-default';
+                        return 'bg-blue-700 border border-blue-800 text-white cursor-default';
                     } else {
-                        return 'bg-green-600 hover:bg-green-500 text-white';
+                        return 'bg-green-600 hover:bg-green-500 text-white border border-transparent';
                     }
                 },
                 // Función para verificar si una serie está completada
