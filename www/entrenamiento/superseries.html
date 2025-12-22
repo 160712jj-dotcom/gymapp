@@ -2856,6 +2856,12 @@
                 soundEnabled: true,
                 audioContext: null,
                 selectedGroupsForWorkoutGroup: [],
+                        workoutName: '',
+                supersets: [],
+                // Listas separadas
+                manualExercises: [],     // NO se usa en superseries
+                supersetExercises: [],   // SOLO estos se muestran
+                supersetGroups: [],      // Superseries predefinidas
                 currentView: {
                     type: 'all', // 'all', 'routine'
                     routineId: null,
@@ -2897,7 +2903,19 @@
                 currentSupersetGroup: null,
                 tempSelectedExercises: [],
                 activeSupersetId: null,
+                workouts: [],                    // Workouts manuales
+                supersetWorkouts: [],           // Workouts superseries
+                customExercises: [],            // Ejercicios manuales personalizados
+                customSupersetExercises: [],    // Ejercicios superseries personalizados
+                workoutGroups: [],              // Grupos de rutinas
                 
+                // Configuración del temporizador
+                restTimerConfig: {
+                    enabled: true,
+                    duration: 60,
+                    muscleRestDuration: 120,
+                    soundEnabled: true
+                },
 
                 // Constantes
                 levelLabels: {
@@ -2940,14 +2958,25 @@
                     this.userLevel = null;
 
                     console.log('Iniciando aplicación...');
-                    this.migrateOldData();
-                    this.loadFromLocalStorage();
-                    this.loadCustomExercises();
+                    
+                    // 1. MIGRAR DATOS EXISTENTES SEPARANDO MANUAL/SUPERSERIES
+                    this.migrateAndSeparateData();
+                    
+                    // 2. CARGAR DATOS SEPARADOS
+                    this.loadSeparatedData();
+                    
+                    // 3. CARGAR EJERCICIOS PERSONALIZADOS SEPARADOS
+                    this.loadCustomExercisesSeparated();
+                    
+                    // 4. CONFIGURACIÓN INICIAL
                     this.currentScreen = 'mode-selection';
                     this.currentMode = '';
                     this.completedSetsState = {};
-                       // Corregir workouts sin modo
+                    
+                    // 5. CORREGIR WORKOUTS SIN MODO
                     this.fixWorkoutModes();
+                    
+                    // 6. VERIFICACIÓN Y CORRECCIÓN DE REFERENCIAS
                     setTimeout(() => {
                         console.log('=== VERIFICACIÓN INICIAL DE RUTINAS ===');
                         const results = this.verifyAndFixWorkoutReferences();
@@ -2955,10 +2984,9 @@
                         if (results.fixedCount > 0 || results.invalidCount > 0) {
                             console.log('Se corrigieron problemas en las rutinas al iniciar:', results);
                         }
-
                     }, 500);
 
-                    // Limpieza de músculos huérfanos después de la verificación de rutinas
+                    // 7. LIMPIEZA DE MÚSCULOS HUÉRFANOS
                     setTimeout(() => {
                         console.log('=== LIMPIEZA DE MÚSCULOS PERSONALIZADOS HUÉRFANOS ===');
                         const cleanedCount = this.cleanupOrphanCustomMuscles();
@@ -2969,7 +2997,138 @@
                         }
                     }, 800);
                     
-                    // Cargar configuración del temporizador
+                    // 8. CONFIGURACIÓN DEL TEMPORIZADOR
+                    this.loadRestTimerConfig();
+                    
+                    // 9. CARGAR GRUPOS DE RUTINAS SEPARADOS
+                    this.loadWorkoutGroupsSeparated();
+                    
+                    // 10. SERVICE WORKER Y NOTIFICACIONES
+                    this.registerServiceWorker();
+                    this.requestNotificationPermission();
+                },
+
+                // ========== NUEVAS FUNCIONES AÑADIR ==========
+
+                // 1. MIGRAR Y SEPARAR DATOS EXISTENTES
+                migrateAndSeparateData() {
+                    console.log('=== MIGRANDO Y SEPARANDO DATOS ===');
+                    
+                    // Verificar si hay datos antiguos sin separar
+                    const oldWorkouts = localStorage.getItem('workouts') || 
+                                    localStorage.getItem('gymApp_workouts');
+                    
+                    if (oldWorkouts) {
+                        try {
+                            const parsed = JSON.parse(oldWorkouts);
+                            let manualCount = 0;
+                            let supersetCount = 0;
+                            
+                            parsed.forEach(workout => {
+                                // Determinar tipo basado en estructura
+                                if (workout.supersets) {
+                                    // Es una superserie
+                                    this.saveToSupersetStorage(workout);
+                                    supersetCount++;
+                                } else {
+                                    // Es manual
+                                    this.saveToManualStorage(workout);
+                                    manualCount++;
+                                }
+                            });
+                            
+                            // Eliminar datos antiguos
+                            localStorage.removeItem('workouts');
+                            localStorage.removeItem('gymApp_workouts');
+                            
+                            console.log(`✅ Datos migrados: ${manualCount} manuales, ${supersetCount} superseries`);
+                            
+                        } catch (e) {
+                            console.error('Error migrando datos antiguos:', e);
+                        }
+                    }
+                    
+                    // Inicializar almacenamientos separados si no existen
+                    this.initializeSeparatedStorage();
+                },
+
+                // 2. INICIALIZAR ALMACENAMIENTOS SEPARADOS
+                initializeSeparatedStorage() {
+                    const storageKeys = {
+                        MANUAL: 'gymApp_manual_workouts',
+                        SUPERSET: 'gymApp_superset_workouts',
+                        MANUAL_EXERCISES: 'gymApp_manual_exercises',
+                        SUPERSET_EXERCISES: 'gymApp_superset_exercises'
+                    };
+                    
+                    // Inicializar si no existen
+                    ['MANUAL', 'SUPERSET', 'MANUAL_EXERCISES', 'SUPERSET_EXERCISES'].forEach(key => {
+                        if (!localStorage.getItem(storageKeys[key])) {
+                            localStorage.setItem(storageKeys[key], JSON.stringify([]));
+                        }
+                    });
+                },
+
+                // 3. GUARDAR EN ALMACENAMIENTO MANUAL
+                saveToManualStorage(workout) {
+                    const workouts = JSON.parse(localStorage.getItem('gymApp_manual_workouts') || '[]');
+                    const workoutWithType = {
+                        ...workout,
+                        type: 'manual',
+                        mode: workout.mode || 'manual'
+                    };
+                    workouts.push(workoutWithType);
+                    localStorage.setItem('gymApp_manual_workouts', JSON.stringify(workouts));
+                },
+
+                // 4. GUARDAR EN ALMACENAMIENTO SUPERSERIES
+                saveToSupersetStorage(workout) {
+                    const workouts = JSON.parse(localStorage.getItem('gymApp_superset_workouts') || '[]');
+                    const workoutWithType = {
+                        ...workout,
+                        type: 'superset',
+                        mode: 'superset'
+                    };
+                    workouts.push(workoutWithType);
+                    localStorage.setItem('gymApp_superset_workouts', JSON.stringify(workouts));
+                },
+
+                // 5. CARGAR DATOS SEPARADOS
+                loadSeparatedData() {
+                    console.log('=== CARGANDO DATOS SEPARADOS ===');
+                    
+                    // Cargar workouts manuales
+                    const manualWorkouts = JSON.parse(localStorage.getItem('gymApp_manual_workouts') || '[]');
+                    console.log(`📁 Workouts manuales cargados: ${manualWorkouts.length}`);
+                    
+                    // Cargar workouts superseries
+                    const supersetWorkouts = JSON.parse(localStorage.getItem('gymApp_superset_workouts') || '[]');
+                    console.log(`⚡ Workouts superseries cargados: ${supersetWorkouts.length}`);
+                    
+                    // Asignar a variables de estado según tu estructura
+                    this.workouts = manualWorkouts; // Ajusta según tu variable
+                    this.supersetWorkouts = supersetWorkouts; // Añade esta variable si no existe
+                },
+
+                // 6. CARGAR EJERCICIOS PERSONALIZADOS SEPARADOS
+                loadCustomExercisesSeparated() {
+                    console.log('=== CARGANDO EJERCICIOS PERSONALIZADOS SEPARADOS ===');
+                    
+                    // Ejercicios manuales personalizados
+                    const manualExercises = JSON.parse(localStorage.getItem('gymApp_manual_exercises') || '[]');
+                    console.log(`💪 Ejercicios manuales personalizados: ${manualExercises.length}`);
+                    
+                    // Ejercicios superseries personalizados
+                    const supersetExercises = JSON.parse(localStorage.getItem('gymApp_superset_exercises') || '[]');
+                    console.log(`⚡ Ejercicios superseries personalizados: ${supersetExercises.length}`);
+                    
+                    // Asignar según tu estructura
+                    this.customExercises = manualExercises; // Ajusta
+                    this.customSupersetExercises = supersetExercises; // Añade si no existe
+                },
+
+                // 7. CARGAR CONFIGURACIÓN TEMPORIZADOR
+                loadRestTimerConfig() {
                     const savedRestConfig = localStorage.getItem('gymApp_restTimerConfig');
                     if (savedRestConfig) {
                         try {
@@ -2984,27 +3143,129 @@
                             console.error('Error parsing rest timer config:', error);
                         }
                     }
-                    
-                    // CARGAR RUTINAS DE TRABAJO GUARDADAS
+                },
+
+                // 8. CARGAR GRUPOS DE RUTINAS SEPARADOS
+                loadWorkoutGroupsSeparated() {
                     const savedWorkoutGroups = localStorage.getItem('gymApp_workoutGroups');
                     if (savedWorkoutGroups) {
                         try {
                             this.workoutGroups = JSON.parse(savedWorkoutGroups);
+                            console.log(`📂 Grupos de rutinas cargados: ${this.workoutGroups.length}`);
                         } catch (error) {
                             console.error('Error parsing workout groups:', error);
                             this.workoutGroups = [];
                         }
                     }
-                    
+                },
+
+                // 9. REGISTRAR SERVICE WORKER
+                registerServiceWorker() {
                     if ('serviceWorker' in navigator) {
                         navigator.serviceWorker.register('/sw.js')
                             .then(reg => console.log('Service Worker registrado', reg))
                             .catch(err => console.log('Error registrando Service Worker', err));
                     }
-                    
+                },
+
+                // 10. SOLICITAR PERMISO NOTIFICACIONES
+                requestNotificationPermission() {
                     if ('Notification' in window) {
                         Notification.requestPermission();
                     }
+                },
+
+                // 11. FUNCIÓN PARA LIMPIAR DATOS MEZCLADOS
+                cleanMixedData() {
+                    console.log('=== LIMPIANDO DATOS MEZCLADOS ===');
+                    
+                    const manualWorkouts = JSON.parse(localStorage.getItem('gymApp_manual_workouts') || '[]');
+                    const supersetWorkouts = JSON.parse(localStorage.getItem('gymApp_superset_workouts') || '[]');
+                    
+                    let movedToManual = 0;
+                    let movedToSuperset = 0;
+                    
+                    // Encontrar superseries en manuales
+                    const supersetsInManual = manualWorkouts.filter(w => 
+                        w.supersets || w.type === 'superset' || w.mode === 'superset'
+                    );
+                    
+                    supersetsInManual.forEach(workout => {
+                        this.saveToSupersetStorage(workout);
+                        movedToSuperset++;
+                    });
+                    
+                    // Encontrar manuales en superseries
+                    const manualsInSuperset = supersetWorkouts.filter(w => 
+                        !w.supersets || w.type === 'manual' || w.mode === 'manual'
+                    );
+                    
+                    manualsInSuperset.forEach(workout => {
+                        this.saveToManualStorage(workout);
+                        movedToManual++;
+                    });
+                    
+                    // Eliminar los movidos de sus ubicaciones originales
+                    if (movedToSuperset > 0) {
+                        const filteredManual = manualWorkouts.filter(w => 
+                            !w.supersets && w.type !== 'superset' && w.mode !== 'superset'
+                        );
+                        localStorage.setItem('gymApp_manual_workouts', JSON.stringify(filteredManual));
+                    }
+                    
+                    if (movedToManual > 0) {
+                        const filteredSuperset = supersetWorkouts.filter(w => 
+                            w.supersets && w.type === 'superset' && w.mode === 'superset'
+                        );
+                        localStorage.setItem('gymApp_superset_workouts', JSON.stringify(filteredSuperset));
+                    }
+                    
+                    console.log(`✅ Datos limpiados: ${movedToManual} a manual, ${movedToSuperset} a superset`);
+                },
+
+                // ========== FUNCIONES EXISTENTES MODIFICADAS ==========
+
+                // Modificar fixWorkoutModes para manejar ambos tipos
+                fixWorkoutModes() {
+                    console.log('=== CORRIGIENDO MODOS DE WORKOUTS ===');
+                    
+                    // Corregir workouts manuales
+                    const manualWorkouts = JSON.parse(localStorage.getItem('gymApp_manual_workouts') || '[]');
+                    let fixedManual = 0;
+                    
+                    manualWorkouts.forEach(workout => {
+                        if (!workout.mode) {
+                            workout.mode = 'manual';
+                            fixedManual++;
+                        }
+                        if (!workout.type) {
+                            workout.type = 'manual';
+                        }
+                    });
+                    
+                    if (fixedManual > 0) {
+                        localStorage.setItem('gymApp_manual_workouts', JSON.stringify(manualWorkouts));
+                    }
+                    
+                    // Corregir workouts superseries
+                    const supersetWorkouts = JSON.parse(localStorage.getItem('gymApp_superset_workouts') || '[]');
+                    let fixedSuperset = 0;
+                    
+                    supersetWorkouts.forEach(workout => {
+                        if (!workout.mode) {
+                            workout.mode = 'superset';
+                            fixedSuperset++;
+                        }
+                        if (!workout.type) {
+                            workout.type = 'superset';
+                        }
+                    });
+                    
+                    if (fixedSuperset > 0) {
+                        localStorage.setItem('gymApp_superset_workouts', JSON.stringify(supersetWorkouts));
+                    }
+                    
+                    console.log(`🔧 Modos corregidos: ${fixedManual} manuales, ${fixedSuperset} superseries`);
                 },
 
                 // ==================================================
