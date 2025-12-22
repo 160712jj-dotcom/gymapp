@@ -1938,31 +1938,35 @@
                                                             S<span x-text="setIndex + 1"></span>
                                                         </span>
                                                         
-                                                        <!-- Peso -->
-                                                        <div class="flex-1">
-                                                            <div class="flex items-center space-x-1 h-10">
-                                                                <span class="text-xs text-gray-400 whitespace-nowrap flex items-center h-10 px-1">P (Kg):</span>
-                                                                <input type="number" min="0" 
-                                                                    class="w-full bg-gray-700 rounded-lg px-2 py-2 text-center border border-gray-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50 disabled:cursor-not-allowed text-base h-10 min-h-[40px]"
-                                                                    x-model="exerciseWeights[muscle][exercise.name][setIndex]"
-                                                                    @change="updateSetData(muscle, exercise.name, setIndex)"
-                                                                    placeholder="0"
-                                                                    :disabled="currentExercise.muscle !== muscle || currentExercise.name !== exercise.name"
-                                                                    inputmode="decimal">
+                                                        <div class="flex items-center space-x-2">
+                                                            <!-- Peso -->
+                                                            <div class="flex-1 min-w-[100px]"> <!-- Ancho mínimo -->
+                                                                <div class="relative">
+                                                                    <span class="absolute left-2 top-1/2 transform -translate-y-1/2 text-xs text-gray-400 pointer-events-none">
+                                                                        Kg
+                                                                    </span>
+                                                                    <input type="number" min="0" step="0.5"
+                                                                        class="w-full h-10 bg-gray-700 rounded pl-10 pr-2 text-center border border-gray-600 focus:border-blue-500 text-white text-sm"
+                                                                        x-model="exerciseWeights[muscle][exercise.name][setIndex]"
+                                                                        @change="updateSetData(muscle, exercise.name, setIndex)"
+                                                                        placeholder="0"
+                                                                        :disabled="currentExercise.muscle !== muscle || currentExercise.name !== exercise.name">
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                        
-                                                        <!-- Reps -->
-                                                        <div class="flex-1">
-                                                            <div class="flex items-center space-x-1 h-10">
-                                                                <span class="text-xs text-gray-400 whitespace-nowrap flex items-center h-10 px-1">Reps:</span>
-                                                                <input type="number" min="0" 
-                                                                    class="w-full bg-gray-700 rounded-lg px-2 py-2 text-center border border-gray-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50 disabled:cursor-not-allowed text-base h-10 min-h-[40px]"
-                                                                    x-model="exerciseReps[muscle][exercise.name][setIndex]"
-                                                                    @change="updateSetData(muscle, exercise.name, setIndex)"
-                                                                    placeholder="0"
-                                                                    :disabled="currentExercise.muscle !== muscle || currentExercise.name !== exercise.name"
-                                                                    inputmode="numeric"> <!-- Teclado numérico -->
+                                                            
+                                                            <!-- Reps -->
+                                                            <div class="flex-1 min-w-[100px]">
+                                                                <div class="relative">
+                                                                    <span class="absolute left-2 top-1/2 transform -translate-y-1/2 text-xs text-gray-400 pointer-events-none">
+                                                                        Reps
+                                                                    </span>
+                                                                    <input type="number" min="0"
+                                                                        class="w-full h-10 bg-gray-700 rounded pl-12 pr-2 text-center border border-gray-600 focus:border-green-500 text-white text-sm"
+                                                                        x-model="exerciseReps[muscle][exercise.name][setIndex]"
+                                                                        @change="updateSetData(muscle, exercise.name, setIndex)"
+                                                                        placeholder="0"
+                                                                        :disabled="currentExercise.muscle !== muscle || currentExercise.name !== exercise.name">
+                                                                </div>
                                                             </div>
                                                         </div>
                                                         
