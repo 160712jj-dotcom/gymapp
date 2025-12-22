@@ -101,14 +101,15 @@
             </div>
 
             <!-- ENTRENAMIENTO SUPERSERIES -->
-            <div class="module-card coming-soon bg-gray-800 p-6 rounded-xl opacity-80">
+            <div class="module-card active bg-gray-800 p-6 rounded-xl"
+                onclick="navigateTo('superseries.html')">
                 <div class="text-5xl mb-4 text-purple-400">
                     <i class="fas fa-bolt"></i>
                 </div>
                 <h3 class="text-xl font-semibold mb-3 text-white">Entrenamiento Superseries</h3>
                 <p class="text-gray-400 mb-4">Rutinas intensivas con ejercicios combinados para máxima eficiencia.</p>
                 <div class="text-sm text-purple-300 flex items-center">
-                    <i class="fas fa-clock mr-2"></i> Próximamente
+                    <i class="fas fa-check-circle mr-2"></i> Disponible ahora
                 </div>
             </div>
 
@@ -132,15 +133,15 @@
             </h3>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                 <div>
-                    <div class="text-2xl font-bold text-green-400">1</div>
-                    <div class="text-sm text-gray-400">Módulo Activo</div>
+                    <div class="text-2xl font-bold text-green-400">2</div> <!-- Cambiar de 1 a 2 -->
+                    <div class="text-sm text-gray-400">Módulos Activos</div>
                 </div>
                 <div>
-                    <div class="text-2xl font-bold text-blue-400" id="appVersion">v1.0</div>
+                    <div class="text-2xl font-bold text-blue-400" id="appVersion">v1.1</div> <!-- Actualizar versión -->
                     <div class="text-sm text-gray-400">Versión</div>
                 </div>
                 <div>
-                    <div class="text-2xl font-bold text-purple-400">2</div>
+                    <div class="text-2xl font-bold text-purple-400">1</div> <!-- Cambiar de 2 a 1 -->
                     <div class="text-sm text-gray-400">Próximamente</div>
                 </div>
                 <div>
@@ -153,7 +154,7 @@
         <!-- INFORMACIÓN ADICIONAL -->
         <div class="bg-gray-800 rounded-xl p-6">
             <h3 class="text-lg font-semibold mb-3 text-white flex items-center">
-                <i class="fas fa-rocket mr-2 text-green-400"></i> Próximas Características
+                <i class="fas fa-rocket mr-2 text-green-400"></i> Características
             </h3>
             <ul class="text-gray-400 space-y-2 text-sm">
                 <li class="flex items-center">
@@ -161,8 +162,8 @@
                     <span>Entrenamiento manual - <strong class="text-white">Disponible</strong></span>
                 </li>
                 <li class="flex items-center">
-                    <i class="fas fa-clock text-yellow-400 mr-2 text-xs"></i>
-                    <span>Entrenamiento Superseries - <strong class="text-yellow-400">Próximamente</strong></span>
+                    <i class="fas fa-check text-green-400 mr-2 text-xs"></i> <!-- Cambiar icono -->
+                    <span>Entrenamiento Superseries - <strong class="text-green-400">Disponible</strong></span> <!-- Cambiar texto -->
                 </li>
                 <li class="flex items-center">
                     <i class="fas fa-clock text-yellow-400 mr-2 text-xs"></i>
@@ -170,7 +171,6 @@
                 </li>
             </ul>
         </div>
-    </div>
 
     <script>
         // Función para navegar entre módulos
