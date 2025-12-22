@@ -876,7 +876,7 @@
         .border-muscle-traps { border-left-color: #6366f1 !important; }
         .border-muscle-custom { border-left-color: #6b7280 !important; }
     </style>
-    <script src="../workoutManager.js"></script>
+    <script src="../storageManager.js"></script>
 </head>
 <body class="text-gray-100">
     <main x-data="gymApp()" x-init="init()">
@@ -2960,6 +2960,18 @@
                 // 2. INICIALIZACIÓN Y CARGA DE DATOS
                 // ==================================================
                 init() {
+
+                    console.log('Iniciando MÓDULO SUPERSERIES');
+                        
+                        // Usar SOLO funciones de superseries
+                        this.workouts = storageManager.getSupersetWorkouts();
+                        this.customExercises = storageManager.getSupersetExercises();
+                        
+                        // Verificar separación al inicio
+                        setTimeout(() => {
+                            storageManager.checkDataSeparation();
+                            storageManager.fixMixedData();
+                        }, 1000);
                     localStorage.removeItem('userLevel');
                     this.userLevel = null;
 
@@ -3012,6 +3024,16 @@
                     // 10. SERVICE WORKER Y NOTIFICACIONES
                     this.registerServiceWorker();
                     this.requestNotificationPermission();
+                },
+                saveSupersetWorkout() {
+                    // Usar saveSupersetWorkout
+                    const saved = storageManager.saveSupersetWorkout({
+                        name: this.workoutName,
+                        supersets: this.supersets,
+                        // ... otros datos ...
+                    });
+                    
+                    console.log('Superserie guardada:', saved);
                 },
 
                 // ========== NUEVAS FUNCIONES AÑADIR ==========

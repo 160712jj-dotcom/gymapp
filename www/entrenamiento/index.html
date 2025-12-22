@@ -872,6 +872,7 @@
         .border-muscle-traps { border-left-color: #6366f1 !important; }
         .border-muscle-custom { border-left-color: #6b7280 !important; }
     </style>
+    <script src="../storageManager.js"></script>
 </head>
 <body class="text-gray-100">
     <main x-data="gymApp()" x-init="init()">
@@ -2699,6 +2700,11 @@
                 // 2. INICIALIZACIÓN Y CARGA DE DATOS
                 // ==================================================
                 init() {
+                    console.log('Iniciando MÓDULO MANUAL');
+            
+                        // Usar SOLO funciones manuales
+                        this.workouts = storageManager.getManualWorkouts();
+                        this.customExercises = storageManager.getManualExercises();
                     localStorage.removeItem('userLevel');
                     this.userLevel = null;
 
@@ -2768,6 +2774,16 @@
                     if ('Notification' in window) {
                         Notification.requestPermission();
                     }
+                },
+                saveWorkout() {
+                    // Usar saveManualWorkout
+                    const saved = storageManager.saveManualWorkout({
+                        name: this.workoutName,
+                        exercises: this.selectedExercises,
+                        // ... otros datos ...
+                    });
+                    
+                    console.log('Workout manual guardado:', saved);
                 },
 
                 // ==================================================
