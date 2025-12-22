@@ -8508,6 +8508,17 @@
                     console.log('Grupos formados para rutinas:', result.length);
                     return result;
                 },
+                saveManualWorkout() {
+                    const workoutData = {
+                        name: "Mi Rutina Manual",
+                        exercises: [
+                            { name: "Press Banca", sets: 4, reps: 8, weight: 80 }
+                        ]
+                    };
+                    
+                    const saved = workoutManager.saveManualWorkout(workoutData);
+                    console.log('Manual guardado:', saved);
+                },
             };
         }
     </script>

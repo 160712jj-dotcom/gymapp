@@ -876,6 +876,7 @@
         .border-muscle-traps { border-left-color: #6366f1 !important; }
         .border-muscle-custom { border-left-color: #6b7280 !important; }
     </style>
+    <script src="../workoutManager.js"></script>
 </head>
 <body class="text-gray-100">
     <main x-data="gymApp()" x-init="init()">
@@ -9608,7 +9609,62 @@
                     }
                 },
 
-                // Modificar el estado de bloqueo en el template
+                saveSuperset() {
+                    const workoutName = document.getElementById('workoutName').value;
+                    const supersets = []; // Aquí recogerías los ejercicios del formulario
+                    
+                    // Ejemplo de estructura de superserie
+                    const supersetWorkout = {
+                        name: workoutName,
+                        supersets: [
+                            {
+                                name: "Superserie Pecho",
+                                exercises: [
+                                    { name: "Press Banca", sets: 3, reps: "8-10", rest: 60 },
+                                    { name: "Aperturas", sets: 3, reps: "12-15", rest: 60 }
+                                ],
+                                totalRest: 90
+                            }
+                        ],
+                        notes: "",
+                        duration: 45
+                    };
+                    
+                    const saved = workoutManager.saveSupersetWorkout(supersetWorkout);
+                    alert(`Superserie "${saved.name}" guardada correctamente!`);
+                    return saved;
+                },
+
+                // Función para cargar solo superseries
+                loadSupersetWorkouts() {
+                    return workoutManager.getSupersetWorkouts();
+                },
+
+                // Función para mostrar estadísticas específicas de superseries
+                showSupersetStats() {
+                    const workouts = workoutManager.getSupersetWorkouts();
+                    const stats = {
+                        total: workouts.length,
+                        lastWorkout: workouts.length > 0 ? new Date(workouts[workouts.length - 1].date).toLocaleDateString() : "Nunca",
+                        totalSupersets: workouts.reduce((total, w) => total + (w.supersets?.length || 0), 0)
+                    };
+                    
+                    return stats;
+                },
+
+                loadSupersetExerciseOptions() {
+                    const supersetExercises = workoutManager.getSupersetExercises();
+                    const selectElement = document.getElementById('exerciseSelect');
+                    
+                    selectElement.innerHTML = '<option value="">Selecciona un ejercicio</option>';
+                    
+                    supersetExercises.forEach(exercise => {
+                        const option = document.createElement('option');
+                        option.value = exercise.id;
+                        option.textContent = `${exercise.name} (${exercise.category})`;
+                        selectElement.appendChild(option);
+                    });
+                },
 
                 // ==================================================
                 // 14. ESTADÍSTICAS
