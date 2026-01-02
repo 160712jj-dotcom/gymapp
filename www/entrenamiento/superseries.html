@@ -853,6 +853,75 @@
             }
         }
 
+        body, html {
+            overflow-x: hidden;
+            max-width: 100vw;
+            width: 100%;
+        }
+
+        /* Contenedor principal */
+        .container.mx-auto {
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box;
+        }
+
+        /* Prevenir desbordamiento en móviles */
+        @media (max-width: 640px) {
+            /* Ajustar padding en móviles */
+            .container {
+                padding-left: 0.75rem !important;
+                padding-right: 0.75rem !important;
+            }
+            
+            /* Forzar contención en elementos largos */
+            .history-item, .workout-exercise, .superset-group,
+            .level-card, .muscle-card, .summary-card {
+                max-width: 100% !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+            
+            /* Ajustar grids en móviles */
+            .grid.grid-cols-2,
+            .grid.grid-cols-3,
+            .grid.grid-cols-4 {
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important;
+                gap: 0.5rem !important;
+            }
+            
+            /* Ajustar inputs */
+            .workout-set input[type="number"] {
+                max-width: 100px !important;
+                width: 100% !important;
+            }
+            
+            /* Prevenir textos largos */
+            .truncate-text {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 100%;
+            }
+            
+            /* Ajustar botones en móviles */
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .button-group button {
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+        }
+
+        /* Clase de utilidad para contener elementos */
+        .no-overflow {
+            max-width: 100% !important;
+            overflow-x: hidden !important;
+            width: 100% !important;
+        }
+
         /* Backup adicional para dispositivos muy pequeños */
         @media (max-width: 360px) {
             .workout-set .grid.grid-cols-2 {
@@ -1333,11 +1402,11 @@
         <!-- CONTENEDOR PARA LAS PANTALLAS PRINCIPALES -->
         <!-- ================================================== -->
         <div x-show="currentScreen !== 'mode-selection' && 
-                    currentScreen !== 'history-selection' && 
-                    currentScreen !== 'workout-groups' && 
-                    currentScreen !== 'workout-group-details' && 
-                    currentScreen !== 'evolution'" 
-             class="container mx-auto px-4 py-8 max-w-6xl">
+                currentScreen !== 'history-selection' && 
+                currentScreen !== 'workout-groups' && 
+                currentScreen !== 'workout-group-details' && 
+                currentScreen !== 'evolution'" 
+            class="container mx-auto px-4 py-8 max-w-6xl w-full overflow-x-hidden">
 
             <!-- Pantalla de selección de nivel (MODO MANUAL) -->
             <div x-show="currentScreen === 'level'" x-transition:enter.duration.300 x-transition:leave.duration.300 class="text-center">
@@ -2282,84 +2351,84 @@
             <!-- Pantalla de historial UNIFICADA -->
             <div x-show="currentScreen === 'history-manual'" x-transition:enter.duration.300 x-transition:leave.duration.300>
                 <!-- Encabezado dinámico -->
-                <div class="flex justify-between items-center mb-6">
+                <div class="flex justify-between items-center mb-6 px-2 sm:px-0">
                     <div>
                         <h2 class="text-2xl font-bold mb-2 text-white">Ejercicios en Ejecución</h2>
                         <p class="text-gray-400">Ejercicios no incluidos en rutinas</p>
                     </div>
                 </div>
-                <!-- Lista de entrenamientos filtrados -->
-                <div class="space-y-4 mb-8" x-show="getFilteredWorkouts().length > 0">
-                    <template x-for="(workout, index) in getFilteredWorkouts()" :key="index">
-                        <div class="history-item bg-gray-700 p-4 md:p-5 rounded-xl">
-                            <div class="flex justify-between items-start mb-3">
-                                <div class="flex-1">
-                                    <h4 class="font-semibold text-white" x-text="getTrainedMuscles(workout)"></h4>
-                                    <div class="text-sm text-gray-400 mt-1">
-                                        <span x-text="'Fecha: ' + formatDate(workout.date)"></span>
+                
+                <!-- Añadir este contenedor para controlar el ancho -->
+                <div class="w-full max-w-full overflow-x-hidden">
+                    <!-- Lista de entrenamientos filtrados -->
+                    <div class="space-y-4 mb-8" x-show="getFilteredWorkouts().length > 0">
+                        <template x-for="(workout, index) in getFilteredWorkouts()" :key="index">
+                            <div class="history-item bg-gray-700 p-4 md:p-5 rounded-xl w-full max-w-full overflow-hidden">
+                                <div class="flex justify-between items-start mb-3">
+                                    <div class="flex-1 min-w-0">
+                                        <h4 class="font-semibold text-white truncate" x-text="getTrainedMuscles(workout)"></h4>
+                                        <div class="text-sm text-gray-400 mt-1">
+                                            <span x-text="'Fecha: ' + formatDate(workout.date)"></span>
+                                        </div>
+                                        <!-- Músculos trabajados -->
+                                        <div class="mt-2 flex flex-wrap gap-1">
+                                            <template x-for="muscle in getWorkoutMusclesByIndex(getWorkoutOriginalIndex(workout))" :key="muscle.key">
+                                                <span class="text-xs px-2 py-1 rounded-full flex items-center"
+                                                    :class="muscle.color + ' bg-opacity-20 text-white'">
+                                                    <div class="w-2 h-2 rounded-full mr-1" :class="muscle.color"></div>
+                                                    <span class="truncate max-w-[80px]" x-text="muscle.label"></span>
+                                                </span>
+                                            </template>
+                                        </div>
                                     </div>
-                                    <!-- Músculos trabajados -->
-                                    <div class="mt-2 flex flex-wrap gap-1">
-                                        <template x-for="muscle in getWorkoutMusclesByIndex(getWorkoutOriginalIndex(workout))" :key="muscle.key">
-                                            <span class="text-xs px-2 py-1 rounded-full flex items-center"
-                                                :class="muscle.color + ' bg-opacity-20 text-white'">
-                                                <div class="w-2 h-2 rounded-full mr-1" :class="muscle.color"></div>
-                                                <span x-text="muscle.label"></span>
-                                            </span>
-                                        </template>
+                                    <div class="text-right ml-2">
+                                        <div class="text-sm text-white" x-text="formatTime(workout.time)"></div>
                                     </div>
                                 </div>
-                                <div class="text-right">
-                                    <div class="text-sm text-white" x-text="formatTime(workout.time)"></div>
-
-                                </div>
-                            </div>
-                            
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
-                                <!-- 1. Ejercicios -->
-                                <div class="bg-gray-800 p-2 rounded text-center">
-                                    <div class="text-xs text-gray-400 mb-1">Ejercicios</div>
-                                    <div class="font-bold text-red-400" x-text="workout.exercises"></div>
+                                
+                                <!-- Grid con mejoras para móviles -->
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+                                    <div class="bg-gray-800 p-2 rounded text-center">
+                                        <div class="text-xs text-gray-400 mb-1">Ejercicios</div>
+                                        <div class="font-bold text-red-400 text-sm" x-text="workout.exercises"></div>
+                                    </div>
+                                    
+                                    <div class="bg-gray-800 p-2 rounded text-center">
+                                        <div class="text-xs text-gray-400 mb-1">Repeticiones</div>
+                                        <div class="font-bold text-yellow-400 text-sm" x-text="calculateTotalReps(workout)"></div>
+                                    </div>
+                                    
+                                    <div class="bg-gray-800 p-2 rounded text-center">
+                                        <div class="text-xs text-gray-400 mb-1">Series</div>
+                                        <div class="font-bold text-white text-sm" x-text="workout.sets"></div>
+                                    </div>
+                                    
+                                    <div class="bg-gray-800 p-2 rounded text-center">
+                                        <div class="text-xs text-gray-400 mb-1">Volumen</div>
+                                        <div class="font-bold text-blue-400 text-sm" x-text="workout.totalVolume + ' kg'"></div>
+                                    </div>
                                 </div>
                                 
-                                <!-- 2. Repeticiones -->
-                                <div class="bg-gray-800 p-2 rounded text-center">
-                                    <div class="text-xs text-gray-400 mb-1">Repeticiones</div>
-                                    <div class="font-bold text-yellow-400" x-text="calculateTotalReps(workout)"></div>
-                                </div>
-                                
-                                <!-- 3. Series -->
-                                <div class="bg-gray-800 p-2 rounded text-center">
-                                    <div class="text-xs text-gray-400 mb-1">Series</div>
-                                    <div class="font-bold text-white" x-text="workout.sets"></div>
-                                </div>
-                                
-                                <!-- 4. Volumen -->
-                                <div class="bg-gray-800 p-2 rounded text-center">
-                                    <div class="text-xs text-gray-400 mb-1">Volumen</div>
-                                    <div class="font-bold text-blue-400" x-text="workout.totalVolume + ' kg'"></div>
-                                </div>
-                            </div>
-                            
-                            <div class="flex justify-between space-x-2">
-                                <div class="flex space-x-2 flex-1">
-                                    <button @click="viewWorkoutDetails(getWorkoutOriginalIndex(workout))"  
-                                            class="flex-1 px-3 py-2 bg-blue-600 rounded text-sm hover:bg-blue-500 transition text-white flex items-center justify-center">
-                                        <i class="fas fa-eye mr-1"></i> Detalles
-                                    </button>
-                                    <button @click="useWorkoutAsTemplateFromIndex(getWorkoutOriginalIndex(workout))" 
-                                            class="flex-1 px-3 py-2 bg-green-600 rounded text-sm hover:bg-green-500 transition text-white flex items-center justify-center">
-                                        <i class="fas fa-copy mr-1"></i> Plantilla
+                                <!-- Botones ajustados -->
+                                <div class="flex flex-col sm:flex-row sm:justify-between space-y-2 sm:space-y-0 sm:space-x-2">
+                                    <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                                        <button @click="viewWorkoutDetails(getWorkoutOriginalIndex(workout))"  
+                                                class="flex-1 px-3 py-2 bg-blue-600 rounded text-sm hover:bg-blue-500 transition text-white flex items-center justify-center">
+                                            <i class="fas fa-eye mr-1"></i> Detalles
+                                        </button>
+                                        <button @click="useWorkoutAsTemplateFromIndex(getWorkoutOriginalIndex(workout))" 
+                                                class="flex-1 px-3 py-2 bg-green-600 rounded text-sm hover:bg-green-500 transition text-white flex items-center justify-center">
+                                            <i class="fas fa-copy mr-1"></i> Plantilla
+                                        </button>
+                                    </div>
+                                    <button @click="deleteSingleWorkout(getWorkoutOriginalIndex(workout))" 
+                                            class="flex-1 px-3 py-2 bg-red-600 rounded text-sm hover:bg-red-500 transition text-white delete-btn flex items-center justify-center">
+                                        <i class="fas fa-trash mr-1"></i> Eliminar
                                     </button>
                                 </div>
-                                <button @click="deleteSingleWorkout(getWorkoutOriginalIndex(workout))" 
-                                        class="flex-1 px-3 py-2 bg-red-600 rounded text-sm hover:bg-red-500 transition text-white delete-btn flex items-center justify-center">
-                                    <i class="fas fa-trash mr-1"></i> Eliminar
-                                </button>
                             </div>
-                        </div>
-                    </template>
-                </div>
+                        </template>
+                    </div>
 
                 <!-- Mensaje cuando no hay entrenamientos - VERSIÓN SIMPLIFICADA -->
                 <div x-show="getFilteredWorkouts().length === 0">
@@ -3014,6 +3083,17 @@
                             console.log('✅ No se encontraron músculos personalizados huérfanos');
                         }
                     }, 800);
+
+                    setTimeout(() => {
+                        this.fixMobileLayout();
+                    }, 300);
+                    
+                    // También corregir cuando cambie la pantalla
+                    this.$watch('currentScreen', () => {
+                        setTimeout(() => {
+                            this.fixMobileLayout();
+                        }, 100);
+                    });
                     
                     // 8. CONFIGURACIÓN DEL TEMPORIZADOR
                     this.loadRestTimerConfig();
@@ -8273,6 +8353,19 @@
                     }
                     
                     return filteredWorkouts;
+                },
+                fixMobileLayout() {
+                    // Solo ejecutar en móviles
+                    if (window.innerWidth < 768) {
+                        // Forzar que todos los contenedores se ajusten
+                        const containers = document.querySelectorAll('[x-show]:not([x-cloak])');
+                        containers.forEach(container => {
+                            if (container && container.style) {
+                                container.style.maxWidth = '100%';
+                                container.style.overflowX = 'hidden';
+                            }
+                        });
+                    }
                 },
 
                 // Obtener los datos limitados para la gráfica
