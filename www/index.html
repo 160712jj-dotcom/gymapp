@@ -68,6 +68,22 @@
             transform: rotate(45deg);
             box-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
+        /* Bordes sutiles por tipo de entrenamiento */
+        .border-manual {
+            border: 2px solid rgba(66, 153, 225, 0.6); /* azul */
+            box-shadow: 0 0 0 1px rgba(66, 153, 225, 0.15);
+        }
+
+        .border-superseries {
+            border: 2px solid rgba(159, 122, 234, 0.6); /* morado */
+            box-shadow: 0 0 0 1px rgba(159, 122, 234, 0.15);
+        }
+
+        .border-biblioteca {
+            border: 2px solid rgba(72, 187, 120, 0.6); /* verde */
+            box-shadow: 0 0 0 1px rgba(72, 187, 120, 0.15);
+        }
+
     </style>
 </head>
 <body class="text-gray-100">
@@ -88,8 +104,8 @@
         <!-- MÓDULOS PRINCIPALES -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
             <!-- ENTRENAMIENTO MANUAL -->
-            <div class="module-card active bg-gray-800 p-6 rounded-xl"
-                 onclick="navigateTo('entrenamiento/')">
+            <div class="module-card active border-manual bg-gray-800 p-6 rounded-xl"
+                onclick="navigateTo('entrenamiento/')">
                 <div class="text-5xl mb-4 text-blue-400">
                     <i class="fas fa-dumbbell"></i>
                 </div>
@@ -101,7 +117,7 @@
             </div>
 
             <!-- ENTRENAMIENTO SUPERSERIES -->
-            <div class="module-card active bg-gray-800 p-6 rounded-xl"
+            <div class="module-card active border-superseries bg-gray-800 p-6 rounded-xl"
                 onclick="navigateTo('entrenamiento/superseries.html')">
                 <div class="text-5xl mb-4 text-purple-400">
                     <i class="fas fa-bolt"></i>
@@ -114,7 +130,7 @@
             </div>
 
             <!-- BIBLIOTECA DE ENTRENAMIENTOS -->
-            <div class="module-card coming-soon bg-gray-800 p-6 rounded-xl opacity-80">
+            <div class="module-card coming-soon border-biblioteca bg-gray-800 p-6 rounded-xl opacity-80">
                 <div class="text-5xl mb-4 text-emerald-400">
                     <i class="fas fa-book"></i>
                 </div>
