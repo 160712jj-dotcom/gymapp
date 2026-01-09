@@ -3496,60 +3496,58 @@
                 },
                 // REEMPLAZAR la función saveCustomExercises con esta versión mejorada
                 saveCustomExercises() {
-                    // Primero limpiar músculos personalizados que no tengan ejercicios
+
+                    // 1️⃣ Cargar lo que ya existe (por ejemplo lo creado en superseries)
+                    const savedData = JSON.parse(
+                        localStorage.getItem('gymApp_customExercises')
+                    ) || {
+                        exercises: {},
+                        customMuscles: [],
+                        muscleGroups: []
+                    };
+
+                    // 2️⃣ Limpiar músculos personalizados sin ejercicios
                     const validCustomMuscles = this.customMuscles.filter(muscleKey => {
-                        return this.exercisesByMuscle[muscleKey] && this.exercisesByMuscle[muscleKey].length > 0;
+                        return this.exercisesByMuscle[muscleKey] &&
+                            this.exercisesByMuscle[muscleKey].length > 0;
                     });
-                    
-                    // Actualizar la lista de customMuscles
+
                     this.customMuscles = validCustomMuscles;
-                    
-                    // También limpiar muscleGroups de músculos personalizados sin ejercicios
-                    this.muscleGroups = this.muscleGroups.filter(muscle => {
-                        if (muscle.key.startsWith('custom_')) {
-                            return this.exercisesByMuscle[muscle.key] && this.exercisesByMuscle[muscle.key].length > 0;
-                        }
-                        return true; // Mantener músculos predefinidos
-                    });
-                    
-                    // Preparar datos para guardar
-                    const exercisesToSave = {};
-                    const muscleGroupsToSave = [];
-                    
-                    // Solo guardar músculos que tengan ejercicios
+
+                    // 3️⃣ Fusionar ejercicios
+                    const mergedExercises = { ...savedData.exercises };
+
                     Object.keys(this.exercisesByMuscle).forEach(muscleKey => {
                         if (this.exercisesByMuscle[muscleKey].length > 0) {
-                            exercisesToSave[muscleKey] = this.exercisesByMuscle[muscleKey];
-                            
-                            // Si es un músculo personalizado, asegurarse de que esté en muscleGroups
-                            if (muscleKey.startsWith('custom_')) {
-                                const exists = this.muscleGroups.find(m => m.key === muscleKey);
-                                if (!exists) {
-                                    const muscleName = muscleKey.replace('custom_', '').replace(/_/g, ' ');
-                                    this.muscleGroups.push({
-                                        key: muscleKey,
-                                        label: muscleName,
-                                        color: 'bg-gray-500'
-                                    });
-                                }
-                            }
+                            mergedExercises[muscleKey] = this.exercisesByMuscle[muscleKey];
                         }
                     });
-                    
-                    // Guardar muscleGroups actualizados
-                    this.muscleGroups.forEach(muscle => {
-                        muscleGroupsToSave.push(muscle);
+
+                    // 4️⃣ Fusionar músculos personalizados (sin duplicados)
+                    const mergedCustomMuscles = Array.from(new Set([
+                        ...savedData.customMuscles,
+                        ...validCustomMuscles
+                    ]));
+
+                    // 5️⃣ Fusionar muscleGroups (por key)
+                    const mergedMuscleGroupsMap = {};
+
+                    [...savedData.muscleGroups, ...this.muscleGroups].forEach(muscle => {
+                        mergedMuscleGroupsMap[muscle.key] = muscle;
                     });
-                    
-                    // Guardar en localStorage
+
+                    const mergedMuscleGroups = Object.values(mergedMuscleGroupsMap);
+
+                    // 6️⃣ Guardar TODO fusionado
                     localStorage.setItem('gymApp_customExercises', JSON.stringify({
-                        exercises: exercisesToSave,
-                        customMuscles: validCustomMuscles,
-                        muscleGroups: muscleGroupsToSave
+                        exercises: mergedExercises,
+                        customMuscles: mergedCustomMuscles,
+                        muscleGroups: mergedMuscleGroups
                     }));
-                    
-                    console.log('Ejercicios personalizados guardados:', exercisesToSave);
+
+                    console.log('Ejercicios personalizados guardados (fusionados):', mergedExercises);
                 },
+
                 currentTemplateOrigin: {
                     type: null, // 'routine', 'single', null
                     routineId: null,
