@@ -2980,71 +2980,56 @@
                 // 2. INICIALIZACIÓN Y CARGA DE DATOS
                 // ==================================================
                 init() {
-
                     console.log('Iniciando MÓDULO SUPERSERIES');
-                        
-                        // Usar SOLO funciones de superseries
-                        this.workouts = storageManager.getSupersetWorkouts();
-                        this.customExercises = storageManager.getSupersetExercises();
-                        
-                        // Verificar separación al inicio
-                        setTimeout(() => {
-                            storageManager.checkDataSeparation();
-                            storageManager.fixMixedData();
-                        }, 1000);
+
+                    // Rutinas e historial → separados
+                    this.workouts = storageManager.getSupersetWorkouts();
+
+                    // 🔹 Ejercicios personalizados → COMPARTIDOS con Manual
+                    this.customExercises = storageManager.getSharedCustomExercises();
+
+                    // Seguridad inicial
+                    setTimeout(() => {
+                        storageManager.checkDataSeparation();
+                        storageManager.fixMixedData();
+                    }, 1000);
+
                     localStorage.removeItem('userLevel');
                     this.userLevel = null;
 
                     console.log('Iniciando aplicación...');
-                    
-                    // 1. MIGRAR DATOS EXISTENTES SEPARANDO MANUAL/SUPERSERIES
+
+                    // Migraciones y datos separados
                     this.migrateAndSeparateData();
-                    
-                    // 2. CARGAR DATOS SEPARADOS
                     this.loadSeparatedData();
-                    
-                    // 3. CARGAR EJERCICIOS PERSONALIZADOS SEPARADOS
-                    this.loadCustomExercisesSeparated();
-                    
-                    // 4. CONFIGURACIÓN INICIAL
+
+                    // ❌ NO cargar ejercicios separados aquí
+                    // this.loadCustomExercisesSeparated();
+
                     this.currentScreen = 'mode-selection';
                     this.currentMode = '';
                     this.completedSetsState = {};
-                    
-                    // 5. CORREGIR WORKOUTS SIN MODO
+
                     this.fixWorkoutModes();
-                    
-                    // 6. VERIFICACIÓN Y CORRECCIÓN DE REFERENCIAS
+
                     setTimeout(() => {
-                        console.log('=== VERIFICACIÓN INICIAL DE RUTINAS ===');
                         const results = this.verifyAndFixWorkoutReferences();
-                        
                         if (results.fixedCount > 0 || results.invalidCount > 0) {
-                            console.log('Se corrigieron problemas en las rutinas al iniciar:', results);
+                            console.log('Correcciones aplicadas:', results);
                         }
                     }, 500);
 
-                    // 7. LIMPIEZA DE MÚSCULOS HUÉRFANOS
                     setTimeout(() => {
-                        console.log('=== LIMPIEZA DE MÚSCULOS PERSONALIZADOS HUÉRFANOS ===');
-                        const cleanedCount = this.cleanupOrphanCustomMuscles();
-                        if (cleanedCount > 0) {
-                            console.log(`🧹 Se eliminaron ${cleanedCount} músculos personalizados huérfanos`);
-                        } else {
-                            console.log('✅ No se encontraron músculos personalizados huérfanos');
-                        }
+                        this.cleanupOrphanCustomMuscles();
                     }, 800);
-                    
-                    // 8. CONFIGURACIÓN DEL TEMPORIZADOR
+
                     this.loadRestTimerConfig();
-                    
-                    // 9. CARGAR GRUPOS DE RUTINAS SEPARADOS
                     this.loadWorkoutGroupsSeparated();
-                    
-                    // 10. SERVICE WORKER Y NOTIFICACIONES
+
                     this.registerServiceWorker();
                     this.requestNotificationPermission();
                 },
+
                 saveSupersetWorkout() {
                     // Usar saveSupersetWorkout
                     const saved = storageManager.saveSupersetWorkout({
@@ -8198,7 +8183,7 @@
                 getAllUniqueExercises() {
                     const exercises = new Set();
 
-                    // 1️⃣ Ejercicios base
+                    // Ejercicios base
                     (this.availableExercises || []).forEach(ex => {
                         const name = ex.name || ex;
                         if (name && name.trim()) {
@@ -8206,7 +8191,7 @@
                         }
                     });
 
-                    // 2️⃣ Ejercicios personalizados (Manual)
+                    // Ejercicios personalizados (compartidos)
                     (this.customExercises || []).forEach(ex => {
                         const name = ex.name || ex;
                         if (name && name.trim()) {
@@ -8214,7 +8199,7 @@
                         }
                     });
 
-                    // 3️⃣ Ejercicios del historial (por seguridad)
+                    // Historial (por compatibilidad)
                     (this.workoutHistory || []).forEach(workout => {
                         if (workout.exercisesData) {
                             Object.values(workout.exercisesData).forEach(muscleExercises => {
@@ -8229,6 +8214,7 @@
 
                     return Array.from(exercises).sort((a, b) => a.localeCompare(b));
                 },
+
 
                 changeMetric(metric) {
                     this.selectedMetric = metric;
