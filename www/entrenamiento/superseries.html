@@ -1346,45 +1346,66 @@
                 
                 <!-- Grid de niveles -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8 md:mb-10">
+
                     <!-- Principiante -->
-                    <div class="level-card bg-gray-700 p-4 md:p-6 rounded-xl cursor-pointer transition-all duration-300 hover:transform hover:scale-105 border-2"
-                        :class="userLevel === 'beginner' ? 'border-green-500 scale-105 shadow-lg' : 'border-blue-500'"
+                    <div class="level-card bg-gray-700 p-4 md:p-6 rounded-xl cursor-pointer transition-all duration-300
+                                hover:scale-105 border-2 border-green-500/40"
+                        :class="userLevel === 'beginner' ? 'border-green-500 scale-105 shadow-lg' : ''"
                         @click="selectLevel('beginner')">
-                        <div class="text-5xl mb-4 text-green-400"><i class="fas fa-seedling"></i></div>
+
+                        <div class="text-5xl mb-4 text-green-400">
+                            <i class="fas fa-seedling"></i>
+                        </div>
                         <h3 class="text-xl font-semibold mb-2 text-white">Principiante</h3>
                         <p class="text-gray-400 text-sm">10-15 series por grupo muscular/semana</p>
                         <p class="text-xs text-green-300 mt-2">Series por ejercicio: 3-4</p>
-                        <div class="mt-4 text-xs text-green-400 flex items-center" x-show="userLevel === 'beginner'">
+
+                        <div class="mt-4 text-xs text-green-400 flex items-center"
+                            x-show="userLevel === 'beginner'">
                             <i class="fas fa-check-circle mr-1"></i> Seleccionado
                         </div>
                     </div>
-                    
+
                     <!-- Intermedio -->
-                    <div class="level-card bg-gray-700 p-4 md:p-6 rounded-xl cursor-pointer transition-all duration-300 hover:transform hover:scale-105 border-2"
-                        :class="userLevel === 'intermediate' ? 'border-yellow-500 scale-105 shadow-lg' : 'border-blue-500'"
+                    <div class="level-card bg-gray-700 p-4 md:p-6 rounded-xl cursor-pointer transition-all duration-300
+                                hover:scale-105 border-2 border-yellow-500/40"
+                        :class="userLevel === 'intermediate' ? 'border-yellow-500 scale-105 shadow-lg' : ''"
                         @click="selectLevel('intermediate')">
-                        <div class="text-5xl mb-4 text-yellow-400"><i class="fas fa-leaf"></i></div>
+
+                        <div class="text-5xl mb-4 text-yellow-400">
+                            <i class="fas fa-leaf"></i>
+                        </div>
                         <h3 class="text-xl font-semibold mb-2 text-white">Intermedio</h3>
                         <p class="text-gray-400 text-sm">15-20 series por grupo muscular/semana</p>
                         <p class="text-xs text-yellow-300 mt-2">Series por ejercicio: 3-4</p>
-                        <div class="mt-4 text-xs text-yellow-400 flex items-center" x-show="userLevel === 'intermediate'">
+
+                        <div class="mt-4 text-xs text-yellow-400 flex items-center"
+                            x-show="userLevel === 'intermediate'">
                             <i class="fas fa-check-circle mr-1"></i> Seleccionado
                         </div>
                     </div>
-                    
+
                     <!-- Avanzado -->
-                    <div class="level-card bg-gray-700 p-4 md:p-6 rounded-xl cursor-pointer transition-all duration-300 hover:transform hover:scale-105 border-2"
-                        :class="userLevel === 'advanced' ? 'border-red-500 scale-105 shadow-lg' : 'border-blue-500'"
+                    <div class="level-card bg-gray-700 p-4 md:p-6 rounded-xl cursor-pointer transition-all duration-300
+                                hover:scale-105 border-2 border-red-500/40"
+                        :class="userLevel === 'advanced' ? 'border-red-500 scale-105 shadow-lg' : ''"
                         @click="selectLevel('advanced')">
-                        <div class="text-5xl mb-4 text-red-400"><i class="fas fa-fire"></i></div>
+
+                        <div class="text-5xl mb-4 text-red-400">
+                            <i class="fas fa-fire"></i>
+                        </div>
                         <h3 class="text-xl font-semibold mb-2 text-white">Avanzado</h3>
                         <p class="text-gray-400 text-sm">20-25 series por grupo muscular/semana</p>
                         <p class="text-xs text-red-300 mt-2">Series por ejercicio: 3-5</p>
-                        <div class="mt-4 text-xs text-red-400 flex items-center" x-show="userLevel === 'advanced'">
+
+                        <div class="mt-4 text-xs text-red-400 flex items-center"
+                            x-show="userLevel === 'advanced'">
                             <i class="fas fa-check-circle mr-1"></i> Seleccionado
                         </div>
                     </div>
+
                 </div>
+
                 
                 <!-- Mensaje de selección automática -->
                 <div x-show="userLevel" class="fade-in mb-4">
