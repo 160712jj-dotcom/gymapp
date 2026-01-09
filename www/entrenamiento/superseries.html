@@ -2912,7 +2912,6 @@
                 newCustomExerciseName: '',
                 newCustomExerciseMuscle: '',
                 customMuscleName: '',
-                customExercises: [],
                 customMuscles: [],
                 viewedWorkoutIndex: -1,
                 restTimerConfig: {
@@ -8198,21 +8197,39 @@
                 },
                 getAllUniqueExercises() {
                     const exercises = new Set();
-                    
-                    this.workoutHistory.forEach(workout => {
+
+                    // 1️⃣ Ejercicios base
+                    (this.availableExercises || []).forEach(ex => {
+                        const name = ex.name || ex;
+                        if (name && name.trim()) {
+                            exercises.add(name.trim());
+                        }
+                    });
+
+                    // 2️⃣ Ejercicios personalizados (Manual)
+                    (this.customExercises || []).forEach(ex => {
+                        const name = ex.name || ex;
+                        if (name && name.trim()) {
+                            exercises.add(name.trim());
+                        }
+                    });
+
+                    // 3️⃣ Ejercicios del historial (por seguridad)
+                    (this.workoutHistory || []).forEach(workout => {
                         if (workout.exercisesData) {
                             Object.values(workout.exercisesData).forEach(muscleExercises => {
                                 muscleExercises.forEach(exercise => {
-                                    if (exercise.name && exercise.name.trim() !== '') {
-                                        exercises.add(exercise.name);
+                                    if (exercise.name && exercise.name.trim()) {
+                                        exercises.add(exercise.name.trim());
                                     }
                                 });
                             });
                         }
                     });
-                    
-                    return Array.from(exercises).sort();
+
+                    return Array.from(exercises).sort((a, b) => a.localeCompare(b));
                 },
+
                 changeMetric(metric) {
                     this.selectedMetric = metric;
                     this.chartStartIndex = 0;
