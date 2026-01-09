@@ -6868,6 +6868,22 @@
                             console.error('Error parsing rest timer config:', error);
                         }
                     }
+                    // Cargar ejercicios personalizados (Manual + Superseries)
+                    const savedCustomExercises = localStorage.getItem('gymApp_customExercises');
+                    if (savedCustomExercises) {
+                        try {
+                            const data = JSON.parse(savedCustomExercises);
+
+                            this.customExercises = data.exercises || [];
+                            this.customMuscles = data.customMuscles || [];
+                            this.muscleGroups = data.muscleGroups || this.muscleGroups;
+
+                        } catch (error) {
+                            console.error('Error cargando ejercicios personalizados:', error);
+                            this.customExercises = [];
+                        }
+                    }
+
                 },
                 saveToLocalStorage() {
                 localStorage.setItem('gymApp_superset_workoutHistory', JSON.stringify(this.workoutHistory));
