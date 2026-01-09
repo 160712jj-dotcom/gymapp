@@ -3901,68 +3901,16 @@
                 },
                 // REEMPLAZAR la función loadCustomExercises con esta versión mejorada
                 loadCustomExercises() {
-                    const saved = localStorage.getItem('gymApp_customExercises');
-                    if (saved) {
-                        try {
-                            const data = JSON.parse(saved);
-                            console.log('Datos cargados de localStorage:', data);
-                            
-                            // Limpiar estructuras existentes primero
-                            this.customMuscles = [];
-                            
-                            // Cargar ejercicios
-                            if (data.exercises) {
-                                Object.keys(data.exercises).forEach(muscle => {
-                                    // Inicializar el array si no existe
-                                    if (!this.exercisesByMuscle[muscle]) {
-                                        this.exercisesByMuscle[muscle] = [];
-                                    }
-                                    
-                                    // Añadir ejercicios que no existan ya
-                                    data.exercises[muscle].forEach(exercise => {
-                                        if (!this.exercisesByMuscle[muscle].includes(exercise)) {
-                                            this.exercisesByMuscle[muscle].push(exercise);
-                                        }
-                                    });
-                                    
-                                    // Si es músculo personalizado, añadir a la lista
-                                    if (muscle.startsWith('custom_')) {
-                                        if (!this.customMuscles.includes(muscle)) {
-                                            this.customMuscles.push(muscle);
-                                        }
-                                    }
-                                });
-                            }
-                            
-                            // Cargar músculos personalizados
-                            if (data.customMuscles) {
-                                this.customMuscles = data.customMuscles.filter(muscle => {
-                                    // Solo mantener músculos que tengan ejercicios
-                                    return this.exercisesByMuscle[muscle] && this.exercisesByMuscle[muscle].length > 0;
-                                });
-                            }
-                            
-                            // Cargar muscleGroups
-                            if (data.muscleGroups) {
-                                data.muscleGroups.forEach(muscle => {
-                                    // Solo añadir si no existe ya y si tiene ejercicios
-                                    const exists = this.muscleGroups.find(m => m.key === muscle.key);
-                                    const hasExercises = this.exercisesByMuscle[muscle.key] && this.exercisesByMuscle[muscle.key].length > 0;
-                                    
-                                    if (!exists && hasExercises) {
-                                        this.muscleGroups.push(muscle);
-                                    }
-                                });
-                            }
-                            
-                            console.log('Ejercicios personalizados cargados:', this.exercisesByMuscle);
-                            console.log('Músculos personalizados:', this.customMuscles);
-                            
-                        } catch (error) {
-                            console.error('Error loading custom exercises:', error);
-                            // En caso de error, limpiar datos corruptos
-                            localStorage.removeItem('gymApp_customExercises');
-                        }
+                    const saved = localStorage.getItem('gymApp_customExercises_shared');
+                    if (!saved) return;
+
+                    try {
+                        const data = JSON.parse(saved);
+                        this.exercisesByMuscle = data.exercises || {};
+                        this.customMuscles = data.customMuscles || [];
+                        this.muscleGroups = data.muscleGroups || [];
+                    } catch (e) {
+                        console.error('Error cargando ejercicios personalizados', e);
                     }
                 },
 
@@ -4000,31 +3948,29 @@
                 },
                 // REEMPLAZAR la función saveCustomExercises con esta versión mejorada
                 saveCustomExercises() {
-                    // 1. Cargar lo que ya existe (manual + superseries)
-                    const stored = JSON.parse(localStorage.getItem('gymApp_customExercises')) || {
-                        exercises: {},
-                        customMuscles: [],
-                        muscleGroups: []
-                    };
-
-                    // 2. Limpiar músculos personalizados sin ejercicios
-                    const validCustomMuscles = this.customMuscles.filter(muscleKey =>
-                        this.exercisesByMuscle[muscleKey] &&
-                        this.exercisesByMuscle[muscleKey].length > 0
-                    );
+                    // 1. Limpiar músculos personalizados sin ejercicios
+                    const validCustomMuscles = this.customMuscles.filter(muscleKey => {
+                        return this.exercisesByMuscle[muscleKey] && this.exercisesByMuscle[muscleKey].length > 0;
+                    });
 
                     this.customMuscles = validCustomMuscles;
 
-                    // 3. Preparar estructuras
-                    const exercisesToSave = { ...stored.exercises };
-                    const muscleGroupsToSave = [...stored.muscleGroups];
+                    // 2. Limpiar muscleGroups huérfanos
+                    this.muscleGroups = this.muscleGroups.filter(muscle => {
+                        if (muscle.key.startsWith('custom_')) {
+                            return this.exercisesByMuscle[muscle.key]?.length > 0;
+                        }
+                        return true;
+                    });
 
-                    // 4. Fusionar ejercicios (NO sobrescribir)
+                    // 3. Preparar datos
+                    const exercisesToSave = {};
+                    const muscleGroupsToSave = [...this.muscleGroups];
+
                     Object.keys(this.exercisesByMuscle).forEach(muscleKey => {
-                        if (this.exercisesByMuscle[muscleKey].length > 0) {
+                        if (this.exercisesByMuscle[muscleKey]?.length > 0) {
                             exercisesToSave[muscleKey] = this.exercisesByMuscle[muscleKey];
 
-                            // Añadir muscleGroup si es personalizado y no existe
                             if (muscleKey.startsWith('custom_')) {
                                 const exists = muscleGroupsToSave.find(m => m.key === muscleKey);
                                 if (!exists) {
@@ -4038,20 +3984,14 @@
                         }
                     });
 
-                    // 5. Fusionar customMuscles
-                    const mergedCustomMuscles = Array.from(new Set([
-                        ...stored.customMuscles,
-                        ...validCustomMuscles
-                    ]));
-
-                    // 6. Guardar TODO fusionado
-                    localStorage.setItem('gymApp_customExercises', JSON.stringify({
+                    // 4. GUARDAR EN KEY COMPARTIDA (CRÍTICO)
+                    localStorage.setItem('gymApp_customExercises_shared', JSON.stringify({
                         exercises: exercisesToSave,
-                        customMuscles: mergedCustomMuscles,
+                        customMuscles: validCustomMuscles,
                         muscleGroups: muscleGroupsToSave
                     }));
 
-                    console.log('✅ Ejercicios personalizados fusionados correctamente');
+                    console.log('✅ Ejercicios personalizados compartidos guardados');
                 },
 
                 currentTemplateOrigin: {
