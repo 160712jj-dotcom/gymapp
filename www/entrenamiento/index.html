@@ -1414,9 +1414,12 @@
                             }"
                             @click="toggleMuscleSelection(muscle.key)">
                             <div class="w-4 h-4 rounded-full mr-3"
-                                :class="muscle.dot || 'bg-gray-500'">
+                                :class="muscleColorMap[muscle]?.dot || 'bg-gray-500'">
                             </div>
-                            <span class="wrap-text text-sm md:text-base" x-text="muscle.label"></span>
+                            <span class="wrap-text text-sm md:text-base"
+                                x-text="muscleGroups.find(m => m.key === muscle)?.label || muscle">
+                            </span>
+
                         </div>
                     </template>
                 </div>
