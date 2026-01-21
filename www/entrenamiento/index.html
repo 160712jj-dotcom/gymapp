@@ -4801,10 +4801,9 @@
                         return indexA - indexB;
                     });
                 },
-
                 getMuscleDot(key) {
-                    const m = this.muscleGroups.find(m => m.key === key);
-                    return m ? m.dot : 'bg-gray-500';
+                    const m = this.muscleGroups?.find(m => m.key === key);
+                    return m?.dot ?? 'bg-gray-500';
                 },
                 // ==================================================
                 // NUEVO: SISTEMA UNIFICADO DE HISTORIAL
