@@ -2749,34 +2749,26 @@
                         Notification.requestPermission();
                     }
                 },
-
                 loadLibrary() {
-                    const library = JSON.parse(localStorage.getItem('gymApp_library'));
+                const library = JSON.parse(localStorage.getItem('gymApp_library'));
 
-                    if (!library || !library.muscleGroups || !library.exercisesByMuscle) {
-                        console.warn('⚠️ Biblioteca no encontrada o incompleta');
-                        this.muscleGroups = [];
-                        this.exercisesByMuscle = {};
-                        this.muscleColorMap = {};
-                        return;
-                    }
+                if (!library || !library.muscleGroups || !library.exercisesByMuscle) {
+                    console.warn('⚠️ Biblioteca no encontrada, usando datos existentes');
+                    return;
+                }
 
-                    // Músculos
-                    this.muscleGroups = library.muscleGroups;
+                this.muscleGroups = JSON.parse(JSON.stringify(library.muscleGroups));
+                this.exercisesByMuscle = JSON.parse(JSON.stringify(library.exercisesByMuscle));
 
-                    // Ejercicios
-                    this.exercisesByMuscle = library.exercisesByMuscle;
+                this.muscleColorMap = {};
+                library.muscleGroups.forEach(muscle => {
+                    this.muscleColorMap[muscle.key] = {
+                    color: muscle.color,
+                    dot: muscle.dot
+                    };
+                });
 
-                    // Colores / puntos (evita el bug que tuvimos en superseries)
-                    this.muscleColorMap = {};
-                    library.muscleGroups.forEach(muscle => {
-                        this.muscleColorMap[muscle.key] = {
-                        color: muscle.color,
-                        dot: muscle.dot
-                        };
-                    });
-
-                    console.log('📚 Biblioteca cargada correctamente');
+                console.log('📚 Biblioteca cargada correctamente');
                 },
 
 
