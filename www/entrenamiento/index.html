@@ -1530,8 +1530,11 @@
             <template x-for="muscle in selectedMuscles" :key="muscle">
                 <div class="mb-6 md:mb-8 bg-gray-700 rounded-xl p-4 md:p-5">
                     <h4 class="font-medium mb-4 text-xl flex items-center">
-                        <div class="w-4 h-4 rounded-full mr-3" 
-                            :class="(muscleGroups.find(m => m.key === muscle) || {}).dot || 'bg-gray-500'"></div>
+                        <div class="w-4 h-4 rounded-full mr-3"
+                            :style="{
+                            backgroundColor: muscleDotMap[muscle] || '#6b7280'
+                            }">
+                        </div>
                         <span class="wrap-text" 
                             x-text="(muscleGroups.find(m => m.key === muscle) || {}).label || muscle"></span>
                         <span class="text-sm text-gray-400 ml-2" x-text="'(' + (selectedExercises[muscle]?.length || 0) + ' ejercicios)'"></span>
