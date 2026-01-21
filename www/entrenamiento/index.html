@@ -1414,7 +1414,7 @@
                             }"
                             @click="toggleMuscleSelection(muscle.key)">
                             <div class="w-4 h-4 rounded-full mr-3"
-                                :class="getMuscleDot(muscle.key)"">
+                                :class="muscle.dot || 'bg-gray-500'">
                             </div>
                             <span class="wrap-text text-sm md:text-base" x-text="muscle.label"></span>
                         </div>
@@ -4803,8 +4803,8 @@
                 },
 
                 getMuscleDot(key) {
-                const m = this.muscleGroups.find(m => m.key === key);
-                return m ? m.dot : 'bg-gray-500';
+                    const m = this.muscleGroups.find(m => m.key === key);
+                    return m ? m.dot : 'bg-gray-500';
                 },
                 // ==================================================
                 // NUEVO: SISTEMA UNIFICADO DE HISTORIAL
