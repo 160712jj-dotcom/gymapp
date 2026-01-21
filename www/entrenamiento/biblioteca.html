@@ -162,6 +162,12 @@
 
 <script>
 function library() {
+
+  /* ===== V2 (ÚNICO CAMBIO) ===== */
+  const STORAGE_KEY = 'gymApp_library_v2';
+  const VERSION = 2;
+  /* ============================ */
+
   return {
     muscleGroups: [],
     exercisesByMuscle: {},
@@ -175,9 +181,14 @@ function library() {
     editIndex: null,
 
     init() {
-      const saved = JSON.parse(localStorage.getItem('gymApp_library'));
-      if (saved && saved.muscleGroups && saved.exercisesByMuscle) {
-        this.muscleGroups = saved.muscleGroups;
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+
+      if (saved && saved.version === VERSION) {
+        this.muscleGroups = saved.muscleGroups.map(m => ({
+          ...m,
+          color: m.color || 'border-gray-500',
+          dot: m.dot || 'bg-gray-500'
+        }));
         this.exercisesByMuscle = saved.exercisesByMuscle;
       } else {
         this.loadDefaults();
