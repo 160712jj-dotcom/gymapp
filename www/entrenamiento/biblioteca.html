@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Biblioteca de Ejercicios</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Alpine -->
+  <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+    }
+  </style>
+</head>
+
+<body class="text-white min-h-screen">
+
+<div x-data="library()" x-init="init()" class="max-w-6xl mx-auto px-4 py-6">
+
+  <!-- HEADER -->
+  <header class="mb-10 text-center">
+    <h1 class="text-3xl font-bold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
+      Biblioteca de Ejercicios
+    </h1>
+    <p class="text-gray-400 text-sm mt-2">
+      Músculos y ejercicios centralizados
+    </p>
+  </header>
+
+  <!-- LISTADO DE MÚSCULOS -->
+  <div class="space-y-6">
+
+    <template x-for="muscle in muscleGroups" :key="muscle.key">
+      <div class="bg-gray-800 rounded-2xl p-5 border-2 shadow-lg"
+           :class="muscle.color">
+
+        <!-- CABECERA MÚSCULO -->
+        <div class="flex justify-between items-center mb-4">
+          <div class="flex items-center gap-3">
+            <span class="w-3 h-3 rounded-full" :class="muscle.dot"></span>
+            <h2 class="text-lg font-semibold" x-text="muscle.label"></h2>
+
+            <template x-if="muscle.key.startsWith('custom_')">
+              <span class="text-xs bg-gray-700 px-2 py-0.5 rounded text-gray-300">
+                Personalizado
+              </span>
+            </template>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <button @click="openExerciseModal(muscle.key)"
+                    class="text-green-400 hover:text-green-300 transition">
+              <i class="fas fa-plus-circle"></i>
+            </button>
+
+            <template x-if="muscle.key.startsWith('custom_')">
+              <button @click="deleteMuscle(muscle.key)"
+                      class="text-red-400 hover:text-red-300 transition">
+                <i class="fas fa-trash"></i>
+              </button>
+            </template>
+          </div>
+        </div>
+
+        <!-- EJERCICIOS -->
+        <ul class="space-y-2">
+          <template x-for="(exercise, index) in exercisesByMuscle[muscle.key]" :key="index">
+            <li class="flex justify-between items-center bg-gray-700 rounded-xl px-4 py-2 hover:bg-gray-600 transition">
+              <span x-text="exercise"></span>
+
+              <div class="space-x-3 text-sm">
+                <button @click="editExercise(muscle.key, index)"
+                        class="text-yellow-400 hover:text-yellow-300">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button @click="deleteExercise(muscle.key, index)"
+                        class="text-red-400 hover:text-red-300">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </li>
+          </template>
+
+          <template x-if="!exercisesByMuscle[muscle.key] || exercisesByMuscle[muscle.key].length === 0">
+            <li class="text-gray-400 text-sm italic px-4 py-2">
+              No hay ejercicios aún
+            </li>
+          </template>
+        </ul>
+      </div>
+    </template>
+
+  </div>
+
+  <!-- BOTÓN CREAR MÚSCULO -->
+  <div class="mt-12 text-center">
+    <button @click="openMuscleModal()"
+            class="bg-blue-600 hover:bg-blue-500 px-6 py-3 rounded-xl transition shadow-lg">
+      <i class="fas fa-layer-group mr-2"></i>
+      Crear nuevo músculo
+    </button>
+  </div>
+
+  <!-- BOTÓN VOLVER AL INICIO PRINCIPAL -->
+  <div class="flex justify-center mt-10 pt-6 border-t border-gray-700">
+    <button onclick="window.location.href = '../index.html'"
+            class="px-6 py-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition flex items-center text-lg font-medium">
+      <i class="fas fa-home mr-3"></i>
+      Volver al Inicio Principal
+    </button>
+  </div>
+
+  <!-- MODAL MÚSCULO -->
+  <div x-show="showMuscleModal" x-transition class="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
+    <div class="bg-gray-800 p-6 rounded-xl w-full max-w-sm">
+      <h3 class="text-lg font-semibold mb-4">Nuevo músculo</h3>
+      <input x-model="newMuscleName"
+             @keyup.enter="saveMuscle()"
+             placeholder="Nombre del músculo"
+             class="w-full p-2 rounded bg-gray-700 mb-4 outline-none focus:ring-2 focus:ring-blue-500">
+      <div class="flex justify-end gap-3">
+        <button @click="showMuscleModal=false"
+                class="px-4 py-2 text-gray-400 hover:text-white">Cancelar</button>
+        <button @click="saveMuscle()"
+                :disabled="!newMuscleName.trim()"
+                :class="{'bg-green-700 cursor-not-allowed': !newMuscleName.trim(), 'bg-green-600 hover:bg-green-500': newMuscleName.trim()}"
+                class="px-4 py-2 rounded transition">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL EJERCICIO -->
+  <div x-show="showExerciseModal" x-transition class="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
+    <div class="bg-gray-800 p-6 rounded-xl w-full max-w-sm">
+      <h3 class="text-lg font-semibold mb-4"
+          x-text="editIndex !== null ? 'Editar ejercicio' : 'Nuevo ejercicio'"></h3>
+      <input x-model="exerciseName"
+             @keyup.enter="saveExercise()"
+             placeholder="Nombre del ejercicio"
+             class="w-full p-2 rounded bg-gray-700 mb-4 outline-none focus:ring-2 focus:ring-blue-500">
+      <div class="flex justify-end gap-3">
+        <button @click="closeExerciseModal()"
+                class="px-4 py-2 text-gray-400 hover:text-white">Cancelar</button>
+        <button @click="saveExercise()"
+                :disabled="!exerciseName.trim()"
+                :class="{'bg-green-700 cursor-not-allowed': !exerciseName.trim(), 'bg-green-600 hover:bg-green-500': exerciseName.trim()}"
+                class="px-4 py-2 rounded transition">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function library() {
+  return {
+    muscleGroups: [],
+    exercisesByMuscle: {},
+
+    showMuscleModal: false,
+    showExerciseModal: false,
+
+    newMuscleName: '',
+    exerciseName: '',
+    currentMuscle: null,
+    editIndex: null,
+
+    init() {
+      const saved = JSON.parse(localStorage.getItem('gymApp_library'));
+      if (saved && saved.muscleGroups && saved.exercisesByMuscle) {
+        this.muscleGroups = saved.muscleGroups;
+        this.exercisesByMuscle = saved.exercisesByMuscle;
+      } else {
+        this.loadDefaults();
+      }
+    },
+
+    loadDefaults() {
+      this.muscleGroups = [
+        { key:'chest', label:'Pecho', color:'border-red-500', dot:'bg-red-500' },
+        { key:'back', label:'Espalda', color:'border-blue-500', dot:'bg-blue-500' },
+        { key:'shoulders', label:'Hombros', color:'border-yellow-500', dot:'bg-yellow-500' },
+        { key:'biceps', label:'Bíceps', color:'border-green-500', dot:'bg-green-500' },
+        { key:'triceps', label:'Tríceps', color:'border-purple-500', dot:'bg-purple-500' },
+        { key:'legs', label:'Piernas', color:'border-orange-500', dot:'bg-orange-500' },
+        { key:'abs', label:'Abdominales', color:'border-pink-500', dot:'bg-pink-500' },
+        { key:'traps', label:'Trapecio', color:'border-indigo-500', dot:'bg-indigo-500' }
+      ];
+
+      this.exercisesByMuscle = {
+        chest: ['Press banca','Press inclinado','Aperturas','Fondos'],
+        back: ['Dominadas','Jalón','Remo','Peso muerto'],
+        shoulders: ['Press militar','Laterales','Face pull'],
+        biceps: ['Curl barra','Curl martillo','Curl concentrado'],
+        triceps: ['Fondos','Press francés','Extensiones'],
+        legs: ['Sentadilla','Prensa','Zancadas'],
+        abs: ['Crunch','Plancha','Elevaciones'],
+        traps: ['Encogimientos','Remo alto']
+      };
+
+      this.save();
+    },
+
+    save() {
+      localStorage.setItem('gymApp_library', JSON.stringify({
+        muscleGroups: this.muscleGroups,
+        exercisesByMuscle: this.exercisesByMuscle
+      }));
+    },
+
+    openMuscleModal() {
+      this.newMuscleName = '';
+      this.showMuscleModal = true;
+    },
+
+    saveMuscle() {
+      if (!this.newMuscleName.trim()) return;
+      const key = 'custom_' + Date.now();
+      this.muscleGroups.push({
+        key,
+        label: this.newMuscleName.trim(),
+        color: 'border-gray-500',
+        dot: 'bg-gray-500'
+      });
+      this.exercisesByMuscle[key] = [];
+      this.showMuscleModal = false;
+      this.save();
+    },
+
+    deleteMuscle(key) {
+      if (!confirm('¿Eliminar músculo y ejercicios?')) return;
+      this.muscleGroups = this.muscleGroups.filter(m => m.key !== key);
+      delete this.exercisesByMuscle[key];
+      this.save();
+    },
+
+    openExerciseModal(muscle) {
+      this.currentMuscle = muscle;
+      this.exerciseName = '';
+      this.editIndex = null;
+      this.showExerciseModal = true;
+    },
+
+    editExercise(muscle, index) {
+      this.currentMuscle = muscle;
+      this.editIndex = index;
+      this.exerciseName = this.exercisesByMuscle[muscle][index];
+      this.showExerciseModal = true;
+    },
+
+    saveExercise() {
+      if (!this.exerciseName.trim()) return;
+      if (this.editIndex !== null) {
+        this.exercisesByMuscle[this.currentMuscle][this.editIndex] = this.exerciseName.trim();
+      } else {
+        this.exercisesByMuscle[this.currentMuscle].push(this.exerciseName.trim());
+      }
+      this.closeExerciseModal();
+      this.save();
+    },
+
+    deleteExercise(muscle, index) {
+      if (confirm('¿Eliminar ejercicio?')) {
+        this.exercisesByMuscle[muscle].splice(index, 1);
+        this.save();
+      }
+    },
+
+    closeExerciseModal() {
+      this.showExerciseModal = false;
+      this.exerciseName = '';
+      this.currentMuscle = null;
+      this.editIndex = null;
+    }
+  }
+}
+</script>
+
+</body>
+</html>

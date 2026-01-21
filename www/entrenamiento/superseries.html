@@ -841,6 +841,44 @@
             }
         }
 
+        /* ===== MÚSCULOS: BORDE SUTIL POR COLOR ===== */
+
+        .muscle-card {
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        /* Verde */
+        .muscle-card .bg-green-500 {
+            box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.35);
+        }
+
+        /* Azul */
+        .muscle-card .bg-blue-500 {
+            box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.35);
+        }
+
+        /* Rojo */
+        .muscle-card .bg-red-500 {
+            box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.35);
+        }
+
+        /* Amarillo */
+        .muscle-card .bg-yellow-500 {
+            box-shadow: 0 0 0 1px rgba(234, 179, 8, 0.35);
+        }
+
+        /* Morado */
+        .muscle-card .bg-purple-500 {
+            box-shadow: 0 0 0 1px rgba(168, 85, 247, 0.35);
+        }
+
+        /* ===== CUANDO ESTÁ SELECCIONADO ===== */
+        .muscle-card.selected {
+            border-width: 2px;
+            opacity: 1;
+        }
+
+
         /* Asegurar que los inputs sean responsivos pero mantengan 2 columnas */
         @media (max-width: 480px) {
             .workout-set .grid.grid-cols-2 {
@@ -1436,61 +1474,33 @@
                 <!-- Grid responsivo para músculos -->
                 <div class="grid grid-cols-2 gap-3 mb-6 md:grid-cols-4 md:gap-4">
                     <template x-for="muscle in muscleGroups" :key="muscle.key">
-                        <div class="muscle-card bg-gray-700 p-3 md:p-4 rounded-xl cursor-pointer transition-all duration-300 flex items-center"
+                        <div
+                            class="muscle-card bg-gray-700 p-3 md:p-4 rounded-xl cursor-pointer transition-all duration-200 flex items-center border-2 border-transparent hover:border-gray-300 hover:shadow-lg"
                             :class="{
-                                'selected': selectedMuscles.includes(muscle.key), 
-                                'opacity-70': !selectedMuscles.includes(muscle.key)
+                                'opacity-70': !selectedMuscles.includes(muscle.key),
+                                'ring-2 ring-offset-2 ring-offset-gray-900': selectedMuscles.includes(muscle.key)
                             }"
-                            @click="toggleMuscleSelection(muscle.key)">
-                            <div class="w-4 h-4 rounded-full mr-3" :class="muscle.color"></div>
-                            <span class="wrap-text text-sm md:text-base" x-text="muscle.label"></span>
+                            @click="toggleMuscleSelection(muscle.key)"
+                            >
+                            <!-- Punto de color (SIEMPRE visible) -->
+                            <div
+                            class="w-4 h-4 rounded-full mr-3 flex-shrink-0"
+                            :class="muscle.dot || 'bg-gray-400'">
+                            </div>
+
+                            <span
+                                class="wrap-text text-sm md:text-base"
+                                x-text="muscle.label">
+                            </span>
                         </div>
+
                     </template>
                 </div>
-                    <!-- Sección de ejercicios personalizados - Ahora debajo del grid -->
-                <div class="bg-gray-700 rounded-xl p-4 md:p-5 mb-6">
-                    <h3 class="text-lg font-semibold mb-4 flex items-center">
-                        <i class="fas fa-plus-circle mr-2 text-green-400"></i> Ejercicios Personalizados
-                    </h3>
-                    <div class="space-y-3">
-                        <!-- Selección de músculo -->
-                        <div>
-                            <label class="block text-sm font-medium mb-2">Grupo muscular:</label>
-                            <select x-model="newCustomExerciseMuscle" 
-                                    class="w-full bg-gray-600 rounded-lg px-4 py-2 border border-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
-                                <option value="">Seleccionar músculo</option>
-                                <template x-for="muscle in muscleGroups" :key="muscle.key">
-                                    <option :value="muscle.key" x-text="muscle.label"></option>
-                                </template>
-                                <option value="custom">Crear nuevo grupo muscular</option>
-                            </select>
-                        </div>
-                        <!-- Nombre del ejercicio -->
-                        <div>
-                            <label class="block text-sm font-medium mb-2">Nombre del ejercicio:</label>
-                            <input type="text" x-model="newCustomExerciseName" 
-                                placeholder="Ej: Press de banca con mancuernas"
-                                class="w-full bg-gray-600 rounded-lg px-4 py-2 border border-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
-                        </div>
-                        <!-- Campo para nuevo grupo muscular (solo visible cuando se selecciona "Crear nuevo grupo muscular") -->
-                        <div x-show="newCustomExerciseMuscle === 'custom'">
-                            <label class="block text-sm font-medium mb-2">Nombre del nuevo grupo muscular:</label>
-                            <input type="text" x-model="customMuscleName" 
-                                placeholder="Ej: Antebrazos, Glúteos, etc."
-                                class="w-full bg-gray-600 rounded-lg px-4 py-2 border border-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
-                        </div>
-                        <!-- Botón para añadir -->
-                        <button @click="addCustomExercise()" 
-                                class="w-full md:w-auto px-4 py-2 bg-green-600 rounded-lg hover:bg-green-500 transition disabled:opacity-50"
-                                :disabled="!newCustomExerciseName || !newCustomExerciseMuscle || (newCustomExerciseMuscle === 'custom' && !customMuscleName)">
-                            <i class="fas fa-plus mr-1"></i> Añadir Ejercicio Personalizado
-                        </button>
-                    </div>
-                </div>
+                
                 <!-- MEJORAR esta sección en la pantalla de músculos -->
                 <div class="bg-gray-700 rounded-xl p-4 md:p-5 mb-6">
                     <h3 class="text-lg font-semibold mb-4 flex items-center">
-                        <i class="fas fa-clock mr-2 text-yellow-400"></i> Configuración del Temporizador de Descanso
+                        <i class="fas fa-clock mr-2 text-yellow-400"></i> Configuración del Temporizador
                     </h3>
                     
                     <!-- ELIMINADO el div duplicado que causaba el problema -->
@@ -1594,8 +1604,10 @@
             <template x-for="muscle in selectedMuscles" :key="muscle">
                 <div class="mb-6 md:mb-8 bg-gray-700 rounded-xl p-4 md:p-5">
                     <h4 class="font-medium mb-4 text-xl flex items-center">
-                        <div class="w-4 h-4 rounded-full mr-3" 
-                            :class="(muscleGroups.find(m => m.key === muscle) || {}).color || 'bg-gray-500'"></div>
+                        <div class="w-4 h-4 rounded-full mr-3"
+                            :class="((muscleGroups.find(m => m.key === muscle) || {}).color || 'border-gray-500')
+                                .replace('border-', 'bg-')">
+                        </div>
                         <span class="wrap-text" 
                             x-text="(muscleGroups.find(m => m.key === muscle) || {}).label || muscle"></span>
                         <span class="text-sm text-gray-400 ml-2" x-text="'(' + (selectedExercises[muscle]?.length || 0) + ' ejercicios)'"></span>
@@ -1640,12 +1652,6 @@
                                             </template>
                                         </div>
                                     </div>
-                                    <!-- Botón para eliminar cualquier ejercicio -->
-                                    <button @click="removeExercise(muscle, exercise)"
-                                            class="ml-2 text-red-400 hover:text-red-300 transition"
-                                            title="Eliminar ejercicio">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -1724,8 +1730,10 @@
                                     'opacity-50': isExerciseInSuperset(muscle, exercise.name)
                                 }">
                                 <!-- Punto de color del músculo -->
-                                <div class="w-2 h-2 rounded-full mr-2 flex-shrink-0" 
-                                    :class="muscleGroups.find(m => m.key === muscle)?.color || 'bg-gray-500'"></div>
+                                <div class="w-2 h-2 rounded-full mr-2 flex-shrink-0"
+                                    :class="muscleGroups.find(m => m.key === muscle)?.dot || 'bg-gray-500'">
+                                </div>
+
                                 
                                 <!-- En la lista de ejercicios, añade el número de series -->
                                 <div class="min-w-0 flex-1 overflow-hidden">
@@ -1805,15 +1813,21 @@
                             <div class="space-y-2">
                                 <template x-for="(exercise, exIndex) in group.exercises" :key="exercise.key">
                                     <div class="flex items-center bg-gray-750 p-2 rounded">
-                                        <div class="w-2 h-2 rounded-full mr-2" 
-                                            :class="muscleGroups.find(m => m.key === exercise.muscle)?.color || 'bg-gray-500'"></div>
-                                        <div class="flex-1">
-                                            <span class="text-white text-sm" x-text="exercise.name"></span>
+                                        
+                                        <!-- Punto de color del músculo -->
+                                        <div class="w-2 h-2 rounded-full mr-2 flex-shrink-0"
+                                            :class="muscleGroups.find(m => m.key === exercise.muscle)?.dot || 'bg-gray-500'">
                                         </div>
-                                        <span class="text-xs text-gray-400" 
+
+                                        <div class="flex-1">
+                                        <span class="text-white text-sm" x-text="exercise.name"></span>
+                                        </div>
+
+                                        <span class="text-xs text-gray-400"
                                             x-text="exIndex === 0 ? 'A' : 'B'"></span>
                                     </div>
                                 </template>
+
                             </div>
                         </div>
                     </template>
@@ -1892,7 +1906,7 @@
                             <template x-for="(exercise, exerciseIndex) in selectedExercises[muscle]" :key="exercise.name">
                                 <!-- SOLO mostrar si NO está en superseries -->
                                 <template x-if="!isExerciseInAnySuperset(muscle, exercise.name)">
-                                    <div class="workout-exercise bg-gray-700 rounded-xl p-5 border-l-4 transition-all duration-300 muscle-exercise-container"
+                                    <div class="workout-exercise bg-gray-700 rounded-xl p-5 border-2 transition-all duration-300 muscle-exercise-container"
                                         :data-muscle="muscle"
                                         :data-exercise-index="exerciseIndex"
                                         :class="getBorderColorClass(muscle)">
@@ -1900,8 +1914,10 @@
                                         <!-- Header unificado con círculo de color y número de ejercicio -->
                                         <div class="flex items-center justify-between mb-3 pb-2 border-b border-gray-600">
                                             <div class="flex items-center">
-                                                <div class="w-4 h-4 rounded-full mr-2" 
-                                                    :class="muscleGroups.find(m => m.key === muscle)?.color || 'bg-gray-500'"></div>
+                                                <div class="w-4 h-4 rounded-full mr-2"
+                                                    :class="(muscleGroups.find(m => m.key === muscle)?.color || 'border-gray-500')
+                                                                .replace('border-', 'bg-')">
+                                                </div>
                                                 <span class="text-sm font-semibold text-white" 
                                                     x-text="muscleGroups.find(m => m.key === muscle)?.label || muscle"></span>
                                             </div>
@@ -2044,7 +2060,7 @@
                                             <template x-for="(exercise, exIndex) in group.exercises" :key="exercise.key">
                                                 <div class="flex items-center">
                                                     <div class="w-3 h-3 rounded-full mr-1" 
-                                                        :class="muscleGroups.find(m => m.key === exercise.muscle)?.color || 'bg-gray-500'"></div>
+                                                        :class="muscleGroups.find(m => m.key === exercise.muscle)?.dot || 'bg-gray-500'"></div>
                                                     <span class="text-sm text-white" x-text="exercise.exercise"></span>
                                                     <span x-show="exIndex < group.exercises.length - 1" class="mx-2 text-gray-400">+</span>
                                                 </div>
@@ -2071,7 +2087,7 @@
                                                     <!-- Círculo de color + S1 -->
                                                     <div class="flex items-center space-x-2 w-16">
                                                         <div class="w-3 h-3 rounded-full flex-shrink-0" 
-                                                            :class="muscleGroups.find(m => m.key === exercise.muscle)?.color || 'bg-gray-500'"></div>
+                                                            :class="muscleGroups.find(m => m.key === exercise.muscle)?.dot || 'bg-gray-500'"></div>
                                                         <span class="font-medium text-white text-sm whitespace-nowrap">
                                                             S<span x-text="setIndex + 1"></span>
                                                         </span>
@@ -2324,7 +2340,7 @@
                                         <template x-for="muscle in getWorkoutMusclesByIndex(getWorkoutOriginalIndex(workout))" :key="muscle.key">
                                             <span class="text-xs px-2 py-1 rounded-full flex items-center"
                                                 :class="muscle.color + ' bg-opacity-20 text-white'">
-                                                <div class="w-2 h-2 rounded-full mr-1" :class="muscle.color"></div>
+                                                <div class="w-2 h-2 rounded-full mr-1" :class="(muscle.color || 'border-gray-500').replace('border-', 'bg-')"></div>
                                                 <span x-text="muscle.label"></span>
                                             </span>
                                         </template>
@@ -2909,9 +2925,6 @@
                 chartStartIndex: 0, // Índice de inicio para la gráfica
                 chartVisibleCount: 8, // Número máximo de entrenamientos a mostrar
                 // Ejercicios personalizados
-                newCustomExerciseName: '',
-                newCustomExerciseMuscle: '',
-                customMuscleName: '',
                 customMuscles: [],
                 viewedWorkoutIndex: -1,
                 restTimerConfig: {
@@ -2954,26 +2967,6 @@
                     intermediate: { min: 2, max: 4 },
                     advanced: { min: 2, max: 5 }
                 },
-                muscleGroups: [
-                    { key: 'chest', label: 'Pecho', color: 'bg-red-500' },
-                    { key: 'back', label: 'Espalda', color: 'bg-blue-500' },
-                    { key: 'shoulders', label: 'Hombros', color: 'bg-yellow-500' },
-                    { key: 'biceps', label: 'Bíceps', color: 'bg-green-500' },
-                    { key: 'triceps', label: 'Tríceps', color: 'bg-purple-500' },
-                    { key: 'legs', label: 'Piernas', color: 'bg-orange-500' },
-                    { key: 'abs', label: 'Abdominales', color: 'bg-pink-500' },
-                    { key: 'traps', label: 'Trapecio + Otros', color: 'bg-indigo-500' }
-                ],
-                exercisesByMuscle: {
-                    chest: ['Press de banca', 'Press inclinado', 'Aperturas banca', 'Aperturas inclinadas', 'Fondos en paralelas', 'Press declinado', 'Cruces en polea alta' , 'Cruces en polea baja', 'Pullover pecho'],
-                    back: ['Dominadas', 'Jalón al pecho', 'Remo invertido', 'Peso muerto', 'Remo en máquina', 'Hiperextensiones', 'Concentrado a una mano', 'Pullover espalda'],
-                    shoulders: ['Press militar', 'Elevaciones laterales', 'Face pulls', 'Elevaciones frontales', 'Press Arnold', 'Pájaro', 'Cruce poleas'],
-                    biceps: ['Curl de bíceps', 'Curl martillo', 'Curl concentrado', 'Curl en banco Scott', 'Curl con barra', '21'],
-                    triceps: ['Fondos', 'Press francés', 'Extensiones polea alta', 'Patada de tríceps', 'Jalón de tríceps', 'Concentrado'],
-                    legs: ['Sentadillas', 'Prensa', 'Prensa pies en V', 'Extensiones de cuádriceps', 'Curl femoral', 'Peso muerto rumano', 'Elevación de talones', 'Cuadriceps en pared', 'Zancada'],
-                    abs: ['Crunch abdominal', 'Plancha', 'Elevaciones de piernas', 'Russian twists', 'Abdominales en bicicleta'],
-                    traps: ['Encogimientos de hombros', 'Remo alto', 'Face pulls', 'Pájaros invertidos', 'Elevaciones laterales']
-                },
 
 
                 // ==================================================
@@ -2981,6 +2974,60 @@
                 // ==================================================
                 init() {
                     console.log('Iniciando MÓDULO SUPERSERIES');
+
+                    // ================================
+                    // 🔗 CARGAR MÚSCULOS Y EJERCICIOS DESDE BIBLIOTECA
+                    // ================================
+                    const library = JSON.parse(localStorage.getItem('gymApp_library'));
+
+                    if (library && library.muscleGroups && library.exercisesByMuscle) {
+                        this.muscleGroups = library.muscleGroups;
+                        this.exercisesByMuscle = library.exercisesByMuscle;
+                        console.log('📚 Biblioteca cargada correctamente');
+
+                        // ==================================================
+                        // 🔧 NORMALIZAR COLORES (PUNTO + BORDE) ← CLAVE
+                        // ==================================================
+                        this.muscleGroups.forEach(m => {
+
+                            // 🟢 DOT (punto de color)
+                            if (!m.dot) {
+                                if (m.color?.includes('red')) m.dot = 'bg-red-500';
+                                else if (m.color?.includes('blue')) m.dot = 'bg-blue-500';
+                                else if (m.color?.includes('yellow')) m.dot = 'bg-yellow-500';
+                                else if (m.color?.includes('green')) m.dot = 'bg-green-500';
+                                else if (m.color?.includes('purple')) m.dot = 'bg-purple-500';
+                                else if (m.color?.includes('orange')) m.dot = 'bg-orange-500';
+                                else if (m.color?.includes('pink')) m.dot = 'bg-pink-500';
+                                else if (m.color?.includes('indigo')) m.dot = 'bg-indigo-500';
+                                else m.dot = 'bg-gray-400';
+                            }
+
+                            // 🔵 BORDE (cuando se selecciona)
+                            if (!m.border) {
+                                if (m.color?.includes('red')) m.border = 'border-red-500';
+                                else if (m.color?.includes('blue')) m.border = 'border-blue-500';
+                                else if (m.color?.includes('yellow')) m.border = 'border-yellow-500';
+                                else if (m.color?.includes('green')) m.border = 'border-green-500';
+                                else if (m.color?.includes('purple')) m.border = 'border-purple-500';
+                                else if (m.color?.includes('orange')) m.border = 'border-orange-500';
+                                else if (m.color?.includes('pink')) m.border = 'border-pink-500';
+                                else if (m.color?.includes('indigo')) m.border = 'border-indigo-500';
+                                else m.border = 'border-gray-500';
+                            }
+                        });
+
+                        // Guardar normalización
+                        localStorage.setItem('gymApp_library', JSON.stringify({
+                            muscleGroups: this.muscleGroups,
+                            exercisesByMuscle: this.exercisesByMuscle
+                        }));
+
+                    } else {
+                        this.muscleGroups = [];
+                        this.exercisesByMuscle = {};
+                        console.warn('⚠️ Biblioteca vacía o no encontrada');
+                    }
 
                     // Rutinas e historial → separados
                     this.workouts = storageManager.getSupersetWorkouts();
@@ -3029,6 +3076,7 @@
                     this.registerServiceWorker();
                     this.requestNotificationPermission();
                 },
+
 
                 saveSupersetWorkout() {
                     // Usar saveSupersetWorkout
@@ -3130,7 +3178,7 @@
                 loadSeparatedData() {
                 // MIGRAR si no hay datos en la nueva clave
                 if (!localStorage.getItem('gymApp_superset_workoutHistory')) {
-                    const oldHistory = localStorage.getItem('gymApp_workoutHistory');
+                    const oldHistory = localStorage.getItem('gymApp_superset_workoutHistory');
                     if (oldHistory) {
                     try {
                         const history = JSON.parse(oldHistory);
@@ -3220,7 +3268,7 @@
 
                 // 8. CARGAR GRUPOS DE RUTINAS SEPARADOS
                 loadWorkoutGroupsSeparated() {
-                    const savedWorkoutGroups = localStorage.getItem('gymApp_workoutGroups');
+                    const savedWorkoutGroups = localStorage.getItem('gymApp_superset_workoutGroups');
                     if (savedWorkoutGroups) {
                         try {
                             this.workoutGroups = JSON.parse(savedWorkoutGroups);
@@ -3822,35 +3870,7 @@
                 // ==================================================
                 // 5. EJERCICIOS PERSONALIZADOS
                 // ==================================================
-                addCustomExercise() {
-                    if (!this.newCustomExerciseName || !this.newCustomExerciseMuscle) return;
-                    let targetMuscle = this.newCustomExerciseMuscle;
-                    if (targetMuscle === 'custom' && this.customMuscleName) {
-                        const customMuscleKey = 'custom_' + this.customMuscleName.toLowerCase().replace(/\s+/g, '_');
-                        if (!this.customMuscles.includes(customMuscleKey)) {
-                            this.customMuscles.push(customMuscleKey);
-                            if (!this.muscleGroups.find(m => m.key === customMuscleKey)) {
-                                this.muscleGroups.push({
-                                    key: customMuscleKey,
-                                    label: this.customMuscleName,
-                                    color: 'bg-gray-500'
-                                });
-                            }
-                        }
-                        targetMuscle = customMuscleKey;
-                    }
-                    if (!this.exercisesByMuscle[targetMuscle]) {
-                        this.exercisesByMuscle[targetMuscle] = [];
-                    }
-                    if (!this.exercisesByMuscle[targetMuscle].includes(this.newCustomExerciseName)) {
-                        this.exercisesByMuscle[targetMuscle].push(this.newCustomExerciseName);
-                        this.saveCustomExercises();
-                    }
-                    this.newCustomExerciseName = '';
-                    this.newCustomExerciseMuscle = '';
-                    this.customMuscleName = '';
-                    alert('Ejercicio personalizado añadido correctamente');
-                },
+                
                 removeCustomExercise(muscle, exercise) {
                     if (confirm(`¿Estás seguro de que quieres eliminar el ejercicio "${exercise}"?`)) {
                         this.exercisesByMuscle[muscle] = this.exercisesByMuscle[muscle].filter(e => e !== exercise);
@@ -3877,123 +3897,8 @@
                         alert('Ejercicio personalizado eliminado correctamente');
                     }
                 },
-                isCustomExercise(muscle, exercise) {
-                    const defaultExercises = {
-                        chest: ['Press de banca', 'Press inclinado', 'Aperturas banca', 'Aperturas inclinadas', 'Fondos en paralelas', 'Press declinado', 'Cruces en polea alta' , 'Cruces en polea baja', 'Pullover pecho'],
-                        back: ['Dominadas', 'Jalón al pecho', 'Remo invertido', 'Peso muerto', 'Remo en máquina', 'Hiperextensiones', 'Concentrado a una mano', 'Pullover espalda'],
-                        shoulders: ['Press militar', 'Elevaciones laterales', 'Face pulls', 'Elevaciones frontales', 'Press Arnold', 'Pájaro', 'Cruce poleas'],
-                        biceps: ['Curl de bíceps', 'Curl martillo', 'Curl concentrado', 'Curl en banco Scott', 'Curl con barra', '21'],
-                        triceps: ['Fondos', 'Press francés', 'Extensiones polea alta', 'Patada de tríceps', 'Jalón de tríceps', 'Concentrado'],
-                        legs: ['Sentadillas', 'Prensa', 'Prensa pies en V', 'Extensiones de cuádriceps', 'Curl femoral', 'Peso muerto rumano', 'Elevación de talones', 'Cuadriceps en pared', 'Zancada'],
-                        abs: ['Crunch abdominal', 'Plancha', 'Elevaciones de piernas', 'Russian twists', 'Abdominales en bicicleta'],
-                        traps: ['Encogimientos de hombros', 'Remo alto', 'Face pulls', 'Pájaros invertidos', 'Elevaciones laterales']
-                    };
-                        if (defaultExercises[muscle] && !defaultExercises[muscle].includes(exercise)) {
-                        return true;
-                    }
-                    
-                    // Si el músculo es personalizado (empieza con 'custom_'), es personalizado
-                    if (muscle.startsWith('custom_')) {
-                        return true;
-                    }
-                    
-                    return false;
-                },
-                // REEMPLAZAR la función loadCustomExercises con esta versión mejorada
-                loadCustomExercises() {
-                    const saved = localStorage.getItem('gymApp_customExercises_shared');
-                    if (!saved) return;
-
-                    try {
-                        const data = JSON.parse(saved);
-                        this.exercisesByMuscle = data.exercises || {};
-                        this.customMuscles = data.customMuscles || [];
-                        this.muscleGroups = data.muscleGroups || [];
-                    } catch (e) {
-                        console.error('Error cargando ejercicios personalizados', e);
-                    }
-                },
-
-                regenerateDefaultData() {
-                    this.showAdvancedMenu = false;
-                    setTimeout(() => {
-                        if (confirm('¿Regenerar ejercicios predeterminados?\n\nEsto no afectará tus ejercicios personalizados.')) {
-                            // Tu función original aquí
-                            const defaultExercises = {
-                                chest: ['Press de banca', 'Press inclinado', 'Aperturas banca', 'Aperturas inclinadas', 'Fondos en paralelas', 'Press declinado', 'Cruces en polea alta' , 'Cruces en polea baja', 'Pullover pecho'],
-                                back: ['Dominadas', 'Jalón al pecho', 'Remo invertido', 'Peso muerto', 'Remo en máquina', 'Hiperextensiones', 'Concentrado a una mano', 'Pullover espalda'],
-                                shoulders: ['Press militar', 'Elevaciones laterales', 'Face pulls', 'Elevaciones frontales', 'Press Arnold', 'Pájaro', 'Cruce poleas'],
-                                biceps: ['Curl de bíceps', 'Curl martillo', 'Curl concentrado', 'Curl en banco Scott', 'Curl con barra', '21'],
-                                triceps: ['Fondos', 'Press francés', 'Extensiones polea alta', 'Patada de tríceps', 'Jalón de tríceps', 'Concentrado'],
-                                legs: ['Sentadillas', 'Prensa', 'Prensa pies en V', 'Extensiones de cuádriceps', 'Curl femoral', 'Peso muerto rumano', 'Elevación de talones', 'Cuadriceps en pared', 'Zancada'],
-                                abs: ['Crunch abdominal', 'Plancha', 'Elevaciones de piernas', 'Russian twists', 'Abdominales en bicicleta'],
-                                traps: ['Encogimientos de hombros', 'Remo alto', 'Face pulls', 'Pájaros invertidos', 'Elevaciones laterales']
-                            };
-                            
-                            Object.keys(defaultExercises).forEach(muscle => {
-                                if (!this.exercisesByMuscle[muscle]) {
-                                    this.exercisesByMuscle[muscle] = [];
-                                }
-                                defaultExercises[muscle].forEach(exercise => {
-                                    if (!this.exercisesByMuscle[muscle].includes(exercise)) {
-                                        this.exercisesByMuscle[muscle].push(exercise);
-                                    }
-                                });
-                            });
-                            
-                            this.saveCustomExercises();
-                            alert('✅ Ejercicios predeterminados regenerados');
-                        }
-                    }, 300);
-                },
-                // REEMPLAZAR la función saveCustomExercises con esta versión mejorada
-                saveCustomExercises() {
-                    // 1. Limpiar músculos personalizados sin ejercicios
-                    const validCustomMuscles = this.customMuscles.filter(muscleKey => {
-                        return this.exercisesByMuscle[muscleKey] && this.exercisesByMuscle[muscleKey].length > 0;
-                    });
-
-                    this.customMuscles = validCustomMuscles;
-
-                    // 2. Limpiar muscleGroups huérfanos
-                    this.muscleGroups = this.muscleGroups.filter(muscle => {
-                        if (muscle.key.startsWith('custom_')) {
-                            return this.exercisesByMuscle[muscle.key]?.length > 0;
-                        }
-                        return true;
-                    });
-
-                    // 3. Preparar datos
-                    const exercisesToSave = {};
-                    const muscleGroupsToSave = [...this.muscleGroups];
-
-                    Object.keys(this.exercisesByMuscle).forEach(muscleKey => {
-                        if (this.exercisesByMuscle[muscleKey]?.length > 0) {
-                            exercisesToSave[muscleKey] = this.exercisesByMuscle[muscleKey];
-
-                            if (muscleKey.startsWith('custom_')) {
-                                const exists = muscleGroupsToSave.find(m => m.key === muscleKey);
-                                if (!exists) {
-                                    muscleGroupsToSave.push({
-                                        key: muscleKey,
-                                        label: muscleKey.replace('custom_', '').replace(/_/g, ' '),
-                                        color: 'bg-gray-500'
-                                    });
-                                }
-                            }
-                        }
-                    });
-
-                    // 4. GUARDAR EN KEY COMPARTIDA (CRÍTICO)
-                    localStorage.setItem('gymApp_customExercises_shared', JSON.stringify({
-                        exercises: exercisesToSave,
-                        customMuscles: validCustomMuscles,
-                        muscleGroups: muscleGroupsToSave
-                    }));
-
-                    console.log('✅ Ejercicios personalizados compartidos guardados');
-                },
-
+                
+                
                 currentTemplateOrigin: {
                     type: null, // 'routine', 'single', null
                     routineId: null,
@@ -4094,8 +3999,51 @@
                         clearInterval(this.workoutTimer);
                         this.workoutTimer = null;
                     }
+
+                    // 🔧 CONSTRUIR exercisesData REAL
+                    const exercisesData = {};
+
+                    this.selectedMuscles.forEach(muscle => {
+                        exercisesData[muscle] = this.selectedExercises[muscle].map(ex => {
+                        const sets = ex.sets;
+                        const weights = this.exerciseWeights[muscle]?.[ex.name] || [];
+                        const reps = this.exerciseReps[muscle]?.[ex.name] || [];
+
+                        const setsData = Array.from({ length: sets }, (_, i) => ({
+                            weight: weights[i] || 0,
+                            reps: reps[i] || 0,
+                            completed: (weights[i] || 0) > 0 && (reps[i] || 0) > 0
+                        }));
+
+                        return {
+                            name: ex.name,
+                            sets,
+                            completed: setsData.filter(s => s.completed).length,
+                            setsData
+                        };
+                        });
+                    });
+
+                    const workout = {
+                        date: new Date().toISOString(),
+                        mode: 'superset',
+                        level: this.userLevel,
+                        exercisesData,
+                        completedSets: this.calculateCompletedSets({ exercisesData }),
+                        order: [...this.selectedMuscles],
+                        routineKey: this.getRoutineKey({ exercisesData, order: this.selectedMuscles })
+                    };
+
+                    // 💾 GUARDAR
+                    this.workoutHistory.push(workout);
+                    this.saveToLocalStorage();
+
+                    console.log('✅ Superserie guardada correctamente', workout);
+
                     this.currentScreen = 'summary';
                 },
+
+
                 completeSet(muscle, exercise, setIndex) {
                     // Seguridad: obtener ejercicio y array de reps
                     const ex = this.selectedExercises[muscle]?.find(e => e.name === exercise);
@@ -6171,6 +6119,16 @@
                     };
                     this.currentScreen = 'history-manual';
                 },
+                muscleGroups: [
+                { key:'chest', label:'Pecho', color:'bg-red-500', border:'border-red-500' },
+                { key:'back', label:'Espalda', color:'bg-blue-500', border:'border-blue-500' },
+                { key:'shoulders', label:'Hombros', color:'bg-yellow-500', border:'border-yellow-500' },
+                { key:'biceps', label:'Bíceps', color:'bg-green-500', border:'border-green-500' },
+                { key:'triceps', label:'Tríceps', color:'bg-purple-500', border:'border-purple-500' },
+                { key:'legs', label:'Piernas', color:'bg-orange-500', border:'border-orange-500' },
+                { key:'abs', label:'Abdominales', color:'bg-pink-500', border:'border-pink-500' },
+                { key:'traps', label:'Trapecio + Otros', color:'bg-indigo-500', border:'border-indigo-500' }
+                ],
 
                 // Datos de evolución filtrados
                 getFilteredEvolutionData() {
@@ -6515,100 +6473,7 @@
                     }
                 },
 
-                // Función mejorada que preserva el orden al usar plantilla
-                useWorkoutAsTemplateWithOrder() {
-                    console.log('=== CARGANDO PLANTILLA CON ORDEN PRESERVADO ===');
-                    
-                    if (!this.viewedWorkout || !this.viewedWorkout.exercisesData) {
-                        alert('No hay un workout cargado para usar como plantilla.');
-                        return;
-                    }
-
-                    const workout = JSON.parse(JSON.stringify(this.viewedWorkout)); // clone seguro
-
-                    // Nivel (si viene)
-                    if (workout.level) this.userLevel = workout.level;
-
-                    // ORDEN CRÍTICO: Usar workout.order si existe, si no usar orden por defecto
-                    const muscleOrder = Array.isArray(workout.order) && workout.order.length > 0
-                        ? workout.order.slice() // PRESERVAR ORDEN ORIGINAL
-                        : Object.keys(workout.exercisesData || []); // Orden por defecto
-
-                    console.log('Orden de músculos a cargar:', muscleOrder);
-
-                    // Asignar selectedMuscles RESPETANDO EL ORDEN ORIGINAL
-                    this.selectedMuscles = muscleOrder.slice();
-
-                    // Construir selectedExercises preservando estructura y orden
-                    this.selectedExercises = {};
-                    this.exerciseWeights = {};
-                    this.exerciseReps = {};
-                    
-                    muscleOrder.forEach(muscleKey => {
-                        const muscleExercises = workout.exercisesData && workout.exercisesData[muscleKey] ? workout.exercisesData[muscleKey] : [];
-                        this.selectedExercises[muscleKey] = muscleExercises.map(ex => {
-                            if (typeof ex === 'string') {
-                                return { 
-                                    name: ex, 
-                                    sets: this.seriesLimits[this.userLevel]?.min || 3,
-                                    completed: 0
-                                };
-                            }
-                            // Si ya es objeto, clonar y resetear estado de completado
-                            return {
-                                name: ex.name,
-                                sets: ex.sets || this.seriesLimits[this.userLevel]?.min || 3,
-                                completed: 0 // Resetear a 0
-                            };
-                        });
-
-                        // Inicializar arrays de pesos y reps CON LOS DATOS DE REFERENCIA
-                        this.exerciseWeights[muscleKey] = {};
-                        this.exerciseReps[muscleKey] = {};
-                        
-                        this.selectedExercises[muscleKey].forEach(ex => {
-                            const maxSets = this.seriesLimits[this.userLevel]?.max || 5;
-                            
-                            // Buscar los datos del ejercicio en el workout de referencia
-                            const referenceExercise = muscleExercises.find(e => e.name === ex.name);
-                            
-                            if (referenceExercise && referenceExercise.setsData) {
-                                // Cargar pesos y reps de la sesión anterior
-                                this.exerciseWeights[muscleKey][ex.name] = Array.from({length: maxSets}, (_, i) => {
-                                    return referenceExercise.setsData[i]?.weight || 0;
-                                });
-                                
-                                this.exerciseReps[muscleKey][ex.name] = Array.from({length: maxSets}, (_, i) => {
-                                    return referenceExercise.setsData[i]?.reps || 0;
-                                });
-                                
-                                console.log(`Cargados datos para ${ex.name}:`, {
-                                    weights: this.exerciseWeights[muscleKey][ex.name],
-                                    reps: this.exerciseReps[muscleKey][ex.name]
-                                });
-                            } else {
-                                // Si no hay datos anteriores, inicializar en 0
-                                this.exerciseWeights[muscleKey][ex.name] = Array.from({length: maxSets}, () => 0);
-                                this.exerciseReps[muscleKey][ex.name] = Array.from({length: maxSets}, () => 0);
-                            }
-                        });
-                    });
-
-                    // Forzar reactividad
-                    this.selectedMuscles = [...this.selectedMuscles];
-                    this.selectedExercises = JSON.parse(JSON.stringify(this.selectedExercises));
-
-                    console.log('✅ Plantilla cargada con orden:', this.selectedMuscles);
-
-                    // INICIAR DIRECTAMENTE EL ENTRENAMIENTO
-                    console.log('Plantilla cargada, iniciando entrenamiento...');
-                    this.startWorkout();
-
-                    this.$nextTick(() => {
-                        console.log('Entrenamiento iniciado desde plantilla. Orden final:', this.selectedMuscles);
-                        alert('✅ Plantilla cargada correctamente. ¡Se ha preservado el orden original y precargado los pesos!');
-                    });
-                },
+               
                 // MEJORAR la función deleteSingleWorkout
                 deleteSingleWorkout(originalIndex) {
                     console.log('Eliminando workout con índice:', originalIndex);
@@ -6675,7 +6540,7 @@
                 migrateOldData() {
                     console.log('Verificando migración de datos antiguos...');
                     
-                    const savedHistory = localStorage.getItem('gymApp_workoutHistory');
+                    const savedHistory = localStorage.getItem('gymApp_superset_workoutHistory');
                     if (!savedHistory) return;
                     
                     try {
@@ -6724,7 +6589,7 @@
                         
                         if (migratedCount > 0 || fixedCount > 0) {
                             console.log(`Migrados ${migratedCount} workouts, corregidos ${fixedCount} datos`);
-                            localStorage.setItem('gymApp_workoutHistory', JSON.stringify(history));
+                            localStorage.setItem('gymApp_superset_workoutHistory', JSON.stringify(history));
                         }
                         
                     } catch (error) {
@@ -6753,86 +6618,174 @@
                     return completed;
                 },
                 loadFromLocalStorage() {
-                    //const savedLevel = localStorage.getItem('gymApp_userLevel');
+                    const savedHistory = localStorage.getItem('gymApp_superset_workoutHistory');
 
-                    //this.userLevel = savedLevel || '';
-
-                    
-                    const savedHistory = localStorage.getItem('gymApp_workoutHistory');
                     if (savedHistory) {
                         try {
-                            this.workoutHistory = JSON.parse(savedHistory);
-                            this.migrateOldHistory();
-                            this.workoutHistory.forEach(workout => {
-                                if (!workout.routineKey) {
-                                    workout.routineKey = this.getRoutineKey(workout);
-                                }
-                            });
+                        this.workoutHistory = JSON.parse(savedHistory);
+
+                        // Asegurar routineKey
+                        this.workoutHistory.forEach(workout => {
+                            if (!workout.routineKey) {
+                            workout.routineKey = this.getRoutineKey(workout);
+                            }
+                        });
+
                         } catch (error) {
-                            console.error('Error parsing workout history:', error);
-                            this.workoutHistory = [];
+                        console.error('Error parsing superset workout history:', error);
+                        this.workoutHistory = [];
                         }
                     }
-                    
+
                     const savedSound = localStorage.getItem('gymApp_soundEnabled');
                     if (savedSound !== null) {
                         this.soundEnabled = savedSound === 'true';
                     }
+
                     const savedRestConfig = localStorage.getItem('gymApp_restTimerConfig');
                     if (savedRestConfig) {
                         try {
-                            const config = JSON.parse(savedRestConfig);
-                            this.restTimerConfig = { 
-                                enabled: config.enabled !== undefined ? config.enabled : true,
-                                duration: config.duration || 60,
-                                muscleRestDuration: config.muscleRestDuration || 120,
-                                soundEnabled: config.soundEnabled !== undefined ? config.soundEnabled : true
-                            };
+                        const config = JSON.parse(savedRestConfig);
+                        this.restTimerConfig = {
+                            enabled: config.enabled ?? true,
+                            duration: config.duration || 60,
+                            muscleRestDuration: config.muscleRestDuration || 120,
+                            soundEnabled: config.soundEnabled ?? true
+                        };
                         } catch (error) {
-                            console.error('Error parsing rest timer config:', error);
+                        console.error('Error parsing rest timer config:', error);
                         }
                     }
-                    // Cargar ejercicios personalizados (Manual + Superseries)
+
                     const savedCustomExercises = localStorage.getItem('gymApp_customExercises');
                     if (savedCustomExercises) {
                         try {
-                            const data = JSON.parse(savedCustomExercises);
-
-                            this.customExercises = data.exercises || [];
-                            this.customMuscles = data.customMuscles || [];
-                            this.muscleGroups = data.muscleGroups || this.muscleGroups;
-
+                        const data = JSON.parse(savedCustomExercises);
+                        this.customExercises = data.exercises || [];
+                        this.customMuscles = data.customMuscles || [];
+                        this.muscleGroups = data.muscleGroups || this.muscleGroups;
                         } catch (error) {
-                            console.error('Error cargando ejercicios personalizados:', error);
-                            this.customExercises = [];
+                        console.error('Error cargando ejercicios personalizados:', error);
                         }
                     }
 
-                },
-                saveToLocalStorage() {
-                localStorage.setItem('gymApp_superset_workoutHistory', JSON.stringify(this.workoutHistory));
-                localStorage.setItem('gymApp_soundEnabled', this.soundEnabled);
-                localStorage.setItem('gymApp_restTimerConfig', JSON.stringify(this.restTimerConfig));
-                localStorage.setItem('gymApp_superset_workoutGroups', JSON.stringify(this.workoutGroups));
-                },
+                    console.log('✅ Historial superseries cargado:', this.workoutHistory);
+                    },
 
-                // FUNCIÓN SIMPLIFICADA SIN MENSAJES EMERGENTES
-                toggleExerciseActivation(muscle, exercise) {
-                    // Si ya está activo este ejercicio, lo desactivamos
-                    if (this.currentExercise.muscle === muscle && this.currentExercise.name === exercise) {
-                        this.currentExercise = { muscle: '', name: '' };
-                    } 
-                    // Si no está activo, lo activamos
-                    else {
-                        this.currentExercise = { muscle, name: exercise };
+                    saveToLocalStorage() {
+                    localStorage.setItem(
+                        'gymApp_superset_workoutHistory',
+                        JSON.stringify(this.workoutHistory)
+                    );
+                    localStorage.setItem('gymApp_soundEnabled', this.soundEnabled);
+                    localStorage.setItem(
+                        'gymApp_restTimerConfig',
+                        JSON.stringify(this.restTimerConfig)
+                    );
+                    localStorage.setItem(
+                        'gymApp_superset_workoutGroups',
+                        JSON.stringify(this.workoutGroups)
+                    );
+                    },
+
+                    /* =========================
+                    HISTORIAL DE EJERCICIOS
+                    ========================= */
+
+                    getLastCompletedExerciseSets(muscle, exerciseName) {
+                        if (!this.workoutHistory || this.workoutHistory.length === 0) return null;
+
+                        // Buscar desde el más reciente al más antiguo
+                        for (let i = this.workoutHistory.length - 1; i >= 0; i--) {
+                            const workout = this.workoutHistory[i];
+
+                            if (
+                            workout.exercisesData &&
+                            workout.exercisesData[muscle]
+                            ) {
+                            const exercise = workout.exercisesData[muscle]
+                                .find(ex => ex.name === exerciseName);
+
+                            if (exercise && Array.isArray(exercise.setsData)) {
+                                // Solo sets completados
+                                const completedSets = exercise.setsData.filter(
+                                set => set.completed && (set.weight > 0 || set.reps > 0)
+                                );
+
+                                if (completedSets.length > 0) {
+                                return completedSets;
+                                }
+                            }
+                            }
+                        }
+
+                        return null;
+                        },
+
+
+                    /* =========================
+                    PLANTILLA CON ORDEN + PESOS
+                    ========================= */
+
+                    useWorkoutAsTemplateWithOrder() {
+                    if (!this.viewedWorkout || !this.viewedWorkout.exercisesData) {
+                        alert('No hay un workout cargado para usar como plantilla.');
+                        return;
                     }
-                    this.playCompletionSound();
-                    
-                    // Si hay un temporizador activo, detenerlo al cambiar de ejercicio
-                    if (this.isRestTimerActive) {
-                        this.stopRestTimer();
-                    }
-                },
+
+                    const workout = JSON.parse(JSON.stringify(this.viewedWorkout));
+
+                    if (workout.level) this.userLevel = workout.level;
+
+                    const muscleOrder = Array.isArray(workout.order) && workout.order.length
+                        ? workout.order.slice()
+                        : Object.keys(workout.exercisesData);
+
+                    this.selectedMuscles = muscleOrder.slice();
+                    this.selectedExercises = {};
+                    this.exerciseWeights = {};
+                    this.exerciseReps = {};
+
+                    muscleOrder.forEach(muscleKey => {
+                        const exercises = workout.exercisesData[muscleKey] || [];
+
+                        this.selectedExercises[muscleKey] = exercises.map(ex => ({
+                        name: ex.name || ex,
+                        sets: ex.sets || this.seriesLimits[this.userLevel]?.min || 3,
+                        completed: 0
+                        }));
+
+                        this.exerciseWeights[muscleKey] = {};
+                        this.exerciseReps[muscleKey] = {};
+
+                        this.selectedExercises[muscleKey].forEach(ex => {
+                        const previousSets = this.getLastCompletedExerciseSets(
+                            muscleKey,
+                            ex.name
+                        );
+
+                        this.exerciseWeights[muscleKey][ex.name] = Array.from(
+                            { length: ex.sets },
+                            (_, i) => previousSets?.[i]?.weight || 0
+                        );
+
+                        this.exerciseReps[muscleKey][ex.name] = Array.from(
+                            { length: ex.sets },
+                            (_, i) => previousSets?.[i]?.reps || 0
+                        );
+                        });
+                    });
+
+                    // Forzar reactividad
+                    this.selectedMuscles = [...this.selectedMuscles];
+                    this.selectedExercises = JSON.parse(JSON.stringify(this.selectedExercises));
+
+                    this.startWorkout();
+
+                    this.$nextTick(() => {
+                        alert('✅ Plantilla cargada con pesos y reps de la última sesión');
+                    });
+                    },
                 formatRestTime(seconds) {
                     const mins = Math.floor(seconds / 60);
                     const secs = seconds % 60;
@@ -7099,29 +7052,22 @@
                         
                         this.selectedExercises[muscleKey].forEach(ex => {
                             const maxSets = this.seriesLimits[this.userLevel]?.max || 5;
-                            
-                            // Buscar los datos del ejercicio en el workout de referencia
-                            const referenceExercise = muscleExercises.find(e => e.name === ex.name);
-                            
-                            if (referenceExercise && referenceExercise.setsData) {
-                                // Cargar pesos y reps de la sesión anterior
-                                this.exerciseWeights[muscleKey][ex.name] = Array.from({length: maxSets}, (_, i) => {
-                                    return referenceExercise.setsData[i]?.weight || 0;
-                                });
-                                
-                                this.exerciseReps[muscleKey][ex.name] = Array.from({length: maxSets}, (_, i) => {
-                                    return referenceExercise.setsData[i]?.reps || 0;
-                                });
-                                
-                                console.log(`Cargados datos para ${ex.name}:`, {
-                                    weights: this.exerciseWeights[muscleKey][ex.name],
-                                    reps: this.exerciseReps[muscleKey][ex.name]
-                                });
-                            } else {
-                                // Si no hay datos anteriores, inicializar en 0
-                                this.exerciseWeights[muscleKey][ex.name] = Array.from({length: maxSets}, () => 0);
-                                this.exerciseReps[muscleKey][ex.name] = Array.from({length: maxSets}, () => 0);
-                            }
+
+                            const totalSets = ex.sets;
+
+                            // Obtener los últimos sets reales desde el historial
+                            const previousSets = this.getLastCompletedExerciseSets(muscleKey, ex.name);
+
+                            this.exerciseWeights[muscleKey][ex.name] = Array.from(
+                            { length: totalSets },
+                            (_, i) => previousSets?.[i]?.weight || 0
+                            );
+
+                            this.exerciseReps[muscleKey][ex.name] = Array.from(
+                            { length: totalSets },
+                            (_, i) => previousSets?.[i]?.reps || 0
+                            );
+
                         });
                     });
 
@@ -7139,6 +7085,7 @@
                     });
                 },
 
+                
                 getPreviousExerciseData(muscle, exercise) {
                     // Buscar en el historial el mismo ejercicio
                     for (let i = this.workoutHistory.length - 1; i >= 0; i--) {
@@ -8096,30 +8043,7 @@
                         trend: trend
                     };
                 },
-                exportProgressReport() {
-                    const progress = this.calculateProgress();
-                    const chartData = this.prepareEvolutionData();
-                    const report = {
-                        title: `Reporte de Progreso - ${new Date().toLocaleDateString()}`,
-                        metric: this.selectedMetric,
-                        filter: this.evolutionFilter,
-                        currentValue: progress.current,
-                        bestValue: progress.best,
-                        progress: `${progress.progress}%`,
-                        consistency: `${progress.consistency}%`,
-                        data: chartData.values.map((value, index) => ({
-                            date: chartData.labels[index],
-                            value: value
-                        }))
-                    };
-                    const dataStr = JSON.stringify(report, null, 2);
-                    const dataUri = 'application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-                    const exportFileDefaultName = `progress_report_${new Date().toISOString().slice(0,10)}.json`;
-                    const linkElement = document.createElement('a');
-                    linkElement.setAttribute('href', dataUri);
-                    linkElement.setAttribute('download', exportFileDefaultName);
-                    linkElement.click();
-                },
+                
                 getAllUniqueExercises() {
                     const exercises = new Set();
 
@@ -9409,6 +9333,13 @@
                         return firstMuscles.join(" + ") + ` + ${muscles.length - 2} más`;
                     }
                 },
+                getMuscleBorderClass(muscleKey) {
+                    const muscle = this.muscleGroups.find(m => m.key === muscleKey);
+                    if (!muscle) return 'border-gray-500';
+
+                    return muscle.color.replace('bg-', 'border-');
+                },
+
                 // Función CORREGIDA para obtener historial de ejercicios (orden correcto)
                 getExerciseHistory(muscle, exerciseName, currentRoutineKey) {
                     console.log('=== OBTENIENDO HISTORIAL DE EJERCICIO ===');
@@ -9560,13 +9491,48 @@
                 },
 
                 startSupersetWorkout() {
-                    if (this.supersetGroups.length === 0) {
-                        alert('Crea al menos una superserie');
-                        return;
+                if (this.supersetGroups.length === 0) {
+                    alert('Crea al menos una superserie');
+                    return;
+                }
+
+                // 🔧 INICIALIZACIONES CRÍTICAS
+                this.currentExercise = { muscle: '', name: '' };
+
+                // Asegurar estructuras necesarias para workout
+                this.selectedMuscles = [...this.selectedMuscles];
+                this.selectedExercises = JSON.parse(JSON.stringify(this.selectedExercises));
+
+                this.exerciseWeights = this.exerciseWeights || {};
+                this.exerciseReps = this.exerciseReps || {};
+
+                this.selectedMuscles.forEach(muscle => {
+                    if (!this.exerciseWeights[muscle]) this.exerciseWeights[muscle] = {};
+                    if (!this.exerciseReps[muscle]) this.exerciseReps[muscle] = {};
+
+                    this.selectedExercises[muscle].forEach(ex => {
+                    if (!this.exerciseWeights[muscle][ex.name]) {
+                        this.exerciseWeights[muscle][ex.name] = Array.from(
+                        { length: ex.sets },
+                        () => 0
+                        );
                     }
-                    this.currentScreen = 'workout';
-                    this.startWorkoutTimer();
+                    if (!this.exerciseReps[muscle][ex.name]) {
+                        this.exerciseReps[muscle][ex.name] = Array.from(
+                        { length: ex.sets },
+                        () => 0
+                        );
+                    }
+                    });
+                });
+
+                // ✅ AHORA SÍ SE PUEDE ENTRAR EN WORKOUT
+                this.currentScreen = 'workout';
+                this.startWorkoutTimer();
+
+                console.log('✅ Superset workout iniciado correctamente');
                 },
+
 
                 goToSupersetGrouping() {
                     this.currentScreen = 'superset-grouping';
