@@ -904,7 +904,7 @@
             </div>
             
             <header class="text-center mb-10">
-                <h1 class="text-4xl font-bold mb-3 bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Entrenamiento Manual</h1>
+                <h1 class="text-4xl font-bold mb-3 bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Iniciamos el Entrenamiento</h1>
             </header>
             
             <!-- SECCIÓN ESTADO ACTUAL - MÉTRICAS REORGANIZADAS -->
@@ -915,17 +915,17 @@
                 <h5 class="font-medium text-white mb-2">Estado Actual</h5>
                 <div class="text-sm text-gray-300 space-y-1">
                     <div class="flex justify-between">
-                        <span>Ejercicios en ejecución:</span>
+                        <span>Rutinas en ejecución:</span>
                         <span class="font-semibold text-green-400" 
                             x-text="getExerciseGroupsInProgress()"></span>
                     </div>
                     <div class="flex justify-between">
-                        <span>Rutinas guardadas:</span>
+                        <span>Agrupación de Rutinas guardadas:</span>
                         <span class="font-semibold text-blue-400" 
                             x-text="workoutGroups.length"></span>
                     </div>
                     <div class="flex justify-between">
-                        <span>Total ejercicios:</span>
+                        <span>Total de Rutinas:</span>
                         <span class="font-semibold text-purple-400" 
                             x-text="getTotalExerciseGroups()"></span>
                     </div>
@@ -989,9 +989,9 @@
                 <div class="level-card bg-gray-700 p-6 md:p-8 rounded-xl cursor-pointer transition-all duration-300 hover:transform hover:scale-105 border-2 border-green-500"
                     @click="currentScreen = 'workout-groups'">
                     <div class="text-5xl mb-5 text-green-400"><i class="fas fa-layer-group"></i></div>
-                    <h3 class="text-xl font-semibold mb-3 text-white">Rutinas Guardadas</h3>
+                    <h3 class="text-xl font-semibold mb-3 text-white">Agrupación de Rutinas Guardadas</h3>
                     <div class="text-sm text-green-300 flex items-center">
-                        <i class="fas fa-check-circle mr-2"></i> Recupera rutinas guardadas y comprueba tu evolución
+                        <i class="fas fa-check-circle mr-2"></i> Recupera conjunto de rutinas guardadas y comprueba tu evolución
                     </div>
                 </div>
             </div>
@@ -1009,7 +1009,7 @@
         <div x-show="currentScreen === 'workout-groups'" x-transition:enter.duration.300 x-transition:leave.duration.300 class="container mx-auto px-4 py-8 max-w-6xl">
             <!-- Encabezado simplificado -->
             <div class="mb-6">
-                <h2 class="text-2xl font-bold text-white">Rutinas guardadas</h2>
+                <h2 class="text-2xl font-bold text-white">Agrupación de Rutinas guardadas</h2>
             </div>
 
             <div class="bg-gray-800 rounded-2xl shadow-xl p-6">
@@ -2102,11 +2102,11 @@
                                 <div class="text-4xl mb-4 text-blue-400">
                                     <i class="fas fa-dumbbell"></i>
                                 </div>
-                                <h3 class="text-xl font-semibold mb-3 text-white">Crear Entrenamiento Suelto</h3>
+                                <h3 class="text-xl font-semibold mb-3 text-white">Crear Entrenamiento</h3>
                                 <p class="text-gray-400 mb-4" x-text="
                                     workoutHistory.length > 0 ? 
                                     'Añade un nuevo entrenamiento individual' :
-                                    'Comienza tu primer entrenamiento manual'
+                                    'Comienza tu primera rutina de entrenamiento'
                                 "></p>
                                 <div class="text-sm text-blue-300 flex items-center justify-center">
                                     <i class="fas fa-arrow-right mr-2"></i>
@@ -6034,7 +6034,7 @@
                     console.log('Grupos disponibles:', availableGroups.length);
 
                     if (availableGroups.length === 0) {
-                        alert('❌ No hay entrenamientos disponibles para crear rutinas.\n\nPrimero completa algunos entrenamientos manuales desde "Crear Entrenamiento Manual".');
+                        alert('❌ No hay entrenamientos disponibles para crear rutinas.\n\nPrimero completa algunos entrenamientos desde "Crear Entrenamiento".');
                         return;
                     }
 
