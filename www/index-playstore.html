@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>GymApp Premium - Play Store</title>
+
+    <!-- METADATOS PWA -->
+    <meta name="theme-color" content="#1a202c">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GymApp">
+
+    <!-- ICONOS PWA -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="./icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="./icons/icon-192x192.png">
+
+    <!-- ESTILOS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            color: #f7fafc;
+        }
+
+        .module-card {
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            cursor: pointer;
+        }
+
+        .module-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .module-card.active:hover {
+            border-color: #4299e1;
+        }
+
+        .border-manual {
+            border: 2px solid rgba(66, 153, 225, 0.6);
+        }
+
+        .border-biblioteca {
+            border: 2px solid rgba(72, 187, 120, 0.6);
+        }
+
+        /* ESTILOS MODAL LICENCIA */
+        .license-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.85);
+            backdrop-filter: blur(5px);
+        }
+        
+        .license-content {
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            border: 2px solid #4299e1;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .trial-badge {
+            background: #2d3748;
+            padding: 15px;
+            border-radius: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #48bb78;
+        }
+        
+        .premium-badge {
+            background: linear-gradient(135deg, #f6e05e 0%, #d69e2e 100%);
+            color: #1a202c;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-block;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #4a5568;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #48bb78, #4299e1);
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+
+<body class="text-gray-100">
+    
+    <!-- MODAL DE LICENCIA -->
+    <div id="licenseModal" class="license-modal">
+        <div class="license-content">
+            <div class="text-center mb-6">
+                <div class="w-20 h-20 bg-gradient-to-r from-green-400 to-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-crown text-white text-3xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold mb-2">GymApp Premium</h2>
+                <p class="text-gray-400" id="licenseMessage"></p>
+            </div>
+            
+            <div id="trialCountdown" class="trial-badge">
+                <div class="flex justify-between items-center mb-2">
+                    <div>
+                        <p class="text-sm text-gray-400">Días restantes de prueba:</p>
+                        <p class="text-3xl font-bold text-green-400" id="daysRemaining">15</p>
+                    </div>
+                    <i class="fas fa-clock text-4xl text-yellow-400"></i>
+                </div>
+                <div class="progress-bar">
+                    <div id="trialProgress" class="progress-fill" style="width: 100%"></div>
+                </div>
+            </div>
+            
+            <div class="bg-gray-900 p-4 rounded-lg mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <p class="text-gray-400 text-sm">Precio de licencia:</p>
+                        <p class="text-3xl font-bold text-white">3€</p>
+                        <p class="text-green-400 text-xs">Pago único • Sin suscripciones</p>
+                    </div>
+                    <div class="premium-badge">
+                        <i class="fas fa-star mr-2"></i>PREMIUM
+                    </div>
+                </div>
+                
+                <ul class="text-gray-300 text-sm space-y-2">
+                    <li><i class="fas fa-check text-green-400 mr-2"></i>Acceso permanente</li>
+                    <li><i class="fas fa-check text-green-400 mr-2"></i>Sin límite de entrenamientos</li>
+                    <li><i class="fas fa-check text-green-400 mr-2"></i>Biblioteca completa</li>
+                    <li><i class="fas fa-check text-green-400 mr-2"></i>Soporte prioritario</li>
+                </ul>
+            </div>
+            
+            <div class="flex space-x-3">
+                <button id="buyLicenseBtn" 
+                        class="flex-1 bg-gradient-to-r from-green-400 to-blue-500 text-white font-bold py-3 rounded-lg hover:opacity-90 transition transform hover:scale-105">
+                    <i class="fas fa-shopping-cart mr-2"></i>Comprar por 3€
+                </button>
+                <button id="enterLicenseBtn" 
+                        class="flex-1 bg-gray-700 text-white font-bold py-3 rounded-lg hover:bg-gray-600 transition">
+                    <i class="fas fa-key mr-2"></i>Ya tengo clave
+                </button>
+            </div>
+            
+            <div class="text-center mt-4">
+                <button id="closeModalBtn" class="text-gray-400 hover:text-white text-sm">
+                    <i class="fas fa-times mr-1"></i> Continuar con prueba gratuita
+                </button>
+            </div>
+        </div>
+    </div>
+
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+
+    <!-- HEADER CON LICENCIA -->
+    <header class="text-center mb-12">
+        <div class="flex justify-between items-center mb-4">
+            <div id="licenseStatus" class="text-sm px-3 py-1 rounded-full bg-blue-800 mx-auto">
+                <i class="fas fa-clock text-yellow-400 mr-1"></i>
+                <span id="statusText">Cargando licencia...</span>
+            </div>
+        </div>
+        
+        <div class="flex justify-center mb-4">
+            <div class="w-20 h-20 bg-gradient-to-r from-green-400 to-blue-500 rounded-2xl flex items-center justify-center">
+                <i class="fas fa-dumbbell text-white text-3xl"></i>
+            </div>
+        </div>
+        <h1 class="text-4xl font-bold mb-3 bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
+            GymApp Premium
+        </h1>
+        <p class="text-lg text-gray-400">Seguimiento y evolución de tus ejercicios</p>
+    </header>
+
+    <!-- MÓDULOS -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+
+        <!-- BIBLIOTECA -->
+        <div class="module-card active border-biblioteca bg-gray-800 p-6 rounded-xl"
+             onclick="navigateTo('entrenamiento/biblioteca.html')">
+            <div class="text-5xl mb-4 text-emerald-400">
+                <i class="fas fa-book"></i>
+            </div>
+            <h3 class="text-xl font-semibold mb-3 text-white">
+                Biblioteca de Músculos y Ejercicios
+            </h3>
+            <p class="text-gray-400 mb-4">
+                Crea y gestiona músculos y ejercicios para tus entrenamientos.
+            </p>
+        </div>
+
+        <!-- ENTRENAMIENTO MANUAL -->
+        <div class="module-card active border-manual bg-gray-800 p-6 rounded-xl"
+             onclick="navigateTo('entrenamiento/')">
+            <div class="text-5xl mb-4 text-blue-400">
+                <i class="fas fa-dumbbell"></i>
+            </div>
+            <h3 class="text-xl font-semibold mb-3 text-white">Iniciar Entrenamiento</h3>
+            <p class="text-gray-400 mb-4">
+                Crea y gestiona rutinas personalizadas de entrenamiento.
+            </p>
+        </div>
+        
+    </div>
+
+    <!-- ESTADO APP -->
+    <div class="bg-gray-800 rounded-xl p-6 mb-8">
+        <h3 class="text-lg font-semibold mb-4 text-white flex items-center">
+            <i class="fas fa-info-circle mr-2 text-blue-400"></i> Estado de la Aplicación
+        </h3>
+        <div class="grid grid-cols-2 gap-4 text-center">
+            <div>
+                <div class="text-2xl font-bold text-blue-400" id="appVersion">v1.1</div>
+                <div class="text-sm text-gray-400">Versión</div>
+            </div>
+            <div>
+                <div class="text-2xl font-bold text-yellow-400" id="lastUpdate">Hoy</div>
+                <div class="text-sm text-gray-400">Actualizado</div>
+            </div>
+        </div>
+        <div id="licenseWarning" class="mt-4 text-center text-sm text-yellow-400 hidden">
+            <i class="fas fa-exclamation-triangle mr-1"></i>
+            Tu período de prueba termina pronto. <button onclick="showLicenseModal()" class="underline">Ver oferta</button>
+        </div>
+    </div>
+
+</div>
+
+<!-- SERVICE WORKER -->
+<script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('✅ Service Worker registrado'))
+            .catch(err => console.log('⚠️ Error Service Worker:', err));
+    }
+</script>
+
+<!-- CAPACITOR DETECTION -->
+<script>
+    if (window.Capacitor) {
+        console.log('📱 Ejecutando en entorno Capacitor');
+        document.body.classList.add('capacitor-mode');
+    }
+</script>
+
+<!-- SCRIPTS PLAY STORE (ORDEN IMPORTANTE) -->
+<script src="js/licenseManager.js"></script>
+<script src="js/app-playstore.js"></script>
+
+</body>
+</html>
