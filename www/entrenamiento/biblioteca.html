@@ -162,11 +162,9 @@
 
 <script>
 function library() {
-
-  /* ===== V2 (ÚNICO CAMBIO) ===== */
+  // Usar la MISMA clave para guardar y recuperar
   const STORAGE_KEY = 'gymApp_library_v2';
   const VERSION = 2;
-  /* ============================ */
 
   return {
     muscleGroups: [],
@@ -285,7 +283,9 @@ function library() {
     },
 
     save() {
-      localStorage.setItem('gymApp_library', JSON.stringify({
+      // Guardar usando la MISMA clave que usamos para recuperar
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        version: VERSION,
         muscleGroups: this.muscleGroups,
         exercisesByMuscle: this.exercisesByMuscle
       }));
