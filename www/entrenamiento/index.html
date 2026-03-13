@@ -2739,7 +2739,7 @@
                     }
                 },
                 loadLibrary() {
-                const library = JSON.parse(localStorage.getItem('gymApp_library'));
+                const library = JSON.parse(localStorage.getItem('gymApp_library_v2'));
 
                 if (!library || !library.muscleGroups || !library.exercisesByMuscle) {
                     console.warn('⚠️ Biblioteca no encontrada, usando datos existentes');
