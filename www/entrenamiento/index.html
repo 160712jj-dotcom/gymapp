@@ -7751,79 +7751,7 @@
                     }
                 },
 
-                // Procesar datos importados
-                processImportedData(importedData) {
-                    try {
-                        console.log('Procesando datos importados...');
-                        
-                        // 1. Backup de datos actuales (por si acaso)
-                        this.createEmergencyBackup();
-                        
-                        // 2. Importar workoutHistory
-                        if (Array.isArray(importedData.workoutHistory)) {
-                            this.workoutHistory = importedData.workoutHistory;
-                            console.log('✅ WorkoutHistory importado:', this.workoutHistory.length, 'entrenamientos');
-                        }
-                        
-                        // 3. Importar workoutGroups
-                        if (Array.isArray(importedData.workoutGroups)) {
-                            this.workoutGroups = importedData.workoutGroups;
-                            console.log('✅ WorkoutGroups importado:', this.workoutGroups.length, 'rutinas');
-                        }
-                        
-                        // 4. Importar customExercises
-                        if (importedData.customExercises) {
-                            if (importedData.customExercises.exercises) {
-                                this.exercisesByMuscle = { ...importedData.customExercises.exercises };
-                                console.log('✅ Exercises importado');
-                            }
-                            
-                            if (Array.isArray(importedData.customExercises.customMuscles)) {
-                                this.customMuscles = importedData.customExercises.customMuscles;
-                                console.log('✅ CustomMuscles importado:', this.customMuscles.length);
-                            }
-                            
-                            if (Array.isArray(importedData.customExercises.muscleGroups)) {
-                                // Combinar muscleGroups sin duplicados
-                                const existingKeys = new Set(this.muscleGroups.map(m => m.key));
-                                importedData.customExercises.muscleGroups.forEach(muscle => {
-                                    if (!existingKeys.has(muscle.key)) {
-                                        this.muscleGroups.push(muscle);
-                                    }
-                                });
-                                console.log('✅ MuscleGroups actualizado');
-                            }
-                        }
-                        
-                        // 5. Importar preferencias de usuario
-                        if (importedData.userPreferences) {
-                            if (importedData.userPreferences.userLevel) {
-                                this.userLevel = importedData.userPreferences.userLevel;
-                            }
-                            if (importedData.userPreferences.soundEnabled !== undefined) {
-                                this.soundEnabled = importedData.userPreferences.soundEnabled;
-                            }
-                            if (importedData.userPreferences.restTimerConfig) {
-                                this.restTimerConfig = { 
-                                    ...this.restTimerConfig, 
-                                    ...importedData.userPreferences.restTimerConfig 
-                                };
-                            }
-                            console.log('✅ Preferencias de usuario importadas');
-                        }
-                        
-                        // 6. Guardar todo en localStorage
-                        this.saveToLocalStorage();
-                        
-                        // 7. Mostrar resumen final
-                        this.showImportSuccess(importedData);
-                        
-                    } catch (error) {
-                        console.error('Error procesando datos importados:', error);
-                        this.handleImportError(error);
-                    }
-                },
-
+                
                 // Crear backup de emergencia
                 createEmergencyBackup() {
                     try {
@@ -7918,80 +7846,78 @@
                 processImportedData(importedData) {
                     try {
                         console.log('=== PROCESANDO DATOS IMPORTADOS ===');
-                        
+
                         // Validar estructura básica
                         if (!importedData || typeof importedData !== 'object') {
                             throw new Error('Estructura de datos inválida');
                         }
-                        
-                        // Restaurar workoutHistory
+
+                        // 1. Restaurar workoutHistory
                         if (Array.isArray(importedData.workoutHistory)) {
                             this.workoutHistory = importedData.workoutHistory;
                             console.log('✅ Workout history restaurado:', this.workoutHistory.length);
                         }
-                        
-                        // Restaurar workoutGroups
+
+                        // 2. Restaurar workoutGroups
                         if (Array.isArray(importedData.workoutGroups)) {
                             this.workoutGroups = importedData.workoutGroups;
                             console.log('✅ Workout groups restaurados:', this.workoutGroups.length);
                         }
-                        
-                        // Restaurar ejercicios personalizados
+
+                        // 3. --- PARTE CRÍTICA: RESTAURAR Y GUARDAR BIBLIOTECA ---
                         if (importedData.customExercises) {
                             const customData = importedData.customExercises;
-                            
+
+                            // Restaurar ejercicios por músculo
                             if (customData.exercises && typeof customData.exercises === 'object') {
-                                // Combinar ejercicios existentes con importados
-                                Object.keys(customData.exercises).forEach(muscle => {
-                                    if (!this.exercisesByMuscle[muscle]) {
-                                        this.exercisesByMuscle[muscle] = [];
-                                    }
-                                    customData.exercises[muscle].forEach(exercise => {
-                                        if (!this.exercisesByMuscle[muscle].includes(exercise)) {
-                                            this.exercisesByMuscle[muscle].push(exercise);
-                                        }
-                                    });
-                                });
+                                this.exercisesByMuscle = JSON.parse(JSON.stringify(customData.exercises));
+                                console.log('✅ exercisesByMuscle restaurado:', Object.keys(this.exercisesByMuscle).length);
                             }
-                            
+
+                            // Restaurar lista de músculos personalizados
                             if (Array.isArray(customData.customMuscles)) {
-                                this.customMuscles = [...new Set([...this.customMuscles, ...customData.customMuscles])];
+                                this.customMuscles = [...customData.customMuscles];
                             }
-                            
+
+                            // Restaurar grupos musculares (combinando predefinidos + importados)
                             if (Array.isArray(customData.muscleGroups)) {
-                                // Añadir músculos personalizados que no existan
-                                customData.muscleGroups.forEach(muscle => {
-                                    const exists = this.muscleGroups.find(m => m.key === muscle.key);
-                                    if (!exists) {
-                                        this.muscleGroups.push(muscle);
-                                    }
-                                });
+                                // Mantener los 8 músculos predefinidos
+                                const predefinedKeys = ['chest', 'back', 'shoulders', 'biceps', 'triceps', 'legs', 'abs', 'traps'];
+                                const predefinedMuscles = this.muscleGroups.filter(m => predefinedKeys.includes(m.key));
+                                const importedMuscles = customData.muscleGroups.filter(m => !predefinedKeys.includes(m.key));
+                                this.muscleGroups = [...predefinedMuscles, ...importedMuscles];
+                                console.log('✅ muscleGroups restaurado:', this.muscleGroups.length);
                             }
-                            
-                            console.log('✅ Ejercicios personalizados restaurados');
+
+                            // --- GUARDAR BIBLIOTECA EN LOCALSTORAGE CON LA CLAVE CORRECTA ---
+                            const libraryToSave = {
+                                version: "2.0",
+                                muscleGroups: this.muscleGroups,
+                                exercisesByMuscle: this.exercisesByMuscle
+                            };
+                            localStorage.setItem('gymApp_library_v2', JSON.stringify(libraryToSave));
+                            console.log('💾 Biblioteca guardada en localStorage con clave gymApp_library_v2');
                         }
-                        
-                        // Restaurar preferencias
+
+                        // 4. Restaurar preferencias de usuario
                         if (importedData.userPreferences) {
                             const prefs = importedData.userPreferences;
-                            
                             if (prefs.userLevel) this.userLevel = prefs.userLevel;
                             if (prefs.soundEnabled !== undefined) this.soundEnabled = prefs.soundEnabled;
                             if (prefs.restTimerConfig) this.restTimerConfig = { ...this.restTimerConfig, ...prefs.restTimerConfig };
-                            
                             console.log('✅ Preferencias de usuario restauradas');
                         }
-                        
-                        // Guardar en localStorage
+
+                        // 5. Guardar el resto de datos en localStorage
                         this.saveToLocalStorage();
-                        
+
                         alert('✅ Datos importados correctamente. La página se recargará.');
-                        
+
                         // Recargar para aplicar cambios
                         setTimeout(() => {
                             location.reload();
                         }, 1000);
-                        
+
                     } catch (error) {
                         console.error('Error procesando datos importados:', error);
                         alert('❌ Error al procesar datos importados: ' + error.message);
