@@ -6297,10 +6297,21 @@
                     let totalReps = 0;
                     Object.values(workout.exercisesData).forEach(muscleExercises => {
                         muscleExercises.forEach(exercise => {
-                            if (exercise.setsData) {
+                            if (exercise.setsData && Array.isArray(exercise.setsData)) {
                                 exercise.setsData.forEach(set => {
                                     if (set.completed) {
-                                        totalReps += set.reps || 0;
+                                        let reps = set.reps;
+                                        // Validar que sea un número razonable
+                                        if (typeof reps === 'number' && !isNaN(reps) && isFinite(reps) && reps >= 0 && reps < 10000) {
+                                            totalReps += reps;
+                                        } else if (typeof reps === 'string') {
+                                            // Intentar convertir string a número
+                                            let num = parseFloat(reps);
+                                            if (!isNaN(num) && isFinite(num) && num >= 0 && num < 10000) {
+                                                totalReps += num;
+                                            }
+                                        }
+                                        // Si no pasa las validaciones, se ignora (no se suma)
                                     }
                                 });
                             }
@@ -6714,10 +6725,19 @@
                     let totalReps = 0;
                     Object.values(workout.exercisesData).forEach(muscleExercises => {
                         muscleExercises.forEach(exercise => {
-                            if (exercise.name === exerciseName && exercise.setsData) {
+                            if (exercise.name === exerciseName && exercise.setsData && Array.isArray(exercise.setsData)) {
                                 exercise.setsData.forEach(set => {
                                     if (set.completed) {
-                                        totalReps += set.reps || 0;
+                                        let reps = set.reps;
+                                        // Validar que sea un número razonable
+                                        if (typeof reps === 'number' && !isNaN(reps) && isFinite(reps) && reps >= 0 && reps < 10000) {
+                                            totalReps += reps;
+                                        } else if (typeof reps === 'string') {
+                                            let num = parseFloat(reps);
+                                            if (!isNaN(num) && isFinite(num) && num >= 0 && num < 10000) {
+                                                totalReps += num;
+                                            }
+                                        }
                                     }
                                 });
                             }
