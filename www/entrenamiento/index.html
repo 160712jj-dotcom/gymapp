@@ -848,6 +848,18 @@
                 padding: 0 2px;
             }
         }
+        /* Desactivar TODOS los efectos visuales */
+        button.delete-btn,
+        button.delete-btn:active,
+        button.delete-btn:focus,
+        button.delete-btn:focus-visible,
+        button.delete-btn:hover {
+            outline: none !important;
+            transform: none !important;
+            box-shadow: none !important;
+            background-color: #dc2626 !important; /* color rojo fijo */
+            color: white !important;
+        }
 
         /* Backup adicional para dispositivos muy pequeños */
         @media (max-width: 360px) {
