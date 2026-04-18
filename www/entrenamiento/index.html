@@ -2079,7 +2079,7 @@
                                         <i class="fas fa-copy mr-1"></i> Plantilla
                                     </button>
                                 </div>
-                                <button @click="deleteWorkoutFromRoutineGroup(workout)" 
+                                <button @click="deleteWorkoutFromRoutineGroup(workout, $event)" 
                                         class="flex-1 px-3 py-2 bg-red-600 rounded text-sm hover:bg-red-500 transition text-white delete-btn flex items-center justify-center">
                                     <i class="fas fa-trash mr-1"></i> Eliminar
                                 </button>
@@ -5244,30 +5244,7 @@
                         alert('✅ Plantilla cargada correctamente. ¡Se ha preservado el orden original y precargado los pesos!');
                     });
                 },
-                // MEJORAR la función deleteSingleWorkout
-                deleteSingleWorkout(originalIndex) {
-                    console.log('Eliminando workout con índice:', originalIndex);
-                    
-                    if (originalIndex >= 0 && originalIndex < this.workoutHistory.length) {
-                        const workoutDate = this.formatDate(this.workoutHistory[originalIndex].date);
-                        const workoutMuscles = this.getTrainedMuscles(this.workoutHistory[originalIndex]);
-                        
-                        if (confirm(`¿Estás seguro de que quieres eliminar el entrenamiento del ${workoutDate}?\n${workoutMuscles}`)) {
-                            this.workoutHistory.splice(originalIndex, 1);
-                            this.saveToLocalStorage();
-                            
-                            // Redirigir al historial correspondiente
-                            if (this.currentScreen === 'details') {
-                                this.currentScreen = 'history-manual';
-                            }
-                            
-                            alert('Entrenamiento eliminado correctamente.');
-                        }
-                    } else {
-                        console.error('Índice inválido para eliminar:', originalIndex);
-                        alert('Error: No se pudo eliminar el entrenamiento seleccionado.');
-                    }
-                },
+
                 // Función para eliminar un entrenamiento de una rutina (con selector de fechas)
                 deleteWorkoutFromRoutineGroup(group) {
                     // 1. Obtener el routineKey del grupo
@@ -5333,42 +5310,6 @@
                     if (confirm(`¿Eliminar entrenamiento del ${workoutDate}?\n${workoutMuscles}`)) {
                         this.performDelete(workoutToDelete.originalIndex);
                     }
-                },
-
-                // Función auxiliar para la eliminación física
-                performDelete(originalIndex) {
-                    this.workoutHistory.splice(originalIndex, 1);
-                    this.saveToLocalStorage();
-
-                    // Actualizar referencias en rutinas
-                    this.workoutGroups.forEach(group => {
-                        if (group.workouts) {
-                            group.workouts = group.workouts.filter(idx => idx !== originalIndex);
-                            group.workouts = group.workouts.map(idx => idx > originalIndex ? idx - 1 : idx);
-                        }
-                    });
-                    this.saveToLocalStorage();
-
-                    if (this.currentScreen === 'details') this.currentScreen = 'history-manual';
-                    alert('Entrenamiento eliminado correctamente.');
-                },
-
-                // Función auxiliar para la eliminación física (para no duplicar código)
-                performDelete(originalIndex) {
-                    this.workoutHistory.splice(originalIndex, 1);
-                    this.saveToLocalStorage();
-
-                    // Actualizar referencias en rutinas (reindexar)
-                    this.workoutGroups.forEach(group => {
-                        if (group.workouts) {
-                            group.workouts = group.workouts.filter(idx => idx !== originalIndex);
-                            group.workouts = group.workouts.map(idx => idx > originalIndex ? idx - 1 : idx);
-                        }
-                    });
-                    this.saveToLocalStorage();
-
-                    if (this.currentScreen === 'details') this.currentScreen = 'history-manual';
-                    alert('Entrenamiento eliminado correctamente.');
                 },
 
                 // Función auxiliar para la eliminación física (para no duplicar código)
@@ -5806,16 +5747,6 @@
                     });
                 },
 
-
-                deleteSingleWorkout(index) {
-                    const workoutDate = this.formatDate(this.workoutHistory[index].date);
-                    if (confirm(`¿Estás seguro de que quieres eliminar el entrenamiento del ${workoutDate}?`)) {
-                        this.workoutHistory.splice(index, 1);
-                        this.saveToLocalStorage();
-                        this.currentScreen = 'history-manual';
-                        alert('Entrenamiento eliminado correctamente.');
-                    }
-                },
 
                 useWorkoutAsTemplate() {
                     console.log('=== CARGANDO PLANTILLA Y INICIANDO ENTRENAMIENTO ===');
