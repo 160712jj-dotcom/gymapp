@@ -5247,26 +5247,106 @@
                 // MEJORAR la función deleteSingleWorkout
                 deleteSingleWorkout(originalIndex) {
                     console.log('Eliminando workout con índice:', originalIndex);
-                    
-                    if (originalIndex >= 0 && originalIndex < this.workoutHistory.length) {
-                        const workoutDate = this.formatDate(this.workoutHistory[originalIndex].date);
-                        const workoutMuscles = this.getTrainedMuscles(this.workoutHistory[originalIndex]);
-                        
+
+                    // 1. Validar el índice recibido
+                    if (originalIndex < 0 || originalIndex >= this.workoutHistory.length) {
+                        console.error('Índice inválido para eliminar:', originalIndex);
+                        alert('Error: No se pudo eliminar el entrenamiento seleccionado.');
+                        return;
+                    }
+
+                    // 2. Obtener el entrenamiento y su rutina
+                    const workoutToDelete = this.workoutHistory[originalIndex];
+                    const routineKey = workoutToDelete.routineKey;
+
+                    // 3. Si no tiene routineKey, es un entrenamiento suelto (se comporta como antes)
+                    if (!routineKey) {
+                        const workoutDate = this.formatDate(workoutToDelete.date);
+                        const workoutMuscles = this.getTrainedMuscles(workoutToDelete);
                         if (confirm(`¿Estás seguro de que quieres eliminar el entrenamiento del ${workoutDate}?\n${workoutMuscles}`)) {
                             this.workoutHistory.splice(originalIndex, 1);
                             this.saveToLocalStorage();
-                            
-                            // Redirigir al historial correspondiente
-                            if (this.currentScreen === 'details') {
-                                this.currentScreen = 'history-manual';
-                            }
-                            
+                            if (this.currentScreen === 'details') this.currentScreen = 'history-manual';
                             alert('Entrenamiento eliminado correctamente.');
                         }
-                    } else {
-                        console.error('Índice inválido para eliminar:', originalIndex);
-                        alert('Error: No se pudo eliminar el entrenamiento seleccionado.');
+                        return;
                     }
+
+                    // 4. Obtener TODOS los entrenamientos de la MISMA rutina
+                    const routineWorkouts = this.workoutHistory
+                        .map((w, idx) => ({ ...w, originalIndex: idx }))
+                        .filter(w => w.routineKey === routineKey);
+
+                    if (routineWorkouts.length === 0) {
+                        alert('No hay entrenamientos en esta rutina.');
+                        return;
+                    }
+
+                    // 5. Si solo hay uno, preguntar directamente (sin selector)
+                    if (routineWorkouts.length === 1) {
+                        const workout = routineWorkouts[0];
+                        const workoutDate = this.formatDate(workout.date);
+                        const workoutMuscles = this.getTrainedMuscles(workout);
+                        if (confirm(`¿Eliminar el único entrenamiento de esta rutina?\n${workoutDate}\n${workoutMuscles}`)) {
+                            this.performDelete(workout.originalIndex);
+                        }
+                        return;
+                    }
+
+                    // 6. Crear la lista de opciones (solo de esta rutina)
+                    const options = routineWorkouts.map((workout, idx) => {
+                        const date = new Date(workout.date);
+                        const dateStr = date.toLocaleDateString('es-ES', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+                        const muscles = this.getTrainedMuscles(workout);
+                        return `${idx}: ${dateStr} - ${muscles}`;
+                    });
+
+                    // 7. Mostrar selector
+                    const selectedIndex = prompt(
+                        `Entrenamientos de esta rutina:\n\n${options.join('\n')}\n\nEscribe el número que quieres eliminar:`
+                    );
+
+                    if (selectedIndex === null) return;
+
+                    const index = parseInt(selectedIndex);
+                    if (isNaN(index) || index < 0 || index >= routineWorkouts.length) {
+                        alert('Número inválido. No se eliminó ningún entrenamiento.');
+                        return;
+                    }
+
+                    // 8. Obtener el índice real y eliminar
+                    const workoutToDeleteFinal = routineWorkouts[index];
+                    const finalOriginalIndex = workoutToDeleteFinal.originalIndex;
+                    const workoutDate = this.formatDate(workoutToDeleteFinal.date);
+                    const workoutMuscles = this.getTrainedMuscles(workoutToDeleteFinal);
+
+                    if (confirm(`¿Eliminar entrenamiento del ${workoutDate}?\n${workoutMuscles}`)) {
+                        this.performDelete(finalOriginalIndex);
+                    }
+                },
+
+                // Función auxiliar para la eliminación física (para no duplicar código)
+                performDelete(originalIndex) {
+                    this.workoutHistory.splice(originalIndex, 1);
+                    this.saveToLocalStorage();
+
+                    // Actualizar referencias en rutinas (reindexar)
+                    this.workoutGroups.forEach(group => {
+                        if (group.workouts) {
+                            group.workouts = group.workouts.filter(idx => idx !== originalIndex);
+                            group.workouts = group.workouts.map(idx => idx > originalIndex ? idx - 1 : idx);
+                        }
+                    });
+                    this.saveToLocalStorage();
+
+                    if (this.currentScreen === 'details') this.currentScreen = 'history-manual';
+                    alert('Entrenamiento eliminado correctamente.');
                 },
                 // Función para encontrar en qué rutina está un workout
                 findWorkoutRoutineOrigin(workoutIndex) {
