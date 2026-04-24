@@ -848,6 +848,14 @@
                 padding: 0 2px;
             }
         }
+        button.delete-btn:active,
+        button.delete-btn:focus,
+        button.delete-btn:focus-visible {
+            outline: none !important;
+            transform: none !important;
+            box-shadow: none !important;
+            background-color: #dc2626 !important;
+        }
         /* Desactivar TODOS los efectos visuales */
         button.delete-btn,
         button.delete-btn:active,
@@ -2091,7 +2099,7 @@
                                         <i class="fas fa-copy mr-1"></i> Plantilla
                                     </button>
                                 </div>
-                                <button @click="deleteWorkoutFromRoutineGroup(workout, $event)" 
+                                <button @click="prepareDeleteModal(workout)" 
                                         class="flex-1 px-3 py-2 bg-red-600 rounded text-sm hover:bg-red-500 transition text-white delete-btn flex items-center justify-center">
                                     <i class="fas fa-trash mr-1"></i> Eliminar
                                 </button>
@@ -2575,6 +2583,60 @@
                 </div>
             </div>
         </div>
+                <!-- MODAL PROFESIONAL PARA ELIMINAR ENTRENAMIENTOS -->
+        <div x-show="showDeleteModal" 
+             x-cloak 
+             class="fixed inset-0 bg-black bg-opacity-80 z-[10000] flex items-center justify-center p-4"
+             @click.away="showDeleteModal = false; deleteModalWorkouts = []">
+            <div class="bg-gray-800 rounded-xl shadow-2xl w-full max-w-md border border-gray-700 overflow-hidden">
+                
+                <div class="flex justify-between items-center p-5 border-b border-gray-700">
+                    <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i class="fas fa-trash-alt text-red-500"></i> 
+                        Seleccionar entrenamiento
+                    </h3>
+                    <button @click="showDeleteModal = false; deleteModalWorkouts = []" class="text-gray-400 hover:text-white">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <div class="p-2 max-h-96 overflow-y-auto">
+                    <template x-for="(item, idx) in deleteModalWorkouts" :key="idx">
+                        <div @click="selectedDeleteIndex = idx" 
+                             class="delete-modal-item group flex items-center justify-between p-4 m-2 rounded-xl cursor-pointer transition-all duration-200"
+                             :class="selectedDeleteIndex === idx ? 'bg-blue-900 border border-blue-600 shadow-md' : 'bg-gray-750 hover:bg-gray-700 border border-transparent'">
+                            
+                            <div class="flex items-center gap-4">
+                                <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center"
+                                     :class="selectedDeleteIndex === idx ? 'border-blue-500' : 'border-gray-500'">
+                                    <div class="w-2.5 h-2.5 rounded-full"
+                                         :class="selectedDeleteIndex === idx ? 'bg-blue-500' : ''"></div>
+                                </div>
+                                
+                                <div>
+                                    <div class="font-mono text-sm text-gray-300" x-text="item.fecha"></div>
+                                    <div class="text-white font-semibold" x-text="item.volumen + ' kg'"></div>
+                                </div>
+                            </div>
+                            
+                            <i class="fas fa-dumbbell text-gray-500 group-hover:text-gray-300 transition-colors"></i>
+                        </div>
+                    </template>
+                </div>
+
+                <div class="flex gap-3 p-5 border-t border-gray-700 bg-gray-800">
+                    <button @click="showDeleteModal = false; deleteModalWorkouts = []" 
+                            class="flex-1 py-2.5 bg-gray-700 hover:bg-gray-600 rounded-lg transition text-white font-medium">
+                        Cancelar
+                    </button>
+                    <button @click="confirmDeleteFromModal()" 
+                            class="flex-1 py-2.5 bg-red-600 hover:bg-red-700 rounded-lg transition text-white font-medium flex items-center justify-center gap-2"
+                            :disabled="selectedDeleteIndex === null">
+                        <i class="fas fa-trash-alt"></i> Eliminar
+                    </button>
+                </div>
+            </div>
+        </div>
 
     </main>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -2606,6 +2668,9 @@
                     routineId: null,
                     filter: 'current'
                 },
+                showDeleteModal: false,
+                deleteModalWorkouts: [],
+                selectedDeleteIndex: null,
                 workoutGroups: [],
                 currentWorkoutGroup: null,
                 showCreateWorkoutGroupModal: false,
@@ -2841,6 +2906,71 @@
                             this.initEvolutionChart();
                         }, 300);
                     });
+                },
+                prepareDeleteModal(group) {
+                    const routineKey = group.routineKey;
+                    if (!routineKey) {
+                        alert('Error: Esta rutina no tiene identificador.');
+                        return;
+                    }
+
+                    const workouts = this.workoutHistory
+                        .map((w, idx) => ({ ...w, originalIndex: idx }))
+                        .filter(w => w.routineKey === routineKey);
+
+                    if (workouts.length === 0) {
+                        alert('No hay entrenamientos en esta rutina.');
+                        return;
+                    }
+
+                    this.deleteModalWorkouts = workouts.map(workout => ({
+                        fecha: new Date(workout.date).toLocaleString('es-ES', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        }),
+                        volumen: workout.totalVolume || 0,
+                        originalIndex: workout.originalIndex
+                    }));
+
+                    this.selectedDeleteIndex = null;
+                    this.showDeleteModal = true;
+                },
+
+                confirmDeleteFromModal() {
+                    if (this.selectedDeleteIndex === null) {
+                        alert('Por favor, selecciona un entrenamiento.');
+                        return;
+                    }
+
+                    const workoutToDelete = this.deleteModalWorkouts[this.selectedDeleteIndex];
+                    const workoutDate = workoutToDelete.fecha;
+                    const volume = workoutToDelete.volumen;
+
+                    if (confirm(`¿Eliminar entrenamiento del ${workoutDate}?\nVolumen: ${volume} kg`)) {
+                        this.performDelete(workoutToDelete.originalIndex);
+                        this.showDeleteModal = false;
+                        this.deleteModalWorkouts = [];
+                        this.selectedDeleteIndex = null;
+                    }
+                },
+
+                performDelete(originalIndex) {
+                    this.workoutHistory.splice(originalIndex, 1);
+                    this.saveToLocalStorage();
+
+                    this.workoutGroups.forEach(group => {
+                        if (group.workouts) {
+                            group.workouts = group.workouts.filter(idx => idx !== originalIndex);
+                            group.workouts = group.workouts.map(idx => idx > originalIndex ? idx - 1 : idx);
+                        }
+                    });
+                    this.saveToLocalStorage();
+
+                    if (this.currentScreen === 'details') this.currentScreen = 'history-manual';
+                    alert('Entrenamiento eliminado correctamente.');
                 },
 
 
@@ -5257,73 +5387,7 @@
                     });
                 },
 
-                // Función para eliminar un entrenamiento de una rutina (con selector de fechas)
-                deleteWorkoutFromRoutineGroup(group) {
-                    // 1. Obtener el routineKey del grupo
-                    const routineKey = group.routineKey;
-                    if (!routineKey) {
-                        alert('Error: Esta rutina no tiene identificador.');
-                        return;
-                    }
-
-                    // 2. Obtener TODOS los entrenamientos de esta rutina
-                    const routineWorkouts = this.workoutHistory
-                        .map((w, idx) => ({ ...w, originalIndex: idx }))
-                        .filter(w => w.routineKey === routineKey);
-
-                    if (routineWorkouts.length === 0) {
-                        alert('No hay entrenamientos en esta rutina.');
-                        return;
-                    }
-
-                    // 3. Si solo hay uno, preguntar directamente
-                    if (routineWorkouts.length === 1) {
-                        const workout = routineWorkouts[0];
-                        const workoutDate = this.formatDate(workout.date);
-                        const workoutMuscles = this.getTrainedMuscles(workout);
-                        if (confirm(`¿Eliminar el único entrenamiento de esta rutina?\n${workoutDate}\n${workoutMuscles}`)) {
-                            this.performDelete(workout.originalIndex);
-                        }
-                        return;
-                    }
-
-                    // 4. Crear la lista de opciones
-                    const options = routineWorkouts.map((workout, idx) => {
-                        const date = new Date(workout.date);
-                        const dateStr = date.toLocaleDateString('es-ES', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                        });
-                        const volume = workout.totalVolume || 0;
-                        return `${idx}: ${dateStr} - ${volume} kg`;
-                    });
-
-                    // 5. Mostrar selector
-                    const selectedIndex = prompt(
-                        `Entrenamientos de esta rutina:\n\n${options.join('\n')}\n\nEscribe el número que quieres eliminar:`
-                    );
-
-                    if (selectedIndex === null) return;
-
-                    const index = parseInt(selectedIndex);
-                    if (isNaN(index) || index < 0 || index >= routineWorkouts.length) {
-                        alert('Número inválido.');
-                        return;
-                    }
-
-                    // 6. Eliminar el elegido
-                    const workoutToDelete = routineWorkouts[index];
-                    const workoutDate = this.formatDate(workoutToDelete.date);
-                    const workoutMuscles = this.getTrainedMuscles(workoutToDelete);
-
-                    if (confirm(`¿Eliminar entrenamiento del ${workoutDate}?\n${workoutMuscles}`)) {
-                        this.performDelete(workoutToDelete.originalIndex);
-                    }
-                },
-
+                
                 // Función auxiliar para la eliminación física (para no duplicar código)
                 performDelete(originalIndex) {
                     this.workoutHistory.splice(originalIndex, 1);
